@@ -1,0 +1,66 @@
+{
+  "name": "payload-better-editor",
+  "version": "0.1.0",
+  "description": "A Volto-inspired live editor for Payload CMS — edit pages inline with a block-aware sidebar",
+  "license": "MIT",
+  "author": "scorpio-99",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/scorpio-99/payload-better-editor"
+  },
+  "keywords": [
+    "payload",
+    "payloadcms",
+    "payload-plugin",
+    "editor",
+    "live-editor",
+    "cms"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./client": {
+      "import": "./dist/client.js",
+      "types": "./dist/client.d.ts",
+      "default": "./dist/client.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "pnpm copyfiles && pnpm build:types && pnpm build:swc",
+    "build:swc": "swc ./src -d ./dist --config-file .swcrc --strip-leading-paths",
+    "build:types": "tsc --outDir dist --rootDir ./src",
+    "clean": "rimraf {dist,*.tsbuildinfo}",
+    "copyfiles": "copyfiles -u 1 \"src/**/*.{html,css,scss,ttf,woff,woff2,eot,svg,jpg,png,json}\" dist/",
+    "lint": "eslint",
+    "lint:fix": "eslint ./src --fix"
+  },
+  "devDependencies": {
+    "@swc/cli": "0.6.0",
+    "@types/node": "22.19.9",
+    "@types/react": "19.2.1",
+    "@types/react-dom": "19.2.1",
+    "copyfiles": "2.4.1",
+    "rimraf": "3.0.2",
+    "typescript": "5.7.3"
+  },
+  "peerDependencies": {
+    "@payloadcms/ui": "^3.0.0",
+    "payload": "^3.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "engines": {
+    "node": "^18.20.2 || >=20.9.0",
+    "pnpm": "^9 || ^10"
+  },
+  "registry": "https://registry.npmjs.org/"
+}

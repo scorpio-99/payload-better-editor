@@ -12,7 +12,20 @@ export type PreviewFrameProps = {
 
 const HOVER_STYLE_ID = 'better-editor-hover-style'
 
-const makeHoverCss = (selector: string) => `
+const ID_HOVER_CSS = `
+  [data-better-editor-id] {
+    cursor: pointer;
+  }
+  [data-better-editor-id]:hover:not(:has([data-better-editor-id]:hover)) {
+    outline: 2px solid #3b82f6;
+    outline-offset: -2px;
+  }
+  [data-better-editor-id] [data-better-editor-id]:hover:not(:has([data-better-editor-id]:hover)) {
+    outline-color: #f59e0b;
+  }
+`
+
+const makeLegacyHoverCss = (selector: string) => `
   ${selector} {
     cursor: pointer;
   }
@@ -24,13 +37,20 @@ const makeHoverCss = (selector: string) => `
 
 /**
  * Renders the frontend draft URL in an iframe and wires up:
- *  - Hover highlight on top-level blocks (via injected <style>)
- *  - Click-to-focus: on click, the handler walks up to the nearest element
- *    matching `topLevelBlocksSelector`, looks up its position among the
- *    matching siblings to derive the block's index, and posts
- *    `{ type: 'focus-block', field, index }` back to the overlay.
- *  - Save forwarding: on successful save, posts `payload-document-event` into
- *    the iframe so the consumer's `<RefreshRouteOnSave />` re-fetches.
+ *  - Hover highlight on blocks (via injected <style>). Prefers id-based
+ *    targeting (`[data-better-editor-id]`) so nested blocks highlight
+ *    individually; falls back to the legacy selector for older setups.
+ *  - Click-to-focus:
+ *      Primary: walk up to the nearest `[data-better-editor-id]` and post
+ *        `{ type: 'focus-block', id }`. The overlay resolves the id to a
+ *        form-state path. This is what enables nested-block selection
+ *        (e.g. a block inside a Columns block).
+ *      Fallback: walk up to the nearest match of `topLevelBlocksSelector`,
+ *        derive a position-based index, and post
+ *        `{ type: 'focus-block', field, index }`. Kept so older consumers
+ *        without per-block ids still work.
+ *  - Save forwarding: on successful save, posts `payload-document-event`
+ *    into the iframe so the consumer's `<RefreshRouteOnSave />` re-fetches.
  *
  * Same-origin only. If contentDocument is inaccessible, the iframe falls
  * back to view-only (hover + click do nothing).
@@ -58,12 +78,15 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     }
     if (!doc) return
 
-    // Re-inject style on every navigation/reload
+    // Re-inject style on every navigation/reload. If the rendered page
+    // exposes per-block ids we use the id-based CSS so each (nested) block
+    // highlights individually; otherwise fall back to the selector.
     const existing = doc.getElementById(HOVER_STYLE_ID)
     if (existing) existing.remove()
+    const hasIds = doc.querySelector('[data-better-editor-id]') !== null
     const style = doc.createElement('style')
     style.id = HOVER_STYLE_ID
-    style.textContent = makeHoverCss(topLevelBlocksSelector)
+    style.textContent = hasIds ? ID_HOVER_CSS : makeLegacyHoverCss(topLevelBlocksSelector)
     doc.head.appendChild(style)
 
     if (clickHandlerRef.current) {
@@ -73,17 +96,28 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     const onClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null
       if (!target) return
+
+      // Primary path: id-based, supports any nesting depth.
+      const idEl = target.closest<HTMLElement>('[data-better-editor-id]')
+      if (idEl) {
+        const id = idEl.getAttribute('data-better-editor-id')
+        if (!id) return
+        e.preventDefault()
+        e.stopPropagation()
+        window.postMessage(
+          { type: 'focus-block', id },
+          window.location.origin,
+        )
+        return
+      }
+
+      // Fallback: selector + position index (legacy, top-level only).
       const el = target.closest(topLevelBlocksSelector)
       if (!el) return
-
-      // Derive index by position among siblings that match the selector.
-      // Using the shared matching set keeps things correct when the selector
-      // matches non-adjacent elements (e.g. `.page > [data-block]`).
       const matches = Array.from(doc.querySelectorAll(topLevelBlocksSelector))
       const index = matches.indexOf(el as Element)
       if (index < 0) return
 
-      // In editor mode, clicks focus the block instead of navigating
       e.preventDefault()
       e.stopPropagation()
 

@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { RenderFields, useAllFormFields, useDocumentInfo } from '@payloadcms/ui'
+import { RenderFields, useAllFormFields, useDocumentInfo, useField } from '@payloadcms/ui'
 
 // See DocumentSettingsTab for rationale.
 const FULL_ACCESS = true as const
@@ -63,14 +63,41 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
           Could not resolve block schema for this path.
         </div>
       ) : (
-        <RenderFields
-          fields={resolved.blockFields}
-          parentPath={resolved.parentPath}
-          parentIndexPath=""
-          parentSchemaPath={resolved.schemaPath}
-          permissions={FULL_ACCESS}
-        />
+        <>
+          <BlockNameInput path={`${selectedBlockPath}.blockName`} />
+          <RenderFields
+            fields={resolved.blockFields}
+            parentPath={resolved.parentPath}
+            parentIndexPath=""
+            parentSchemaPath={resolved.schemaPath}
+            permissions={FULL_ACCESS}
+          />
+        </>
       )}
+    </div>
+  )
+}
+
+/**
+ * Tiny isolated component so `useField` is only mounted while we have a
+ * resolved block path — `useField` requires a stable path for the
+ * lifetime of the component.
+ */
+const BlockNameInput: React.FC<{ path: string }> = ({ path }) => {
+  const { value, setValue } = useField<string>({ path })
+  return (
+    <div className="better-editor-tab__block-name">
+      <label className="better-editor-tab__block-name-label" htmlFor={`be-blockname-${path}`}>
+        Block Name
+      </label>
+      <input
+        id={`be-blockname-${path}`}
+        className="better-editor-tab__block-name-input"
+        type="text"
+        value={(value as string) || ''}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="Optional label for this block"
+      />
     </div>
   )
 }

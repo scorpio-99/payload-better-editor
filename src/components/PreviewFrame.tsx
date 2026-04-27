@@ -8,30 +8,33 @@ export type PreviewFrameProps = {
   isPreviewEnabled: boolean | undefined
   blocksField: string
   topLevelBlocksSelector: string
+  hoverColorTopLevel: string
+  hoverColorNested: string
+  hoverOutlineWidth: number
 }
 
 const HOVER_STYLE_ID = 'better-editor-hover-style'
 
-const ID_HOVER_CSS = `
+const makeIdHoverCss = (top: string, nested: string, width: number) => `
   [data-better-editor-id] {
     cursor: pointer;
   }
   [data-better-editor-id]:hover:not(:has([data-better-editor-id]:hover)) {
-    outline: 2px solid #3b82f6;
-    outline-offset: -2px;
+    outline: ${width}px solid ${top};
+    outline-offset: -${width}px;
   }
   [data-better-editor-id] [data-better-editor-id]:hover:not(:has([data-better-editor-id]:hover)) {
-    outline-color: #f59e0b;
+    outline-color: ${nested};
   }
 `
 
-const makeLegacyHoverCss = (selector: string) => `
+const makeLegacyHoverCss = (selector: string, top: string, width: number) => `
   ${selector} {
     cursor: pointer;
   }
   ${selector}:hover {
-    outline: 2px solid #3b82f6;
-    outline-offset: -2px;
+    outline: ${width}px solid ${top};
+    outline-offset: -${width}px;
   }
 `
 
@@ -60,6 +63,9 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
   isPreviewEnabled,
   blocksField,
   topLevelBlocksSelector,
+  hoverColorTopLevel,
+  hoverColorNested,
+  hoverOutlineWidth,
 }) => {
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   const clickHandlerRef = useRef<((e: MouseEvent) => void) | null>(null)
@@ -86,7 +92,9 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     const hasIds = doc.querySelector('[data-better-editor-id]') !== null
     const style = doc.createElement('style')
     style.id = HOVER_STYLE_ID
-    style.textContent = hasIds ? ID_HOVER_CSS : makeLegacyHoverCss(topLevelBlocksSelector)
+    style.textContent = hasIds
+      ? makeIdHoverCss(hoverColorTopLevel, hoverColorNested, hoverOutlineWidth)
+      : makeLegacyHoverCss(topLevelBlocksSelector, hoverColorTopLevel, hoverOutlineWidth)
     doc.head.appendChild(style)
 
     if (clickHandlerRef.current) {
@@ -129,7 +137,13 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
 
     doc.addEventListener('click', onClick, true)
     clickHandlerRef.current = onClick
-  }, [blocksField, topLevelBlocksSelector])
+  }, [blocksField, topLevelBlocksSelector, hoverColorTopLevel, hoverColorNested, hoverOutlineWidth])
+
+  // Re-inject hover CSS when hover settings change (without waiting for the
+  // iframe to navigate / re-fire onLoad).
+  useEffect(() => {
+    setupIframe()
+  }, [setupIframe])
 
   useEffect(() => {
     return () => {

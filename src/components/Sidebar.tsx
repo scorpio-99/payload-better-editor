@@ -7,11 +7,16 @@ import { BlockSettingsTab } from './BlockSettingsTab'
 export type SidebarProps = {
   selectedBlockPath: string | null
   onClearSelection: () => void
+  forceFullWidthFields: boolean
 }
 
 type TabKey = 'page' | 'block'
 
-export const Sidebar: React.FC<SidebarProps> = ({ selectedBlockPath, onClearSelection }) => {
+export const Sidebar: React.FC<SidebarProps> = ({
+  selectedBlockPath,
+  onClearSelection,
+  forceFullWidthFields,
+}) => {
   const [tab, setTab] = useState<TabKey>('page')
 
   // Auto-switch to block tab when the user picks a block in the preview.
@@ -20,7 +25,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ selectedBlockPath, onClearSele
   }, [selectedBlockPath])
 
   return (
-    <div className="better-editor-sidebar">
+    <div
+      className={
+        'better-editor-sidebar' +
+        (forceFullWidthFields ? ' better-editor-sidebar--force-full-width' : '')
+      }
+    >
       <div role="tablist" className="better-editor-sidebar__tabs">
         <button
           type="button"

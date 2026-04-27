@@ -88,16 +88,45 @@ export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({
 
     if (!main) return
 
+    const html = document.documentElement
+    const body = document.body
+
     const prevPosition = main.style.position
     const prevOverflow = main.style.overflow
+    const prevHeight = main.style.height
+    const prevHtmlOverflow = html.style.overflow
+    const prevBodyOverflow = body.style.overflow
+
     if (!main.style.position) main.style.position = 'relative'
     main.style.overflow = 'hidden'
+
+    // Lock the outer page scroll so wheel events that escape the iframe
+    // or sidebar can't scroll the admin shell along with them.
+    html.style.overflow = 'hidden'
+    body.style.overflow = 'hidden'
+
+    // Clamp the wrapper's height to the viewport from its current top.
+    // Without this, the wrapper grows with the underlying form (often
+    // thousands of pixels), the absolutely-positioned overlay inherits
+    // that height, and neither the iframe nor the sidebar ever overflow
+    // their own boxes — instead the page scrolls everything together.
+    const updateHeight = () => {
+      const top = main.getBoundingClientRect().top
+      main.style.height = `${Math.max(0, window.innerHeight - top)}px`
+    }
+    updateHeight()
+
+    window.addEventListener('resize', updateHeight)
 
     setMountNode(main)
 
     return () => {
+      window.removeEventListener('resize', updateHeight)
       main.style.position = prevPosition
       main.style.overflow = prevOverflow
+      main.style.height = prevHeight
+      html.style.overflow = prevHtmlOverflow
+      body.style.overflow = prevBodyOverflow
       setMountNode(null)
     }
   }, [open])

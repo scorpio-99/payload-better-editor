@@ -2,27 +2,26 @@
    payload-better-editor — Live Editor overlay
    ========================================================================== */
 
-/* Overlay ------------------------------------------------------------------ */
+/* Overlay shell ------------------------------------------------------------ */
 
 .better-editor {
   position: absolute;
   inset: 0;
   z-index: 50;
-  background: var(--theme-bg, #f8fafc);
-  color: var(--theme-text, #111);
+  background: var(--theme-bg, #fff);
 }
 
 .better-editor__body {
   display: grid;
   grid-template-columns: 1fr 380px;
   height: 100%;
-  min-height: 0;
 }
+
+/* Preview pane ------------------------------------------------------------- */
 
 .better-editor__preview {
   position: relative;
   overflow: hidden;
-  background: var(--theme-elevation-50, #f1f5f9);
 }
 
 .better-editor-frame {
@@ -32,38 +31,11 @@
   background: #fff;
 }
 
-.better-editor-frame__empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  padding: 2rem;
-  color: var(--theme-text-secondary, #475569);
-  font-size: 0.875rem;
-  text-align: center;
-}
-
-.better-editor-frame__empty code {
-  padding: 0.1rem 0.35rem;
-  border-radius: 4px;
-  background: var(--theme-elevation-100, #e2e8f0);
-  font-size: 0.8125rem;
-}
+/* Sidebar ------------------------------------------------------------------ */
 
 .better-editor__sidebar {
-  overflow: auto;
-  border-left: 1px solid var(--theme-elevation-150, #e5e7eb);
-  background: var(--theme-elevation-0, #fff);
+  overflow: hidden;
 }
-
-.better-editor-tab__empty {
-  padding: 1rem;
-  color: var(--theme-text-secondary, #64748b);
-  font-size: 0.875rem;
-  text-align: center;
-}
-
-/* Sidebar ------------------------------------------------------------------ */
 
 .better-editor-sidebar {
   display: flex;
@@ -71,119 +43,140 @@
   height: 100%;
 }
 
+.better-editor-sidebar__content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+.better-editor-tab {
+  margin: 20px;
+}
+
+/* Force every field inside the sidebar to span the full row, regardless
+   of the `admin.width` set on the field config. Payload exposes that
+   width as an inline `--field-width` custom property; overriding it
+   here (with !important to beat the inline style) collapses
+   side-by-side fields like 4×25% selects into a vertical stack so they
+   stay readable in the narrow sidebar. */
+.better-editor-sidebar__content .field-type {
+  --field-width: 100% !important;
+}
+
+.better-editor-sidebar__content .render-fields {
+  margin-top: 16px;
+}
+
+/* Sidebar — Page / Block tab switcher -------------------------------------- */
+
 .better-editor-sidebar__tabs {
   display: flex;
-  border-bottom: 1px solid var(--theme-elevation-150, #e5e7eb);
+  border-bottom: 1px solid var(--theme-elevation-150);
 }
 
 .better-editor-sidebar__tab {
   flex: 1;
-  padding: 0.75rem 1rem;
+  padding: 12px 16px;
   border: 0;
   background: transparent;
-  color: var(--theme-text-secondary, #64748b);
+  color: var(--theme-elevation-500);
+  font: inherit;
   font-weight: 500;
   cursor: pointer;
   border-bottom: 2px solid transparent;
 }
+
+.better-editor-sidebar__tab:hover:not(:disabled) {
+  color: var(--theme-text);
+}
+
 .better-editor-sidebar__tab:disabled {
-  color: var(--theme-elevation-300, #cbd5e1);
+  color: var(--theme-elevation-300);
   cursor: not-allowed;
 }
+
 .better-editor-sidebar__tab--active {
-  color: var(--theme-text, #111);
-  border-bottom-color: #3b82f6;
+  color: var(--theme-text);
+  border-bottom-color: var(--theme-text);
 }
 
-.better-editor-sidebar__content {
-  flex: 1;
-  overflow: auto;
-  padding: 1rem;
-}
-
-/* Tab content -------------------------------------------------------------- */
-
-.better-editor-tab {
-  display: grid;
-  gap: 1rem;
-}
+/* Block tab — header + Deselect button ------------------------------------- */
 
 .better-editor-tab__header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--theme-elevation-150, #e5e7eb);
+  gap: 12px;
+  padding-bottom: 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--theme-elevation-150);
 }
 
 .better-editor-tab__kicker {
   display: block;
-  font-size: 0.6875rem;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--theme-text-secondary, #64748b);
+  color: var(--theme-elevation-500);
 }
 
 .better-editor-tab__heading {
-  margin: 0.125rem 0 0.25rem;
-  font-size: 1rem;
+  margin: 2px 0 4px;
+  font-size: 16px;
   font-weight: 600;
+  line-height: 1.2;
 }
 
-.better-editor-tab__path {
-  font-size: 0.75rem;
-  color: var(--theme-text-secondary, #64748b);
+.better-editor-tab__block-name {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 12px;
 }
 
-.better-editor-tab__clear {
-  padding: 0.375rem 0.625rem;
-  border: 1px solid var(--theme-elevation-150, #e5e7eb);
-  border-radius: 6px;
-  background: transparent;
-  color: inherit;
-  font-size: 0.75rem;
-  cursor: pointer;
-}
-
-/* Field -------------------------------------------------------------------- */
-
-.better-editor-field {
-  display: grid;
-  gap: 0.25rem;
-}
-
-.better-editor-field__label {
-  font-size: 0.75rem;
+.better-editor-tab__block-name-label {
+  font-size: 11px;
   font-weight: 600;
-  color: var(--theme-text-secondary, #475569);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--theme-elevation-500);
 }
 
-.better-editor-field__input,
-.better-editor-field__textarea {
-  width: 100%;
-  padding: 0.5rem 0.625rem;
-  border: 1px solid var(--theme-elevation-150, #e5e7eb);
-  border-radius: 6px;
-  background: var(--theme-elevation-0, #fff);
+.better-editor-tab__block-name-input {
+  padding: 8px 10px;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 4px;
+  background: var(--theme-input-bg, transparent);
   color: inherit;
   font: inherit;
-  font-size: 0.875rem;
 }
-.better-editor-field__input:focus,
-.better-editor-field__textarea:focus {
-  outline: 2px solid #3b82f6;
+
+.better-editor-tab__block-name-input:focus {
+  outline: 2px solid var(--theme-text);
   outline-offset: 1px;
 }
 
-.better-editor-field__checkbox {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
+.better-editor-tab__path {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  color: var(--theme-elevation-500);
 }
 
-.better-editor-field__error {
-  color: #dc2626;
-  font-size: 0.75rem;
+.better-editor-tab__clear {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.better-editor-tab__clear:hover {
+  background: var(--theme-elevation-100);
 }

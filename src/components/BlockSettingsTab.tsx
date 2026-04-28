@@ -1,7 +1,16 @@
 'use client'
 
-import React from 'react'
-import { RenderFields, useAllFormFields, useDocumentInfo, useField } from '@payloadcms/ui'
+import React, { useCallback, useMemo } from 'react'
+import {
+  BlocksDrawer,
+  RenderFields,
+  useAllFormFields,
+  useDocumentInfo,
+  useDrawerSlug,
+  useField,
+  useForm,
+  useModal,
+} from '@payloadcms/ui'
 
 // See DocumentSettingsTab for rationale.
 const FULL_ACCESS = true as const
@@ -9,7 +18,39 @@ const FULL_ACCESS = true as const
 export type BlockSettingsTabProps = {
   selectedBlockPath: string | null
   onClearSelection: () => void
+  onSelectPath: (path: string | null) => void
+  blocksField: string
 }
+
+const PlusIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <line x1="12" y1="5" x2="12" y2="19" />
+    <line x1="5" y1="12" x2="19" y2="12" />
+  </svg>
+)
+
+const ChevronUp = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <polyline points="18 15 12 9 6 15" />
+  </svg>
+)
+const ChevronDown = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <polyline points="6 9 12 15 18 9" />
+  </svg>
+)
+const CopyIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="9" y="9" width="13" height="13" rx="2" />
+    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+  </svg>
+)
+const TrashIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <polyline points="3 6 5 6 21 6" />
+    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+  </svg>
+)
 
 /**
  * Resolves the ClientField schema for a block row at `path` and renders its
@@ -20,24 +61,131 @@ export type BlockSettingsTabProps = {
 export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
   selectedBlockPath,
   onClearSelection,
+  onSelectPath,
+  blocksField,
 }) => {
   const { docConfig } = useDocumentInfo()
   const [fields] = useAllFormFields()
-
-  if (!selectedBlockPath) {
-    return (
-      <div className="better-editor-tab__empty">
-        Select a block in the preview to edit its settings.
-      </div>
-    )
-  }
+  const { addFieldRow, dispatchFields, setModified } = useForm()
+  const { toggleModal } = useModal()
+  const addBlockDrawerSlug = useDrawerSlug('better-editor-add-block')
 
   const docFields = docConfig && 'fields' in docConfig ? docConfig.fields : undefined
   const docSlug = docConfig && 'slug' in docConfig ? docConfig.slug : ''
 
+  // Resolve the top-level blocks field config so we can hand its
+  // `blocks[]` to BlocksDrawer (the same picker used by Payload's native
+  // Blocks field) and know the schemaPath for addFieldRow.
+  const blocksFieldInfo = useMemo(() => {
+    if (!docFields) return null
+    return findNamedField(docFields, blocksField, docSlug || '')
+  }, [docFields, blocksField, docSlug])
+
+  const availableBlocks = (blocksFieldInfo?.field?.blocks as AnyField[] | undefined) || []
+  const blocksSchemaPath = blocksFieldInfo?.schemaPath || ''
+  const topLevelRows = fields[blocksField]?.rows
+  const addRowIndex = Array.isArray(topLevelRows) ? topLevelRows.length : 0
+
+  const addTopLevelRow = useCallback(
+    (index: number, blockType?: string) => {
+      addFieldRow({
+        blockType,
+        path: blocksField,
+        rowIndex: index,
+        schemaPath: blocksSchemaPath,
+      })
+      setModified(true)
+    },
+    [addFieldRow, blocksField, blocksSchemaPath, setModified],
+  )
+
+  if (!selectedBlockPath) {
+    return (
+      <div className="better-editor-tab better-editor-tab--empty">
+        <p className="better-editor-tab__empty-text">
+          Select a block in the preview to edit its settings.
+        </p>
+        {availableBlocks.length > 0 ? (
+          <>
+            <button
+              type="button"
+              className="better-editor-tab__add-block"
+              onClick={() => toggleModal(addBlockDrawerSlug)}
+            >
+              <PlusIcon />
+              <span>Add Block</span>
+            </button>
+            <BlocksDrawer
+              addRow={addTopLevelRow}
+              addRowIndex={addRowIndex}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              blocks={availableBlocks as any}
+              drawerSlug={addBlockDrawerSlug}
+              labels={{ singular: 'Block', plural: 'Blocks' }}
+            />
+          </>
+        ) : null}
+      </div>
+    )
+  }
+
   const resolved = docFields
     ? resolveBlockSchema(docFields, docSlug || '', selectedBlockPath, fields)
     : null
+
+  // Split `selectedBlockPath` into the parent blocks-field path + index so we
+  // can dispatch row mutations against the parent. Works for top-level
+  // (`layout.2`) and nested (`layout.2.columns.0.blocks.1`) alike.
+  const lastDot = selectedBlockPath.lastIndexOf('.')
+  const parentPath = lastDot >= 0 ? selectedBlockPath.slice(0, lastDot) : ''
+  const rowIndex = lastDot >= 0 ? Number(selectedBlockPath.slice(lastDot + 1)) : NaN
+  const parentRows = parentPath ? fields[parentPath]?.rows : undefined
+  const rowCount = Array.isArray(parentRows) ? parentRows.length : 0
+  const canMoveUp = !Number.isNaN(rowIndex) && rowIndex > 0
+  const canMoveDown = !Number.isNaN(rowIndex) && rowIndex < rowCount - 1
+  const canMutate = !Number.isNaN(rowIndex) && parentPath !== ''
+
+  // dispatchFields mutates the field map but doesn't flip the form's
+  // `modified` flag — autosave + live-preview-refresh hang off that, so
+  // they wouldn't fire after a row mutation. setModified(true) restores
+  // the same behavior typing into an input gives us.
+  const markModified = () => setModified(true)
+
+  const moveUp = () => {
+    if (!canMoveUp) return
+    dispatchFields({
+      type: 'MOVE_ROW',
+      path: parentPath,
+      moveFromIndex: rowIndex,
+      moveToIndex: rowIndex - 1,
+    })
+    markModified()
+    onSelectPath(`${parentPath}.${rowIndex - 1}`)
+  }
+  const moveDown = () => {
+    if (!canMoveDown) return
+    dispatchFields({
+      type: 'MOVE_ROW',
+      path: parentPath,
+      moveFromIndex: rowIndex,
+      moveToIndex: rowIndex + 1,
+    })
+    markModified()
+    onSelectPath(`${parentPath}.${rowIndex + 1}`)
+  }
+  const duplicate = () => {
+    if (!canMutate) return
+    dispatchFields({ type: 'DUPLICATE_ROW', path: parentPath, rowIndex })
+    markModified()
+    // Payload inserts the duplicate immediately after the source row.
+    onSelectPath(`${parentPath}.${rowIndex + 1}`)
+  }
+  const remove = () => {
+    if (!canMutate) return
+    dispatchFields({ type: 'REMOVE_ROW', path: parentPath, rowIndex })
+    markModified()
+    onClearSelection()
+  }
 
   return (
     <div className="better-editor-tab better-editor-tab--native">
@@ -57,6 +205,49 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
           Deselect
         </button>
       </div>
+
+      {canMutate ? (
+        <div className="better-editor-tab__actions" role="toolbar" aria-label="Block actions">
+          <button
+            type="button"
+            className="better-editor-tab__action"
+            onClick={moveUp}
+            disabled={!canMoveUp}
+            title="Move up"
+            aria-label="Move block up"
+          >
+            <ChevronUp />
+          </button>
+          <button
+            type="button"
+            className="better-editor-tab__action"
+            onClick={moveDown}
+            disabled={!canMoveDown}
+            title="Move down"
+            aria-label="Move block down"
+          >
+            <ChevronDown />
+          </button>
+          <button
+            type="button"
+            className="better-editor-tab__action"
+            onClick={duplicate}
+            title="Duplicate"
+            aria-label="Duplicate block"
+          >
+            <CopyIcon />
+          </button>
+          <button
+            type="button"
+            className="better-editor-tab__action better-editor-tab__action--danger"
+            onClick={remove}
+            title="Delete"
+            aria-label="Delete block"
+          >
+            <TrashIcon />
+          </button>
+        </div>
+      ) : null}
 
       {!resolved ? (
         <div className="better-editor-tab__empty">

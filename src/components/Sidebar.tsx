@@ -7,7 +7,9 @@ import { BlockSettingsTab } from './BlockSettingsTab'
 export type SidebarProps = {
   selectedBlockPath: string | null
   onClearSelection: () => void
+  onSelectPath: (path: string | null) => void
   forceFullWidthFields: boolean
+  blocksField: string
 }
 
 type TabKey = 'page' | 'block'
@@ -15,7 +17,9 @@ type TabKey = 'page' | 'block'
 export const Sidebar: React.FC<SidebarProps> = ({
   selectedBlockPath,
   onClearSelection,
+  onSelectPath,
   forceFullWidthFields,
+  blocksField,
 }) => {
   const [tab, setTab] = useState<TabKey>('page')
 
@@ -48,7 +52,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           type="button"
           role="tab"
           aria-selected={tab === 'block'}
-          disabled={!selectedBlockPath}
           className={
             'better-editor-sidebar__tab' +
             (tab === 'block' ? ' better-editor-sidebar__tab--active' : '')
@@ -65,6 +68,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <BlockSettingsTab
             selectedBlockPath={selectedBlockPath}
             onClearSelection={onClearSelection}
+            onSelectPath={onSelectPath}
+            blocksField={blocksField}
           />
         )}
       </div>

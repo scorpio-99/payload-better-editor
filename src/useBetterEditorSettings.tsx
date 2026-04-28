@@ -11,8 +11,8 @@ export type BetterEditorSettings = {
   hoverOutlineWidth: number
 }
 
-export const DEFAULT_SIDEBAR_WIDTH = 380
-export const MIN_SIDEBAR_WIDTH = 240
+export const DEFAULT_SIDEBAR_WIDTH = 400
+export const MIN_SIDEBAR_WIDTH = 250
 export const MAX_SIDEBAR_WIDTH = 800
 
 export const DEFAULT_SETTINGS: BetterEditorSettings = {

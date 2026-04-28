@@ -69,6 +69,7 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
   const { addFieldRow, dispatchFields, setModified } = useForm()
   const { toggleModal } = useModal()
   const addBlockDrawerSlug = useDrawerSlug('better-editor-add-block')
+  const addAfterDrawerSlug = useDrawerSlug('better-editor-add-after')
 
   const docFields = docConfig && 'fields' in docConfig ? docConfig.fields : undefined
   const docSlug = docConfig && 'slug' in docConfig ? docConfig.slug : ''
@@ -187,6 +188,20 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
     onClearSelection()
   }
 
+  // "Add Below" picker — uses the parent blocks-field's allowed `blocks[]`
+  // so nested blocks only see slugs valid in their own container.
+  const addRowAfterSelected = (index: number, blockType?: string) => {
+    if (!canMutate || !resolved) return
+    addFieldRow({
+      blockType,
+      path: parentPath,
+      rowIndex: index,
+      schemaPath: resolved.blocksFieldSchemaPath,
+    })
+    setModified(true)
+    onSelectPath(`${parentPath}.${index}`)
+  }
+
   return (
     <div className="better-editor-tab better-editor-tab--native">
       <div className="better-editor-tab__header">
@@ -239,6 +254,16 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
           </button>
           <button
             type="button"
+            className="better-editor-tab__action"
+            onClick={() => toggleModal(addAfterDrawerSlug)}
+            disabled={!resolved}
+            title="Add block below"
+            aria-label="Add block below"
+          >
+            <PlusIcon />
+          </button>
+          <button
+            type="button"
             className="better-editor-tab__action better-editor-tab__action--danger"
             onClick={remove}
             title="Delete"
@@ -246,6 +271,16 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
           >
             <TrashIcon />
           </button>
+          {resolved && resolved.blocksFieldBlocks.length > 0 ? (
+            <BlocksDrawer
+              addRow={addRowAfterSelected}
+              addRowIndex={rowIndex + 1}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              blocks={resolved.blocksFieldBlocks as any}
+              drawerSlug={addAfterDrawerSlug}
+              labels={{ singular: 'Block', plural: 'Blocks' }}
+            />
+          ) : null}
         </div>
       ) : null}
 
@@ -301,6 +336,10 @@ type Resolved = {
   parentPath: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   permissions: any
+  /** Schema path of the parent blocks-field (e.g. `pages.layout`). */
+  blocksFieldSchemaPath: string
+  /** Available block configs in the parent blocks-field. */
+  blocksFieldBlocks: AnyField[]
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -361,6 +400,8 @@ function resolveBlockSchema(
   let currentPath = ''
   let blockType: string | null = null
   let blockConfig: AnyField | null = null
+  let blocksFieldSchemaPath = ''
+  let blocksFieldBlocks: AnyField[] = []
 
   for (let i = 0; i < segments.length; i += 2) {
     const fieldName = segments[i]
@@ -382,6 +423,11 @@ function resolveBlockSchema(
       blockType = row.blockType as string
       blockConfig = (field.blocks || []).find((b: AnyField) => b.slug === blockType) || null
       if (!blockConfig) return null
+      // Capture the parent blocks-field's schema path + available blocks
+      // BEFORE we descend into the selected row so consumers can offer
+      // "Add sibling block".
+      blocksFieldSchemaPath = currentSchemaPath
+      blocksFieldBlocks = (field.blocks || []) as AnyField[]
       currentFields = blockConfig.fields || []
       currentSchemaPath = `${currentSchemaPath}.${blockType}`
       currentPath = `${currentPath}.${index}`
@@ -401,5 +447,7 @@ function resolveBlockSchema(
     schemaPath: currentSchemaPath,
     parentPath: currentPath,
     permissions: {},
+    blocksFieldSchemaPath,
+    blocksFieldBlocks,
   }
 }

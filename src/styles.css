@@ -13,8 +13,32 @@
 
 .better-editor__body {
   display: grid;
-  grid-template-columns: 1fr 380px;
+  /* grid-template-columns is set inline (preview | resize-handle | sidebar).
+     Sidebar width is local, drag-resizable state — defaults on every open. */
+  grid-template-columns: 1fr 6px 380px;
   height: 100%;
+}
+
+/* Drag handle: sits between preview + sidebar, 6px wide. Subtle until
+   hover. No transition — transitions on bg cause a perceived flicker
+   when the cursor crosses the column boundary repeatedly. */
+.better-editor__resize-handle {
+  cursor: col-resize;
+  background: transparent;
+}
+
+.better-editor__resize-handle:hover,
+.better-editor--resizing .better-editor__resize-handle {
+  background: var(--theme-elevation-200);
+}
+
+/* While resizing, the cursor inevitably crosses over the iframe (when
+   making the sidebar bigger on the right, or smaller on the left). The
+   iframe would normally swallow mousemove events and the drag would
+   stall. Disabling pointer-events on it lets the parent window keep
+   receiving the events. */
+.better-editor--resizing .better-editor-frame {
+  pointer-events: none;
 }
 
 /* Preview pane ------------------------------------------------------------- */
@@ -60,8 +84,9 @@
    width as an inline `--field-width` custom property; overriding it
    here (with !important to beat the inline style) collapses
    side-by-side fields like 4×25% selects into a vertical stack so they
-   stay readable in the narrow sidebar. */
-.better-editor-sidebar__content .field-type {
+   stay readable in the narrow sidebar.
+   Toggleable via BetterEditorSettings → Layout → forceFullWidthFields. */
+.better-editor-sidebar--force-full-width .better-editor-sidebar__content .field-type {
   --field-width: 100% !important;
 }
 

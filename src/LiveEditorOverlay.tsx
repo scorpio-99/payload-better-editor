@@ -175,7 +175,9 @@ const LiveEditorOverlayInner: React.FC<LiveEditorOverlayProps> = ({
           <Sidebar
             selectedBlockPath={selectedBlockPath}
             onClearSelection={() => setSelectedBlockPath(null)}
+            onSelectPath={setSelectedBlockPath}
             forceFullWidthFields={settings.forceFullWidthFields}
+            blocksField={blocksField}
           />
         </aside>
       </div>

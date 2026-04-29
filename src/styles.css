@@ -365,9 +365,6 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  padding-bottom: 12px;
-  margin-bottom: 4px;
-  border-bottom: 1px solid var(--theme-elevation-150);
 }
 
 .better-editor-tab__kicker {
@@ -413,6 +410,17 @@
 .better-editor-tab__block-name-input:focus {
   outline: 2px solid var(--theme-text);
   outline-offset: 1px;
+}
+
+/* Visual break between the block-tab header (kicker / heading / actions /
+   block-name) and the block's own field tabs (Content / Row Settings / …)
+   so the structural shift is obvious. Symmetric vertical margin — the
+   render-fields rule below has its own 16px margin-top, which collapses
+   into the divider's 20px so the gap looks the same above and below. */
+.better-editor-tab__divider {
+  margin: 20px 0;
+  border: 0;
+  border-top: 1px solid var(--theme-elevation-150);
 }
 
 .better-editor-tab__path {

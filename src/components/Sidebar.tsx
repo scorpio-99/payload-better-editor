@@ -11,6 +11,7 @@ export type SidebarProps = {
   onSelectPath: (path: string | null) => void
   forceFullWidthFields: boolean
   blocksField: string
+  addBelowRequestId?: number
 }
 
 type TabKey = 'page' | 'block' | 'settings'
@@ -21,6 +22,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectPath,
   forceFullWidthFields,
   blocksField,
+  addBelowRequestId = 0,
 }) => {
   const [tab, setTab] = useState<TabKey>('page')
 
@@ -59,7 +61,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           }
           onClick={() => setTab('block')}
         >
-          Block
+          Blocks
         </button>
         <button
           type="button"
@@ -83,6 +85,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onClearSelection={onClearSelection}
             onSelectPath={onSelectPath}
             blocksField={blocksField}
+            addBelowRequestId={addBelowRequestId}
           />
         )}
         {tab === 'settings' && <DocumentMetaTab />}

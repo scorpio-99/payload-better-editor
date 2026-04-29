@@ -5,18 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to [Semantic Versioning](https://semver.org).
 
-## [Unreleased]
-### Added
-- Plugin scaffold (`betterEditor` factory, `BetterEditorConfig`)
-- `collections` opt-in option — per-collection toggle injection
-- Live Editor toggle in the edit view (`LiveEditorToggle`)
-- Fullscreen Live Editor overlay (`LiveEditorOverlay`) mounted via React portal
-- Split layout: preview pane (block list) + sidebar with Page / Block tabs
-- `FieldEditor` — generic scalar field editor bound to Payload's form state via `useField`
-- Auto-tab switch when a block is selected in the preview
-- ESC key closes the overlay
+## [1.0.0]
+Initial release.
 
-### Known limitations
-- Preview is a structural block list, not yet a visual inline-editable rendering
-- Only top-level scalar fields are editable in the sidebar; nested arrays / groups must still be edited in the classic form
-- Injected toggle overwrites `admin.components.edit.Description` if set by the consumer
+### Features
+- `betterEditor()` plugin with per-collection opt-in
+- Fullscreen Live Editor overlay with live preview iframe + 3-tab sidebar (Page / Blocks / Settings, auto-split via `admin.position`)
+- Click any block in the preview to edit its fields via Payload's native `RenderFields` — supports arbitrary nesting
+- Block actions (move / duplicate / add / delete) from both the sidebar and an iframe hover toolbar
+- Viewport toggle: Desktop, Tablet, Mobile, Responsive (drag-resizable), Fullscreen
+- Undo / Redo for block actions (`Cmd/Ctrl+Z` / `Cmd/Ctrl+Shift+Z`)
+- Drag-resizable sidebar
+- `BetterEditorSettings` global for sidebar position, hover colors, breakpoint widths, hover-toolbar options

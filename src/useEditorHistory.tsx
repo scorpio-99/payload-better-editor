@@ -15,6 +15,8 @@ type Snapshot = ReturnType<typeof useAllFormFields>[0]
 
 type HistoryContextValue = {
   pushSnapshot: () => void
+  /** Push a snapshot, run the mutation, mark the form modified. */
+  commit: (mutation: () => void) => void
   undo: () => void
   redo: () => void
   canUndo: boolean
@@ -23,6 +25,7 @@ type HistoryContextValue = {
 
 const DEFAULT_VALUE: HistoryContextValue = {
   pushSnapshot: () => {},
+  commit: (mutation) => mutation(),
   undo: () => {},
   redo: () => {},
   canUndo: false,
@@ -36,13 +39,9 @@ export const useEditorHistory = () => useContext(Ctx)
 const MAX_HISTORY = 50
 
 /**
- * Snapshot-based undo/redo for block actions inside the overlay. Callers
- * invoke `pushSnapshot()` BEFORE a `dispatchFields` mutation; undo/redo
- * restore the entire form state via REPLACE_STATE. New edits after an
- * undo clear the redo stack (standard linear history).
- *
- * History is in-memory and resets when the overlay unmounts. Capped at
- * MAX_HISTORY entries; oldest are dropped.
+ * Snapshot-based undo/redo. In-memory, capped at MAX_HISTORY entries,
+ * resets on overlay unmount. Linear history — new edits after an undo
+ * clear the redo stack.
  */
 export const EditorHistoryProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -56,10 +55,9 @@ export const EditorHistoryProvider: React.FC<{ children: React.ReactNode }> = ({
   const { dispatchFields, setModified } = useForm()
   const [undoStack, setUndoStack] = useState<Snapshot[]>([])
   const [redoStack, setRedoStack] = useState<Snapshot[]>([])
-  // Refs mirror the stacks so undo/redo can read the latest values without
-  // running side effects inside a setState updater (React 18+ may invoke
-  // updaters speculatively during another component's render — calling
-  // `dispatchFields` from there throws the "set state during render" warning).
+  // Refs mirror the stacks so undo/redo can read latest values without
+  // calling setState inside another setState updater (React 18+ flags
+  // that as "set state during render").
   const undoStackRef = useRef(undoStack)
   const redoStackRef = useRef(redoStack)
   useEffect(() => {
@@ -76,6 +74,15 @@ export const EditorHistoryProvider: React.FC<{ children: React.ReactNode }> = ({
     setUndoStack(next.length > MAX_HISTORY ? next.slice(-MAX_HISTORY) : next)
     setRedoStack([])
   }, [])
+
+  const commit = useCallback(
+    (mutation: () => void) => {
+      pushSnapshot()
+      mutation()
+      setModified(true)
+    },
+    [pushSnapshot, setModified],
+  )
 
   const undo = useCallback(() => {
     const stack = undoStackRef.current
@@ -110,12 +117,13 @@ export const EditorHistoryProvider: React.FC<{ children: React.ReactNode }> = ({
   const value = useMemo<HistoryContextValue>(
     () => ({
       pushSnapshot,
+      commit,
       undo,
       redo,
       canUndo: undoStack.length > 0,
       canRedo: redoStack.length > 0,
     }),
-    [pushSnapshot, undo, redo, undoStack.length, redoStack.length],
+    [pushSnapshot, commit, undo, redo, undoStack.length, redoStack.length],
   )
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>

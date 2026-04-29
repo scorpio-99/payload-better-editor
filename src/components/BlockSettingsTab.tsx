@@ -1,20 +1,22 @@
 'use client'
 
-import React, { useCallback, useEffect, useMemo, useRef } from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
 import {
-  BlocksDrawer,
   RenderFields,
   useAllFormFields,
-  useDocumentInfo,
   useDrawerSlug,
   useField,
-  useForm,
   useModal,
 } from '@payloadcms/ui'
-import { useEditorHistory } from '../useEditorHistory'
-import { ChevronDown, ChevronUp, CopyIcon, PlusIcon, TrashIcon } from '../icons'
+import { useDocConfig } from '../hooks/useDocConfig'
+import { AddBlockDrawer } from './blocks/AddBlockDrawer'
+import { BlockActionsToolbar } from './blocks/BlockActionsToolbar'
+import { useBlockActions } from './blocks/useBlockActions'
+import { findNamedField, resolveBlockSchema, type AnyField } from './blocks/schema'
+import { PlusIcon } from '../icons'
 
-// See DocumentSettingsTab for rationale.
+// `permissions={true}` skips RenderFields' client-side read gate; the
+// server-side write check still runs on save.
 const FULL_ACCESS = true as const
 
 export type BlockSettingsTabProps = {
@@ -23,20 +25,16 @@ export type BlockSettingsTabProps = {
   onSelectPath: (path: string | null) => void
   blocksField: string
   /**
-   * When this id changes (and is non-zero), open the BlocksDrawer to
-   * insert a block right after the currently-selected one. Used by the
-   * iframe hover toolbar's `+` button — it sets selectedBlockPath +
-   * bumps this id, BlockSettingsTab observes the change and toggles
-   * the drawer.
+   * Bump this id to open the add-below drawer externally — used by the
+   * iframe hover toolbar's `+` button.
    */
   addBelowRequestId?: number
 }
 
 /**
- * Resolves the ClientField schema for a block row at `path` and renders its
- * fields with Payload's native RenderFields. Supports top-level blocks and
- * nested blocks, including blocks living inside `tabs` / `collapsible` /
- * `row` / `group` field containers.
+ * Renders the selected block's fields via Payload's native RenderFields,
+ * plus an action toolbar and a Block Name input. Works at any nesting
+ * depth (blocks inside tabs / collapsible / row / group / array).
  */
 export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
   selectedBlockPath,
@@ -45,37 +43,31 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
   blocksField,
   addBelowRequestId = 0,
 }) => {
-  const { docConfig } = useDocumentInfo()
+  const { fields: docFields, slug: docSlug } = useDocConfig()
   const [fields] = useAllFormFields()
-  const { addFieldRow, dispatchFields, setModified } = useForm()
   const { toggleModal } = useModal()
-  const { pushSnapshot } = useEditorHistory()
   const addBlockDrawerSlug = useDrawerSlug('better-editor-add-block')
   const addAfterDrawerSlug = useDrawerSlug('better-editor-add-after')
 
-  // External trigger from the iframe hover toolbar: when the request id
-  // bumps, open the add-after drawer. We compare to a previous value so
-  // we don't fire on the initial mount (id starts at 0; meaningful
-  // requests use Date.now() and are always > 0).
+  const actions = useBlockActions({
+    selectedBlockPath,
+    onSelectPath,
+    onClearSelection,
+  })
+
+  // Open the add-after drawer when the external request id bumps.
+  // RAF defers to the next paint so the drawer is mounted (the sidebar
+  // tab may have just auto-switched to "Blocks").
   const lastHandledRequestRef = useRef(0)
   useEffect(() => {
     if (!addBelowRequestId || addBelowRequestId === lastHandledRequestRef.current) return
     if (!selectedBlockPath) return
     lastHandledRequestRef.current = addBelowRequestId
-    // Defer to the next paint so the BlocksDrawer is mounted before we
-    // toggle it (BlockSettingsTab may have just mounted because the
-    // sidebar tab auto-switched to "Blocks").
     requestAnimationFrame(() => {
       toggleModal(addAfterDrawerSlug)
     })
   }, [addBelowRequestId, selectedBlockPath, toggleModal, addAfterDrawerSlug])
 
-  const docFields = docConfig && 'fields' in docConfig ? docConfig.fields : undefined
-  const docSlug = docConfig && 'slug' in docConfig ? docConfig.slug : ''
-
-  // Resolve the top-level blocks field config so we can hand its
-  // `blocks[]` to BlocksDrawer (the same picker used by Payload's native
-  // Blocks field) and know the schemaPath for addFieldRow.
   const blocksFieldInfo = useMemo(() => {
     if (!docFields) return null
     return findNamedField(docFields, blocksField, docSlug || '')
@@ -85,20 +77,6 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
   const blocksSchemaPath = blocksFieldInfo?.schemaPath || ''
   const topLevelRows = fields[blocksField]?.rows
   const addRowIndex = Array.isArray(topLevelRows) ? topLevelRows.length : 0
-
-  const addTopLevelRow = useCallback(
-    (index: number, blockType?: string) => {
-      pushSnapshot()
-      addFieldRow({
-        blockType,
-        path: blocksField,
-        rowIndex: index,
-        schemaPath: blocksSchemaPath,
-      })
-      setModified(true)
-    },
-    [addFieldRow, blocksField, blocksSchemaPath, setModified, pushSnapshot],
-  )
 
   if (!selectedBlockPath) {
     return (
@@ -116,13 +94,13 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
               <PlusIcon />
               <span>Add Block</span>
             </button>
-            <BlocksDrawer
-              addRow={addTopLevelRow}
+            <AddBlockDrawer
+              slug={addBlockDrawerSlug}
+              blocks={availableBlocks}
+              addRow={(index, blockType) =>
+                actions.addAfter(blockType, blocksSchemaPath, blocksField, index)
+              }
               addRowIndex={addRowIndex}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              blocks={availableBlocks as any}
-              drawerSlug={addBlockDrawerSlug}
-              labels={{ singular: 'Block', plural: 'Blocks' }}
             />
           </>
         ) : null}
@@ -133,79 +111,6 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
   const resolved = docFields
     ? resolveBlockSchema(docFields, docSlug || '', selectedBlockPath, fields)
     : null
-
-  // Split `selectedBlockPath` into the parent blocks-field path + index so we
-  // can dispatch row mutations against the parent. Works for top-level
-  // (`layout.2`) and nested (`layout.2.columns.0.blocks.1`) alike.
-  const lastDot = selectedBlockPath.lastIndexOf('.')
-  const parentPath = lastDot >= 0 ? selectedBlockPath.slice(0, lastDot) : ''
-  const rowIndex = lastDot >= 0 ? Number(selectedBlockPath.slice(lastDot + 1)) : NaN
-  const parentRows = parentPath ? fields[parentPath]?.rows : undefined
-  const rowCount = Array.isArray(parentRows) ? parentRows.length : 0
-  const canMoveUp = !Number.isNaN(rowIndex) && rowIndex > 0
-  const canMoveDown = !Number.isNaN(rowIndex) && rowIndex < rowCount - 1
-  const canMutate = !Number.isNaN(rowIndex) && parentPath !== ''
-
-  // dispatchFields mutates the field map but doesn't flip the form's
-  // `modified` flag — autosave + live-preview-refresh hang off that, so
-  // they wouldn't fire after a row mutation. setModified(true) restores
-  // the same behavior typing into an input gives us.
-  const markModified = () => setModified(true)
-
-  const moveUp = () => {
-    if (!canMoveUp) return
-    pushSnapshot()
-    dispatchFields({
-      type: 'MOVE_ROW',
-      path: parentPath,
-      moveFromIndex: rowIndex,
-      moveToIndex: rowIndex - 1,
-    })
-    markModified()
-    onSelectPath(`${parentPath}.${rowIndex - 1}`)
-  }
-  const moveDown = () => {
-    if (!canMoveDown) return
-    pushSnapshot()
-    dispatchFields({
-      type: 'MOVE_ROW',
-      path: parentPath,
-      moveFromIndex: rowIndex,
-      moveToIndex: rowIndex + 1,
-    })
-    markModified()
-    onSelectPath(`${parentPath}.${rowIndex + 1}`)
-  }
-  const duplicate = () => {
-    if (!canMutate) return
-    pushSnapshot()
-    dispatchFields({ type: 'DUPLICATE_ROW', path: parentPath, rowIndex })
-    markModified()
-    // Payload inserts the duplicate immediately after the source row.
-    onSelectPath(`${parentPath}.${rowIndex + 1}`)
-  }
-  const remove = () => {
-    if (!canMutate) return
-    pushSnapshot()
-    dispatchFields({ type: 'REMOVE_ROW', path: parentPath, rowIndex })
-    markModified()
-    onClearSelection()
-  }
-
-  // "Add Below" picker — uses the parent blocks-field's allowed `blocks[]`
-  // so nested blocks only see slugs valid in their own container.
-  const addRowAfterSelected = (index: number, blockType?: string) => {
-    if (!canMutate || !resolved) return
-    pushSnapshot()
-    addFieldRow({
-      blockType,
-      path: parentPath,
-      rowIndex: index,
-      schemaPath: resolved.blocksFieldSchemaPath,
-    })
-    setModified(true)
-    onSelectPath(`${parentPath}.${index}`)
-  }
 
   return (
     <div className="better-editor-tab better-editor-tab--native">
@@ -228,67 +133,32 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
 
       <hr className="better-editor-tab__divider" aria-hidden="true" />
 
-      {canMutate ? (
-        <div className="better-editor-tab__actions" role="toolbar" aria-label="Block actions">
-          <button
-            type="button"
-            className="better-editor-tab__action"
-            onClick={moveUp}
-            disabled={!canMoveUp}
-            title="Move up"
-            aria-label="Move block up"
-          >
-            <ChevronUp />
-          </button>
-          <button
-            type="button"
-            className="better-editor-tab__action"
-            onClick={moveDown}
-            disabled={!canMoveDown}
-            title="Move down"
-            aria-label="Move block down"
-          >
-            <ChevronDown />
-          </button>
-          <button
-            type="button"
-            className="better-editor-tab__action"
-            onClick={duplicate}
-            title="Duplicate"
-            aria-label="Duplicate block"
-          >
-            <CopyIcon />
-          </button>
-          <button
-            type="button"
-            className="better-editor-tab__action"
-            onClick={() => toggleModal(addAfterDrawerSlug)}
-            disabled={!resolved}
-            title="Add block below"
-            aria-label="Add block below"
-          >
-            <PlusIcon />
-          </button>
-          <button
-            type="button"
-            className="better-editor-tab__action better-editor-tab__action--danger"
-            onClick={remove}
-            title="Delete"
-            aria-label="Delete block"
-          >
-            <TrashIcon />
-          </button>
-          {resolved && resolved.blocksFieldBlocks.length > 0 ? (
-            <BlocksDrawer
-              addRow={addRowAfterSelected}
-              addRowIndex={rowIndex + 1}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              blocks={resolved.blocksFieldBlocks as any}
-              drawerSlug={addAfterDrawerSlug}
-              labels={{ singular: 'Block', plural: 'Blocks' }}
-            />
-          ) : null}
-        </div>
+      <BlockActionsToolbar
+        canMoveUp={actions.canMoveUp}
+        canMoveDown={actions.canMoveDown}
+        canMutate={actions.canMutate}
+        canAddBelow={!!resolved}
+        onMoveUp={actions.moveUp}
+        onMoveDown={actions.moveDown}
+        onDuplicate={actions.duplicate}
+        onAddBelow={() => toggleModal(addAfterDrawerSlug)}
+        onDelete={actions.remove}
+      />
+
+      {actions.canMutate && resolved && resolved.blocksFieldBlocks.length > 0 ? (
+        <AddBlockDrawer
+          slug={addAfterDrawerSlug}
+          blocks={resolved.blocksFieldBlocks}
+          addRow={(index, blockType) =>
+            actions.addAfter(
+              blockType,
+              resolved.blocksFieldSchemaPath,
+              actions.parentPath,
+              index,
+            )
+          }
+          addRowIndex={actions.rowIndex + 1}
+        />
       ) : null}
 
       {!resolved ? (
@@ -312,11 +182,7 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
   )
 }
 
-/**
- * Tiny isolated component so `useField` is only mounted while we have a
- * resolved block path — `useField` requires a stable path for the
- * lifetime of the component.
- */
+/** Isolated so `useField` only mounts when `path` is stable. */
 const BlockNameInput: React.FC<{ path: string }> = ({ path }) => {
   const { value, setValue } = useField<string>({ path })
   return (
@@ -334,128 +200,4 @@ const BlockNameInput: React.FC<{ path: string }> = ({ path }) => {
       />
     </div>
   )
-}
-
-type Resolved = {
-  blockType: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  blockFields: any[]
-  schemaPath: string
-  parentPath: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  permissions: any
-  /** Schema path of the parent blocks-field (e.g. `pages.layout`). */
-  blocksFieldSchemaPath: string
-  /** Available block configs in the parent blocks-field. */
-  blocksFieldBlocks: AnyField[]
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyField = Record<string, any>
-
-/**
- * Walk through layout containers (tabs / collapsible / row / group) and named
- * fields to find a field by name. Returns the field along with the schema
- * path it's reachable at.
- */
-function findNamedField(
-  fields: AnyField[],
-  name: string,
-  schemaPath: string,
-): { field: AnyField; schemaPath: string } | null {
-  for (const field of fields) {
-    if (!field || typeof field !== 'object') continue
-
-    if (typeof field.name === 'string' && field.name === name) {
-      return { field, schemaPath: `${schemaPath}.${name}` }
-    }
-
-    const type = field.type
-
-    if (type === 'tabs' && Array.isArray(field.tabs)) {
-      for (const tab of field.tabs) {
-        const tabSchemaPath =
-          typeof tab?.name === 'string' ? `${schemaPath}.${tab.name}` : schemaPath
-        const found = findNamedField(tab?.fields || [], name, tabSchemaPath)
-        if (found) return found
-      }
-    } else if (type === 'collapsible' || type === 'row') {
-      const found = findNamedField(field.fields || [], name, schemaPath)
-      if (found) return found
-    } else if (type === 'group' && typeof field.name === 'string') {
-      // Group paths include the group name but we only descend if still
-      // searching inside it — groups at this level weren't the target name,
-      // so only useful if the caller is navigating INTO a group by name.
-      // Skip here to avoid false matches.
-    }
-  }
-  return null
-}
-
-/**
- * Given a form-state path like `layout.6` or `layout.6.columns.0.blocks.1`,
- * walk the schema and locate the block's field config + matching schema path.
- */
-function resolveBlockSchema(
-  docFields: AnyField[],
-  docSlug: string,
-  path: string,
-  formFields: Record<string, AnyField>,
-): Resolved | null {
-  const segments = path.split('.')
-  let currentFields: AnyField[] = docFields
-  let currentSchemaPath = docSlug
-  let currentPath = ''
-  let blockType: string | null = null
-  let blockConfig: AnyField | null = null
-  let blocksFieldSchemaPath = ''
-  let blocksFieldBlocks: AnyField[] = []
-
-  for (let i = 0; i < segments.length; i += 2) {
-    const fieldName = segments[i]
-    const indexStr = segments[i + 1]
-    if (indexStr === undefined) break
-    const index = Number(indexStr)
-    if (Number.isNaN(index)) return null
-
-    const found = findNamedField(currentFields, fieldName, currentSchemaPath)
-    if (!found) return null
-    const field = found.field
-    currentSchemaPath = found.schemaPath
-    currentPath = currentPath ? `${currentPath}.${fieldName}` : fieldName
-
-    if (field.type === 'blocks') {
-      const rows = formFields[currentPath]?.rows
-      const row = Array.isArray(rows) ? rows[index] : undefined
-      if (!row?.blockType) return null
-      blockType = row.blockType as string
-      blockConfig = (field.blocks || []).find((b: AnyField) => b.slug === blockType) || null
-      if (!blockConfig) return null
-      // Capture the parent blocks-field's schema path + available blocks
-      // BEFORE we descend into the selected row so consumers can offer
-      // "Add sibling block".
-      blocksFieldSchemaPath = currentSchemaPath
-      blocksFieldBlocks = (field.blocks || []) as AnyField[]
-      currentFields = blockConfig.fields || []
-      currentSchemaPath = `${currentSchemaPath}.${blockType}`
-      currentPath = `${currentPath}.${index}`
-    } else if (field.type === 'array') {
-      currentFields = field.fields || []
-      currentPath = `${currentPath}.${index}`
-    } else {
-      return null
-    }
-  }
-
-  if (!blockType || !blockConfig) return null
-
-  return {
-    blockType,
-    blockFields: currentFields,
-    schemaPath: currentSchemaPath,
-    parentPath: currentPath,
-    permissions: {},
-    blocksFieldSchemaPath,
-    blocksFieldBlocks,
-  }
 }

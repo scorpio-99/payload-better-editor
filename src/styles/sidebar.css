@@ -1,0 +1,74 @@
+/* Sidebar shell — column wrapper, scrolling content area, tab nav,
+   force-full-width-fields override. */
+
+.better-editor__sidebar {
+  overflow: hidden;
+}
+
+.better-editor-sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.better-editor-sidebar__content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+.better-editor-tab {
+  margin: 20px;
+}
+
+/* Force every field inside the sidebar to span the full row, regardless
+   of the `admin.width` set on the field config. Payload exposes that
+   width as an inline `--field-width` custom property; overriding it
+   here (with !important to beat the inline style) collapses
+   side-by-side fields like 4×25% selects into a vertical stack so they
+   stay readable in the narrow sidebar.
+   Toggleable via BetterEditorSettings → Layout → forceFullWidthFields.
+   NOTE: the `--field-width` variable is a Payload-internal CSS var; if
+   Payload renames it the sidebar silently reverts to honoring admin.width. */
+.better-editor-sidebar--force-full-width .better-editor-sidebar__content .field-type {
+  --field-width: 100% !important;
+}
+
+.better-editor-sidebar__content .render-fields {
+  margin-top: 16px;
+}
+
+/* Page / Blocks / Settings tab switcher */
+
+.better-editor-sidebar__tabs {
+  display: flex;
+  border-bottom: 1px solid var(--theme-elevation-150);
+}
+
+.better-editor-sidebar__tab {
+  flex: 1;
+  padding: 12px 16px;
+  border: 0;
+  background: transparent;
+  color: var(--theme-elevation-500);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.better-editor-sidebar__tab:hover:not(:disabled) {
+  color: var(--theme-text);
+}
+
+.better-editor-sidebar__tab:disabled {
+  color: var(--theme-elevation-300);
+  cursor: not-allowed;
+}
+
+.better-editor-sidebar__tab--active {
+  color: var(--theme-text);
+  border-bottom-color: var(--theme-text);
+}

@@ -1,63 +1,22 @@
 'use client'
 
-import React, { useMemo } from 'react'
-import { RenderFields, useDocumentInfo } from '@payloadcms/ui'
-
-// Passing `permissions={true}` tells RenderFields to render every field
-// without applying its client-side read-permission gate. The real
-// write-permission check still happens server-side on save, so an author
-// who can't edit a field will get a validation error back as normal.
-// For our use case (users who already opened the classic edit view have
-// the required read access), this avoids having to walk nested block
-// permission trees ourselves.
-const FULL_ACCESS = true as const
+import React from 'react'
+import { DocumentFieldsTab } from './DocumentFieldsTab'
 
 /**
- * Page tab — content-area fields. Mirrors what Payload's classic editor
- * shows in the main column (Hero / Content / SEO tabs, the title field).
- *
- * Filters out:
- *  - top-level fields with `admin.position: 'sidebar'` (slug, publishedAt,
- *    pageInfo group, pageSettings group, updatedBy, etc.) — those live in
- *    the Settings tab now
- *  - any `type: 'blocks'` field, recursively — blocks are edited via the
- *    Block tab after being selected in the preview
+ * Page tab — main-column content fields (Hero / Content / SEO / title).
+ * Excludes sidebar-positioned fields (those go to the Settings tab) and
+ * any `type: 'blocks'` field recursively (those are edited via the
+ * Blocks tab after being selected in the preview).
  */
-export const DocumentSettingsTab: React.FC = () => {
-  const { docConfig } = useDocumentInfo()
-
-  const allFields = docConfig && 'fields' in docConfig ? docConfig.fields : undefined
-  const slug = docConfig && 'slug' in docConfig ? docConfig.slug : ''
-
-  const filteredFields = useMemo(() => {
-    if (!allFields) return []
-    const contentOnly = allFields.filter(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (f: any) => f?.admin?.position !== 'sidebar',
-    )
-    return stripBlocks(contentOnly)
-  }, [allFields])
-
-  if (filteredFields.length === 0) {
-    return (
-      <div className="better-editor-tab__empty">
-        No document-level fields found.
-      </div>
-    )
-  }
-
-  return (
-    <div className="better-editor-tab better-editor-tab--native">
-      <RenderFields
-        fields={filteredFields}
-        parentPath=""
-        parentIndexPath=""
-        parentSchemaPath={slug || ''}
-        permissions={FULL_ACCESS}
-      />
-    </div>
-  )
-}
+export const DocumentSettingsTab: React.FC = () => (
+  <DocumentFieldsTab
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    filter={(f: any) => f?.admin?.position !== 'sidebar'}
+    transform={stripBlocks}
+    emptyText="No document-level fields found."
+  />
+)
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function stripBlocks(fields: any[]): any[] {

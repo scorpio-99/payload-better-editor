@@ -56,47 +56,55 @@ export const EditorHistoryProvider: React.FC<{ children: React.ReactNode }> = ({
   const { dispatchFields, setModified } = useForm()
   const [undoStack, setUndoStack] = useState<Snapshot[]>([])
   const [redoStack, setRedoStack] = useState<Snapshot[]>([])
+  // Refs mirror the stacks so undo/redo can read the latest values without
+  // running side effects inside a setState updater (React 18+ may invoke
+  // updaters speculatively during another component's render — calling
+  // `dispatchFields` from there throws the "set state during render" warning).
+  const undoStackRef = useRef(undoStack)
+  const redoStackRef = useRef(redoStack)
+  useEffect(() => {
+    undoStackRef.current = undoStack
+  }, [undoStack])
+  useEffect(() => {
+    redoStackRef.current = redoStack
+  }, [redoStack])
   const restoringRef = useRef(false)
 
   const pushSnapshot = useCallback(() => {
     if (restoringRef.current) return
-    setUndoStack((prev) => {
-      const next = [...prev, fieldsRef.current]
-      return next.length > MAX_HISTORY ? next.slice(-MAX_HISTORY) : next
-    })
+    const next = [...undoStackRef.current, fieldsRef.current]
+    setUndoStack(next.length > MAX_HISTORY ? next.slice(-MAX_HISTORY) : next)
     setRedoStack([])
   }, [])
 
   const undo = useCallback(() => {
-    setUndoStack((prev) => {
-      if (prev.length === 0) return prev
-      const target = prev[prev.length - 1]
-      setRedoStack((r) => [...r, fieldsRef.current])
-      restoringRef.current = true
-      dispatchFields({ type: 'REPLACE_STATE', state: target })
-      setModified(true)
-      // Release on the next tick so the resulting form re-render doesn't
-      // re-enter pushSnapshot via any side effects.
-      setTimeout(() => {
-        restoringRef.current = false
-      }, 0)
-      return prev.slice(0, -1)
-    })
+    const stack = undoStackRef.current
+    if (stack.length === 0) return
+    const target = stack[stack.length - 1]
+    setUndoStack(stack.slice(0, -1))
+    setRedoStack([...redoStackRef.current, fieldsRef.current])
+    restoringRef.current = true
+    dispatchFields({ type: 'REPLACE_STATE', state: target })
+    setModified(true)
+    // Release on the next tick so the resulting form re-render doesn't
+    // re-enter pushSnapshot via any side effects.
+    setTimeout(() => {
+      restoringRef.current = false
+    }, 0)
   }, [dispatchFields, setModified])
 
   const redo = useCallback(() => {
-    setRedoStack((prev) => {
-      if (prev.length === 0) return prev
-      const target = prev[prev.length - 1]
-      setUndoStack((u) => [...u, fieldsRef.current])
-      restoringRef.current = true
-      dispatchFields({ type: 'REPLACE_STATE', state: target })
-      setModified(true)
-      setTimeout(() => {
-        restoringRef.current = false
-      }, 0)
-      return prev.slice(0, -1)
-    })
+    const stack = redoStackRef.current
+    if (stack.length === 0) return
+    const target = stack[stack.length - 1]
+    setRedoStack(stack.slice(0, -1))
+    setUndoStack([...undoStackRef.current, fieldsRef.current])
+    restoringRef.current = true
+    dispatchFields({ type: 'REPLACE_STATE', state: target })
+    setModified(true)
+    setTimeout(() => {
+      restoringRef.current = false
+    }, 0)
   }, [dispatchFields, setModified])
 
   const value = useMemo<HistoryContextValue>(

@@ -6,7 +6,6 @@ export type { BetterEditorConfig }
 export { BETTER_EDITOR_SETTINGS_SLUG } from './global'
 
 const DEFAULT_BLOCKS_FIELD = 'layout'
-const DEFAULT_SELECTOR = '[data-better-editor-blocks] > *'
 
 export const betterEditor =
   (pluginOptions?: BetterEditorConfig) =>
@@ -17,21 +16,11 @@ export const betterEditor =
 
     const enabledSlugs = new Set(pluginOptions?.collections || [])
     const blocksField = pluginOptions?.blocksField || DEFAULT_BLOCKS_FIELD
-    const topLevelBlocksSelector =
-      pluginOptions?.topLevelBlocksSelector || DEFAULT_SELECTOR
 
     config.globals = config.globals || []
     if (!config.globals.some((g) => g.slug === betterEditorSettingsGlobal.slug)) {
       config.globals.push(betterEditorSettingsGlobal)
     }
-
-    config.admin = config.admin || {}
-    config.admin.components = config.admin.components || {}
-    config.admin.components.providers = config.admin.components.providers || []
-    config.admin.components.providers.push({
-      path: 'payload-better-editor/client#BetterEditorProvider',
-      clientProps: {},
-    })
 
     if (enabledSlugs.size > 0 && config.collections) {
       config.collections = config.collections.map((collection) => {
@@ -49,7 +38,6 @@ export const betterEditor =
             path: 'payload-better-editor/client#LiveEditorToggle',
             clientProps: {
               blocksField,
-              topLevelBlocksSelector,
             },
           },
         ]

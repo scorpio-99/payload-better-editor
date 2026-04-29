@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useMemo } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   BlocksDrawer,
   RenderFields,
@@ -12,6 +12,7 @@ import {
   useModal,
 } from '@payloadcms/ui'
 import { useEditorHistory } from '../useEditorHistory'
+import { ChevronDown, ChevronUp, CopyIcon, PlusIcon, TrashIcon } from '../icons'
 
 // See DocumentSettingsTab for rationale.
 const FULL_ACCESS = true as const
@@ -21,37 +22,15 @@ export type BlockSettingsTabProps = {
   onClearSelection: () => void
   onSelectPath: (path: string | null) => void
   blocksField: string
+  /**
+   * When this id changes (and is non-zero), open the BlocksDrawer to
+   * insert a block right after the currently-selected one. Used by the
+   * iframe hover toolbar's `+` button — it sets selectedBlockPath +
+   * bumps this id, BlockSettingsTab observes the change and toggles
+   * the drawer.
+   */
+  addBelowRequestId?: number
 }
-
-const PlusIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <line x1="12" y1="5" x2="12" y2="19" />
-    <line x1="5" y1="12" x2="19" y2="12" />
-  </svg>
-)
-
-const ChevronUp = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <polyline points="18 15 12 9 6 15" />
-  </svg>
-)
-const ChevronDown = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <polyline points="6 9 12 15 18 9" />
-  </svg>
-)
-const CopyIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <rect x="9" y="9" width="13" height="13" rx="2" />
-    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-  </svg>
-)
-const TrashIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <polyline points="3 6 5 6 21 6" />
-    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-  </svg>
-)
 
 /**
  * Resolves the ClientField schema for a block row at `path` and renders its
@@ -64,6 +43,7 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
   onClearSelection,
   onSelectPath,
   blocksField,
+  addBelowRequestId = 0,
 }) => {
   const { docConfig } = useDocumentInfo()
   const [fields] = useAllFormFields()
@@ -72,6 +52,23 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
   const { pushSnapshot } = useEditorHistory()
   const addBlockDrawerSlug = useDrawerSlug('better-editor-add-block')
   const addAfterDrawerSlug = useDrawerSlug('better-editor-add-after')
+
+  // External trigger from the iframe hover toolbar: when the request id
+  // bumps, open the add-after drawer. We compare to a previous value so
+  // we don't fire on the initial mount (id starts at 0; meaningful
+  // requests use Date.now() and are always > 0).
+  const lastHandledRequestRef = useRef(0)
+  useEffect(() => {
+    if (!addBelowRequestId || addBelowRequestId === lastHandledRequestRef.current) return
+    if (!selectedBlockPath) return
+    lastHandledRequestRef.current = addBelowRequestId
+    // Defer to the next paint so the BlocksDrawer is mounted before we
+    // toggle it (BlockSettingsTab may have just mounted because the
+    // sidebar tab auto-switched to "Blocks").
+    requestAnimationFrame(() => {
+      toggleModal(addAfterDrawerSlug)
+    })
+  }, [addBelowRequestId, selectedBlockPath, toggleModal, addAfterDrawerSlug])
 
   const docFields = docConfig && 'fields' in docConfig ? docConfig.fields : undefined
   const docSlug = docConfig && 'slug' in docConfig ? docConfig.slug : ''
@@ -229,6 +226,8 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
         </button>
       </div>
 
+      <hr className="better-editor-tab__divider" aria-hidden="true" />
+
       {canMutate ? (
         <div className="better-editor-tab__actions" role="toolbar" aria-label="Block actions">
           <button
@@ -299,6 +298,7 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
       ) : (
         <>
           <BlockNameInput path={`${selectedBlockPath}.blockName`} />
+          <hr className="better-editor-tab__divider" aria-hidden="true" />
           <RenderFields
             fields={resolved.blockFields}
             parentPath={resolved.parentPath}

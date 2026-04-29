@@ -4,28 +4,12 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Button, useDocumentInfo, usePreferences } from '@payloadcms/ui'
 import { LiveEditorOverlay } from './LiveEditorOverlay'
+import { LayoutIcon } from './icons'
 
 type Pref = { open?: boolean }
 
 const prefKey = (collectionSlug?: string, globalSlug?: string) =>
   `better-editor:${collectionSlug ? `collection-${collectionSlug}` : `global-${globalSlug ?? 'unknown'}`}`
-
-const LayoutIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <rect x="3" y="4" width="18" height="16" rx="2" />
-    <line x1="14" y1="4" x2="14" y2="20" />
-  </svg>
-)
 
 export type LiveEditorToggleProps = {
   blocksField: string

@@ -14,6 +14,7 @@ import {
   useBetterEditorSettings,
 } from './useBetterEditorSettings'
 import { EditorHistoryProvider, useEditorHistory } from './useEditorHistory'
+import { RedoIcon, UndoIcon } from './icons'
 import './styles.css'
 
 export type LiveEditorOverlayProps = {
@@ -95,6 +96,11 @@ const LiveEditorOverlayInner: React.FC<LiveEditorOverlayProps> = ({
   const [viewport, setViewport] = useState<Viewport>('desktop')
   const [responsiveWidth, setResponsiveWidth] = useState<number>(() => readPersistedResponsiveWidth())
   const [iframeWidth, setIframeWidth] = useState<number | null>(null)
+  // Bumped when the iframe hover toolbar fires "add". BlockSettingsTab
+  // observes this and opens the BlocksDrawer scoped to the parent's
+  // allowed blocks. Using a request-id (timestamp) lets repeated clicks
+  // reopen the drawer even if the selected block didn't change.
+  const [addBelowRequestId, setAddBelowRequestId] = useState<number>(0)
 
   // Persist the responsive-mode width across opens (separate from sidebar).
   useEffect(() => {
@@ -260,6 +266,16 @@ const LiveEditorOverlayInner: React.FC<LiveEditorOverlayProps> = ({
         const rows = allFieldsRef.current[parentPath]?.rows
         const rowCount = Array.isArray(rows) ? rows.length : 0
 
+        // "add" is handled separately — no mutation here. We just select
+        // the clicked block and ping BlockSettingsTab to open its
+        // BlocksDrawer; the actual ADD_ROW dispatch (and snapshot) lives
+        // in addRowAfterSelected when the drawer's user picks a block.
+        if (data.action === 'add') {
+          setSelectedBlockPath(path)
+          setAddBelowRequestId(Date.now())
+          return
+        }
+
         history.pushSnapshot()
         switch (data.action) {
           case 'move-up':
@@ -337,10 +353,7 @@ const LiveEditorOverlayInner: React.FC<LiveEditorOverlayProps> = ({
                 title="Undo (Cmd/Ctrl+Z)"
                 aria-label="Undo"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M3 7v6h6" />
-                  <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6.7 3L3 13" />
-                </svg>
+                <UndoIcon />
               </button>
               <button
                 type="button"
@@ -350,10 +363,7 @@ const LiveEditorOverlayInner: React.FC<LiveEditorOverlayProps> = ({
                 title="Redo (Cmd/Ctrl+Shift+Z)"
                 aria-label="Redo"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M21 7v6h-6" />
-                  <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6.7 3L21 13" />
-                </svg>
+                <RedoIcon />
               </button>
             </div>
             <div className="better-editor__preview-toolbar-right">
@@ -401,6 +411,7 @@ const LiveEditorOverlayInner: React.FC<LiveEditorOverlayProps> = ({
                 onSelectPath={setSelectedBlockPath}
                 forceFullWidthFields={settings.forceFullWidthFields}
                 blocksField={blocksField}
+                addBelowRequestId={addBelowRequestId}
               />
             </aside>
           </>

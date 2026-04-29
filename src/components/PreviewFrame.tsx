@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useDocumentEvents, useDocumentInfo } from '@payloadcms/ui'
 
 import type { HoverToolbarPosition } from '../useBetterEditorSettings'
+import { ICON_SVG } from '../icons'
 
 export type PreviewFrameProps = {
   previewURL: string | undefined
@@ -32,10 +33,11 @@ const HOVER_STYLE_ID = 'better-editor-hover-style'
 const TOOLBAR_ID = 'better-editor-block-toolbar'
 
 const TOOLBAR_HTML = `
-  <button data-action="move-up" title="Move up" aria-label="Move block up"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg></button>
-  <button data-action="move-down" title="Move down" aria-label="Move block down"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
-  <button data-action="duplicate" title="Duplicate" aria-label="Duplicate block"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
-  <button data-action="delete" title="Delete" aria-label="Delete block"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+  <button data-action="move-up" title="Move up" aria-label="Move block up">${ICON_SVG.chevronUp}</button>
+  <button data-action="move-down" title="Move down" aria-label="Move block down">${ICON_SVG.chevronDown}</button>
+  <button data-action="duplicate" title="Duplicate" aria-label="Duplicate block">${ICON_SVG.copy}</button>
+  <button data-action="add" title="Add block below" aria-label="Add block below">${ICON_SVG.plus}</button>
+  <button data-action="delete" title="Delete" aria-label="Delete block">${ICON_SVG.trash}</button>
 `
 
 const TOOLBAR_CSS = `
@@ -76,10 +78,12 @@ const makeIdHoverCss = (top: string, nested: string, width: number) => `
   [data-better-editor-id].better-editor-active {
     outline: ${width}px solid ${top};
     outline-offset: -${width}px;
+    background-color: color-mix(in srgb, ${top} 10%, transparent);
   }
   [data-better-editor-id] [data-better-editor-id]:hover:not(:has([data-better-editor-id]:hover)),
   [data-better-editor-id] [data-better-editor-id].better-editor-active {
     outline-color: ${nested};
+    background-color: color-mix(in srgb, ${nested} 10%, transparent);
   }
 `
 

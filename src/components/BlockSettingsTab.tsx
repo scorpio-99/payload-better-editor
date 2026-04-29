@@ -11,6 +11,7 @@ import {
   useForm,
   useModal,
 } from '@payloadcms/ui'
+import { useEditorHistory } from '../useEditorHistory'
 
 // See DocumentSettingsTab for rationale.
 const FULL_ACCESS = true as const
@@ -68,6 +69,7 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
   const [fields] = useAllFormFields()
   const { addFieldRow, dispatchFields, setModified } = useForm()
   const { toggleModal } = useModal()
+  const { pushSnapshot } = useEditorHistory()
   const addBlockDrawerSlug = useDrawerSlug('better-editor-add-block')
   const addAfterDrawerSlug = useDrawerSlug('better-editor-add-after')
 
@@ -89,6 +91,7 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
 
   const addTopLevelRow = useCallback(
     (index: number, blockType?: string) => {
+      pushSnapshot()
       addFieldRow({
         blockType,
         path: blocksField,
@@ -97,7 +100,7 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
       })
       setModified(true)
     },
-    [addFieldRow, blocksField, blocksSchemaPath, setModified],
+    [addFieldRow, blocksField, blocksSchemaPath, setModified, pushSnapshot],
   )
 
   if (!selectedBlockPath) {
@@ -154,6 +157,7 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
 
   const moveUp = () => {
     if (!canMoveUp) return
+    pushSnapshot()
     dispatchFields({
       type: 'MOVE_ROW',
       path: parentPath,
@@ -165,6 +169,7 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
   }
   const moveDown = () => {
     if (!canMoveDown) return
+    pushSnapshot()
     dispatchFields({
       type: 'MOVE_ROW',
       path: parentPath,
@@ -176,6 +181,7 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
   }
   const duplicate = () => {
     if (!canMutate) return
+    pushSnapshot()
     dispatchFields({ type: 'DUPLICATE_ROW', path: parentPath, rowIndex })
     markModified()
     // Payload inserts the duplicate immediately after the source row.
@@ -183,6 +189,7 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
   }
   const remove = () => {
     if (!canMutate) return
+    pushSnapshot()
     dispatchFields({ type: 'REMOVE_ROW', path: parentPath, rowIndex })
     markModified()
     onClearSelection()
@@ -192,6 +199,7 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
   // so nested blocks only see slugs valid in their own container.
   const addRowAfterSelected = (index: number, blockType?: string) => {
     if (!canMutate || !resolved) return
+    pushSnapshot()
     addFieldRow({
       blockType,
       path: parentPath,

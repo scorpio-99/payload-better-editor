@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { DocumentSettingsTab } from './DocumentSettingsTab'
+import { DocumentMetaTab } from './DocumentMetaTab'
 import { BlockSettingsTab } from './BlockSettingsTab'
 
 export type SidebarProps = {
@@ -12,7 +13,7 @@ export type SidebarProps = {
   blocksField: string
 }
 
-type TabKey = 'page' | 'block'
+type TabKey = 'page' | 'block' | 'settings'
 
 export const Sidebar: React.FC<SidebarProps> = ({
   selectedBlockPath,
@@ -60,6 +61,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
         >
           Block
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'settings'}
+          className={
+            'better-editor-sidebar__tab' +
+            (tab === 'settings' ? ' better-editor-sidebar__tab--active' : '')
+          }
+          onClick={() => setTab('settings')}
+        >
+          Settings
+        </button>
       </div>
 
       <div className="better-editor-sidebar__content">
@@ -72,6 +85,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             blocksField={blocksField}
           />
         )}
+        {tab === 'settings' && <DocumentMetaTab />}
       </div>
     </div>
   )

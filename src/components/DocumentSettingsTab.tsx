@@ -13,9 +13,15 @@ import { RenderFields, useDocumentInfo } from '@payloadcms/ui'
 const FULL_ACCESS = true as const
 
 /**
- * Renders document-level fields via Payload's native RenderFields, but strips
- * out block fields (`type: 'blocks'`) recursively — blocks are edited via the
- * Block tab after being selected in the preview.
+ * Page tab — content-area fields. Mirrors what Payload's classic editor
+ * shows in the main column (Hero / Content / SEO tabs, the title field).
+ *
+ * Filters out:
+ *  - top-level fields with `admin.position: 'sidebar'` (slug, publishedAt,
+ *    pageInfo group, pageSettings group, updatedBy, etc.) — those live in
+ *    the Settings tab now
+ *  - any `type: 'blocks'` field, recursively — blocks are edited via the
+ *    Block tab after being selected in the preview
  */
 export const DocumentSettingsTab: React.FC = () => {
   const { docConfig } = useDocumentInfo()
@@ -23,7 +29,14 @@ export const DocumentSettingsTab: React.FC = () => {
   const allFields = docConfig && 'fields' in docConfig ? docConfig.fields : undefined
   const slug = docConfig && 'slug' in docConfig ? docConfig.slug : ''
 
-  const filteredFields = useMemo(() => stripBlocks(allFields || []), [allFields])
+  const filteredFields = useMemo(() => {
+    if (!allFields) return []
+    const contentOnly = allFields.filter(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (f: any) => f?.admin?.position !== 'sidebar',
+    )
+    return stripBlocks(contentOnly)
+  }, [allFields])
 
   if (filteredFields.length === 0) {
     return (

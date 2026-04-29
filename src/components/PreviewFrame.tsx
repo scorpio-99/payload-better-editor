@@ -9,8 +9,6 @@ import { ICON_SVG } from '../icons'
 export type PreviewFrameProps = {
   previewURL: string | undefined
   isPreviewEnabled: boolean | undefined
-  blocksField: string
-  topLevelBlocksSelector: string
   hoverColorTopLevel: string
   hoverColorNested: string
   hoverOutlineWidth: number
@@ -87,30 +85,14 @@ const makeIdHoverCss = (top: string, nested: string, width: number) => `
   }
 `
 
-const makeLegacyHoverCss = (selector: string, top: string, width: number) => `
-  ${selector} {
-    cursor: pointer;
-  }
-  ${selector}:hover {
-    outline: ${width}px solid ${top};
-    outline-offset: -${width}px;
-  }
-`
-
 /**
  * Renders the frontend draft URL in an iframe and wires up:
- *  - Hover highlight on blocks (via injected <style>). Prefers id-based
- *    targeting (`[data-better-editor-id]`) so nested blocks highlight
- *    individually; falls back to the legacy selector for older setups.
- *  - Click-to-focus:
- *      Primary: walk up to the nearest `[data-better-editor-id]` and post
- *        `{ type: 'focus-block', id }`. The overlay resolves the id to a
- *        form-state path. This is what enables nested-block selection
- *        (e.g. a block inside a Columns block).
- *      Fallback: walk up to the nearest match of `topLevelBlocksSelector`,
- *        derive a position-based index, and post
- *        `{ type: 'focus-block', field, index }`. Kept so older consumers
- *        without per-block ids still work.
+ *  - Hover highlight on blocks via injected `<style>`, targeting elements
+ *    with `data-better-editor-id`. Top-level vs nested colors come from
+ *    the BetterEditorSettings global.
+ *  - Click-to-focus: walk up to the nearest `[data-better-editor-id]` and
+ *    post `{ type: 'focus-block', id }` to the parent. The overlay
+ *    resolves the id to a form-state path. Works at any nesting depth.
  *  - Save forwarding: on successful save, posts `payload-document-event`
  *    into the iframe so the consumer's `<RefreshRouteOnSave />` re-fetches.
  *
@@ -120,8 +102,6 @@ const makeLegacyHoverCss = (selector: string, top: string, width: number) => `
 export const PreviewFrame: React.FC<PreviewFrameProps> = ({
   previewURL,
   isPreviewEnabled,
-  blocksField,
-  topLevelBlocksSelector,
   hoverColorTopLevel,
   hoverColorNested,
   hoverOutlineWidth,
@@ -265,26 +245,19 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     }
     if (!doc) return
 
-    // Re-inject style on every navigation/reload. If the rendered page
-    // exposes per-block ids we use the id-based CSS so each (nested) block
-    // highlights individually; otherwise fall back to the selector.
+    // Re-inject hover CSS on every navigation/reload.
     const existing = doc.getElementById(HOVER_STYLE_ID)
     if (existing) existing.remove()
-    const hasIds = doc.querySelector('[data-better-editor-id]') !== null
     const style = doc.createElement('style')
     style.id = HOVER_STYLE_ID
-    style.textContent = hasIds
-      ? makeIdHoverCss(hoverColorTopLevel, hoverColorNested, hoverOutlineWidth) + TOOLBAR_CSS
-      : makeLegacyHoverCss(topLevelBlocksSelector, hoverColorTopLevel, hoverOutlineWidth)
+    style.textContent =
+      makeIdHoverCss(hoverColorTopLevel, hoverColorNested, hoverOutlineWidth) + TOOLBAR_CSS
     doc.head.appendChild(style)
 
-    // Hover toolbar — id-based only. Skip if the page doesn't expose ids
-    // (legacy mode) since the toolbar relies on per-block ids to dispatch
-    // actions back to the parent. Also skip when the user disabled it.
-    if (hasIds && showHoverToolbar) {
+    if (showHoverToolbar) {
       setupHoverToolbar(doc, hoverColorTopLevel, hoverColorNested, hoverToolbarPosition)
     } else {
-      // Clean up any toolbar from a previous setup
+      // Clean up any toolbar from a previous setup with showHoverToolbar=true
       const existingToolbar = doc.getElementById(TOOLBAR_ID)
       if (existingToolbar) existingToolbar.remove()
       doc
@@ -299,42 +272,18 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     const onClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null
       if (!target) return
-
-      // Primary path: id-based, supports any nesting depth.
       const idEl = target.closest<HTMLElement>('[data-better-editor-id]')
-      if (idEl) {
-        const id = idEl.getAttribute('data-better-editor-id')
-        if (!id) return
-        e.preventDefault()
-        e.stopPropagation()
-        window.postMessage(
-          { type: 'focus-block', id },
-          window.location.origin,
-        )
-        return
-      }
-
-      // Fallback: selector + position index (legacy, top-level only).
-      const el = target.closest(topLevelBlocksSelector)
-      if (!el) return
-      const matches = Array.from(doc.querySelectorAll(topLevelBlocksSelector))
-      const index = matches.indexOf(el as Element)
-      if (index < 0) return
-
+      if (!idEl) return
+      const id = idEl.getAttribute('data-better-editor-id')
+      if (!id) return
       e.preventDefault()
       e.stopPropagation()
-
-      window.postMessage(
-        { type: 'focus-block', field: blocksField, index },
-        window.location.origin,
-      )
+      window.postMessage({ type: 'focus-block', id }, window.location.origin)
     }
 
     doc.addEventListener('click', onClick, true)
     clickHandlerRef.current = onClick
   }, [
-    blocksField,
-    topLevelBlocksSelector,
     hoverColorTopLevel,
     hoverColorNested,
     hoverOutlineWidth,

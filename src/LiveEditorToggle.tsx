@@ -13,7 +13,6 @@ const prefKey = (collectionSlug?: string, globalSlug?: string) =>
 
 export type LiveEditorToggleProps = {
   blocksField: string
-  topLevelBlocksSelector: string
 }
 
 /**
@@ -23,7 +22,6 @@ export type LiveEditorToggleProps = {
  */
 export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({
   blocksField,
-  topLevelBlocksSelector,
 }) => {
   const [open, setOpen] = useState(false)
   const [mountNode, setMountNode] = useState<HTMLElement | null>(null)
@@ -131,7 +129,6 @@ export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({
             <LiveEditorOverlay
               onClose={() => setOpen(false)}
               blocksField={blocksField}
-              topLevelBlocksSelector={topLevelBlocksSelector}
             />,
             mountNode,
           )

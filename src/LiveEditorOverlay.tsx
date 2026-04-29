@@ -20,7 +20,6 @@ import './styles.css'
 export type LiveEditorOverlayProps = {
   onClose: () => void
   blocksField: string
-  topLevelBlocksSelector: string
 }
 
 const SIDEBAR_WIDTH_KEY = 'better-editor:sidebar-width'
@@ -87,7 +86,6 @@ export const LiveEditorOverlay: React.FC<LiveEditorOverlayProps> = (props) => {
 const LiveEditorOverlayInner: React.FC<LiveEditorOverlayProps> = ({
   onClose,
   blocksField,
-  topLevelBlocksSelector,
 }) => {
   const settings = useBetterEditorSettings()
   const [selectedBlockPath, setSelectedBlockPath] = useState<string | null>(null)
@@ -247,10 +245,6 @@ const LiveEditorOverlayInner: React.FC<LiveEditorOverlayProps> = ({
         if (typeof data.id === 'string') {
           const path = findPathById(allFieldsRef.current, data.id)
           if (path) setSelectedBlockPath(path)
-          return
-        }
-        if (typeof data.field === 'string' && typeof data.index === 'number') {
-          setSelectedBlockPath(`${data.field}.${data.index}`)
         }
         return
       }
@@ -380,8 +374,6 @@ const LiveEditorOverlayInner: React.FC<LiveEditorOverlayProps> = ({
             <PreviewFrame
               previewURL={previewURL}
               isPreviewEnabled={isPreviewEnabled}
-              blocksField={blocksField}
-              topLevelBlocksSelector={topLevelBlocksSelector}
               hoverColorTopLevel={settings.hoverColorTopLevel}
               hoverColorNested={settings.hoverColorNested}
               hoverOutlineWidth={settings.hoverOutlineWidth}

@@ -13,20 +13,4 @@ export type BetterEditorConfig = {
    * Defaults to `'layout'`.
    */
   blocksField?: string
-  /**
-   * CSS selector that, when run against the preview iframe's document, returns
-   * the top-level block DOM elements in the same order as the form state's
-   * `blocksField` array.
-   *
-   * Defaults to `'[data-better-editor-blocks] > *'`. With the default, wrap
-   * your frontend block renderer in a single div:
-   *
-   *   <div data-better-editor-blocks>
-   *     <RenderBlocks blocks={layout} />
-   *   </div>
-   *
-   * Override if your frontend markup differs — the selector just needs to
-   * match each top-level block's outermost element.
-   */
-  topLevelBlocksSelector?: string
 }

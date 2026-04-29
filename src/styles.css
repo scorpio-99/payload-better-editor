@@ -11,6 +11,16 @@
   background: var(--theme-bg, #fff);
 }
 
+/* While fullscreen the overlay covers the whole screen via the
+   Fullscreen API. Make sure the body fills it (sidebar is not rendered). */
+.better-editor--fullscreen,
+.better-editor--fullscreen .better-editor__body {
+  background: var(--theme-bg, #fff);
+}
+.better-editor--fullscreen .better-editor__body {
+  height: 100vh;
+}
+
 .better-editor__body {
   display: grid;
   /* grid-template-columns is set inline (preview | resize-handle | sidebar).
@@ -46,6 +56,58 @@
 .better-editor__preview {
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.better-editor__preview-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px;
+  border-bottom: 1px solid var(--theme-elevation-150);
+  background: var(--theme-elevation-50);
+  flex-shrink: 0;
+}
+
+.better-editor__history {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.better-editor__history-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 4px;
+  background: var(--theme-bg, #fff);
+  color: var(--theme-elevation-500);
+  cursor: pointer;
+}
+
+.better-editor__history-btn:first-child { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.better-editor__history-btn:last-child { border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: -1px; }
+
+.better-editor__history-btn:hover:not(:disabled) {
+  color: var(--theme-text);
+  background: var(--theme-elevation-100);
+}
+
+.better-editor__history-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.better-editor__preview-stage {
+  flex: 1;
+  min-height: 0;
+  position: relative;
 }
 
 .better-editor-frame {
@@ -53,6 +115,175 @@
   height: 100%;
   border: 0;
   background: #fff;
+}
+
+/* Wrapper is always rendered (even at full width) so React doesn't remount
+   the iframe when the user switches viewports. The constrained modifier
+   applies the device-frame look. */
+.better-editor-frame__viewport {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.better-editor-frame__viewport--constrained {
+  padding: 16px;
+  background: var(--theme-elevation-100);
+  overflow: auto;
+}
+
+.better-editor-frame__viewport--constrained > .better-editor-frame {
+  height: 100%;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+}
+
+/* Responsive mode: drag handles on each side + width badge top-center. */
+.better-editor-frame__viewport--resizable {
+  position: relative;
+}
+
+.better-editor-frame__handle {
+  align-self: center;
+  width: 6px;
+  height: 64px;
+  margin: 0 6px;
+  border-radius: 3px;
+  background: var(--theme-elevation-300);
+  cursor: ew-resize;
+  flex-shrink: 0;
+}
+
+.better-editor-frame__handle:hover,
+.better-editor-frame__handle:active,
+.better-editor-frame__viewport--resizing .better-editor-frame__handle {
+  background: var(--theme-elevation-500);
+}
+
+/* Mirror of the sidebar fix: while dragging the responsive handles, the
+   cursor crosses over the iframe and would lose mousemove events. */
+.better-editor-frame__viewport--resizing .better-editor-frame {
+  pointer-events: none;
+}
+
+.better-editor__preview-toolbar-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.better-editor__width-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 4px 10px;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 999px;
+  background: var(--theme-bg, #fff);
+  color: var(--theme-text);
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, monospace);
+  user-select: none;
+  min-width: 60px;
+  justify-content: center;
+}
+
+.better-editor__width-chip-unit {
+  color: var(--theme-elevation-500);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+/* Viewport toggle ---------------------------------------------------------- */
+
+.better-editor-viewport {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 6px;
+  background: var(--theme-bg, #fff);
+}
+
+.better-editor-viewport__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--theme-elevation-500);
+  cursor: pointer;
+}
+
+.better-editor-viewport__btn:hover {
+  color: var(--theme-text);
+  background: var(--theme-elevation-100);
+}
+
+.better-editor-viewport__btn--active,
+.better-editor-viewport__btn--active:hover {
+  color: var(--theme-text);
+  background: var(--theme-elevation-150);
+}
+
+/* Error boundary ----------------------------------------------------------- */
+
+.better-editor--errored {
+  background: var(--theme-bg, #fff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+}
+
+.better-editor__error {
+  max-width: 720px;
+  text-align: left;
+}
+
+.better-editor__error h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.better-editor__error pre {
+  max-height: 240px;
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 4px;
+  background: var(--theme-elevation-50);
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
+.better-editor__error-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.better-editor__error-actions button {
+  padding: 8px 14px;
+  border: 1px solid var(--theme-elevation-200);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.better-editor__error-actions button:hover {
+  background: var(--theme-elevation-100);
 }
 
 /* Sidebar ------------------------------------------------------------------ */

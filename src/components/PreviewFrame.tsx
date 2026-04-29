@@ -68,17 +68,21 @@ const TOOLBAR_CSS = `
   #${TOOLBAR_ID} button[data-action="delete"]:hover { background: rgba(0, 0, 0, 0.25); }
 `
 
+// `:hover` propagates up the DOM, so hovering any descendant marks every
+// ancestor block as hovered too — parent outline + tint persist while
+// the cursor is anywhere inside it. The descendant selector overrides
+// the color for nested blocks. `.better-editor-active` is JS-applied to
+// the leaf so the outline persists when the cursor moves to the floating
+// toolbar (which lives in document.body, outside the block tree).
 const makeIdHoverCss = (top: string, nested: string, width: number) => `
-  [data-better-editor-id] {
-    cursor: pointer;
-  }
-  [data-better-editor-id]:hover:not(:has([data-better-editor-id]:hover)),
+  [data-better-editor-id] { cursor: pointer; }
+  [data-better-editor-id]:hover,
   [data-better-editor-id].better-editor-active {
     outline: ${width}px solid ${top};
     outline-offset: -${width}px;
     background-color: color-mix(in srgb, ${top} 10%, transparent);
   }
-  [data-better-editor-id] [data-better-editor-id]:hover:not(:has([data-better-editor-id]:hover)),
+  [data-better-editor-id] [data-better-editor-id]:hover,
   [data-better-editor-id] [data-better-editor-id].better-editor-active {
     outline-color: ${nested};
     background-color: color-mix(in srgb, ${nested} 10%, transparent);
@@ -162,17 +166,25 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
         toolbar.style.right = 'auto'
       }
 
+      const clearActive = () => {
+        doc
+          .querySelectorAll('.better-editor-active')
+          .forEach((node) => node.classList.remove('better-editor-active'))
+      }
       const showFor = (el: HTMLElement) => {
         const blockId = el.getAttribute('data-better-editor-id')
         if (!blockId) return
-        if (currentBlockEl && currentBlockEl !== el) {
-          currentBlockEl.classList.remove('better-editor-active')
-        }
         currentBlockId = blockId
         currentBlockEl = el
-        // Persistent outline that stays visible when cursor moves to the
-        // toolbar (which sits outside the block in the DOM).
-        el.classList.add('better-editor-active')
+        // Mark the leaf + every ancestor block so outlines stay visible
+        // when the cursor moves to the toolbar (toolbar lives in body,
+        // outside the block tree, so :hover propagation doesn't apply).
+        clearActive()
+        let cur: HTMLElement | null = el
+        while (cur) {
+          cur.classList.add('better-editor-active')
+          cur = cur.parentElement?.closest<HTMLElement>('[data-better-editor-id]') ?? null
+        }
         // Toolbar matches the outline color: top-level vs nested.
         const isNested = !!el.parentElement?.closest('[data-better-editor-id]')
         toolbar!.style.background = isNested ? nestedColor : topColor
@@ -181,7 +193,7 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
         requestAnimationFrame(positionToolbar)
       }
       const hide = () => {
-        if (currentBlockEl) currentBlockEl.classList.remove('better-editor-active')
+        clearActive()
         currentBlockId = null
         currentBlockEl = null
         toolbar!.classList.remove('is-visible')
@@ -200,14 +212,20 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
       const onMove = (e: MouseEvent) => {
         const target = e.target as HTMLElement | null
         if (!target) return
-        // Inside the toolbar: keep current selection (outline + visibility).
+        // Inside the toolbar: keep current selection.
         if (toolbar && toolbar.contains(target)) return
         const el = target.closest<HTMLElement>('[data-better-editor-id]')
-        if (el) {
-          if (el !== currentBlockEl) showFor(el)
-        } else {
+        if (!el) {
           hide()
+          return
         }
+        if (el === currentBlockEl) return
+        // Cursor wandered onto an ancestor of the current leaf — that
+        // happens when crossing the gap between sibling children inside
+        // a parent block. Keep the leaf so the toolbar doesn't flicker.
+        // The parent's outline still shows (CSS `:hover` propagates).
+        if (currentBlockEl && el.contains(currentBlockEl)) return
+        showFor(el)
       }
       const onScroll = () => positionToolbar()
       const onToolbarClick = (e: MouseEvent) => {

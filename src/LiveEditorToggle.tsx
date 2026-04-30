@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Button, useDocumentInfo, usePreferences } from '@payloadcms/ui'
+import { useDocumentInfo, usePreferences } from '@payloadcms/ui'
 import { LiveEditorOverlay } from './LiveEditorOverlay'
 import { useMainWrapperPortal } from './hooks/useMainWrapperPortal'
 import { LayoutIcon } from './icons'
@@ -56,15 +56,16 @@ export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({
 
   return (
     <>
-      <Button
-        buttonStyle="secondary"
-        icon={<LayoutIcon />}
-        iconPosition="left"
-        iconStyle="without-border"
+      <button
+        aria-label={open ? 'Close Better Editor' : 'Open Better Editor'}
+        className="preview-btn"
         onClick={handleToggle}
+        title={open ? 'Close Better Editor' : 'Open Better Editor'}
+        type="button"
       >
-        {open ? 'Close Better Editor' : 'Open Better Editor'}
-      </Button>
+        <LayoutIcon />
+      </button>
+
       {open && mountNode
         ? createPortal(
             <LiveEditorOverlay

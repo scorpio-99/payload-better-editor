@@ -51,9 +51,6 @@ export class HoverToolbarController {
         return
       }
       if (el === this.currentBlockEl) return
-      // Sticky leaf: keep the toolbar on the current leaf when the cursor
-      // crosses an ancestor (parent's outline still shows via CSS).
-      if (this.currentBlockEl && el.contains(this.currentBlockEl)) return
       this.showFor(el)
     }
 

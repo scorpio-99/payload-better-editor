@@ -1,11 +1,8 @@
 /**
- * Adds a capture-phase click listener on the iframe's document. When the
- * user clicks anywhere inside a `[data-better-editor-id]` element, the
- * walk-up finds the nearest block id and invokes `onFocus(id)`. The click
- * is preventDefault'd + stopPropagation'd so consumer-side links/buttons
- * don't fire while the editor is open.
- *
- * Returns a teardown that removes the listener.
+ * Capture-phase click listener: walks up to the nearest
+ * `[data-better-editor-id]` and calls `onFocus(id)`. Swallows the click
+ * so consumer-side links/buttons don't fire while the editor is open.
+ * Returns a teardown.
  */
 export const installClickToFocus = (
   doc: Document,

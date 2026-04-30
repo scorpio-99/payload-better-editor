@@ -1,10 +1,13 @@
 'use client'
 
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useDocumentEvents, useDocumentInfo } from '@payloadcms/ui'
 
 import type { HoverToolbarPosition } from '../useBetterEditorSettings'
-import { ICON_SVG } from '../icons'
+import { HoverToolbarController } from '../preview/HoverToolbarController'
+import { TOOLBAR_ID, setHoverVars } from '../preview/hover-css'
+import { installClickToFocus } from '../preview/installClickToFocus'
+import { installHoverStyles } from '../preview/installHoverStyles'
 
 export type PreviewFrameProps = {
   previewURL: string | undefined
@@ -14,94 +17,19 @@ export type PreviewFrameProps = {
   hoverOutlineWidth: number
   showHoverToolbar: boolean
   hoverToolbarPosition: HoverToolbarPosition
-  /**
-   * Constrains the iframe to a fixed pixel width (centered, with padding
-   * around it). `null` / `undefined` = full width.
-   */
+  /** Pixel width of the iframe; `null`/`undefined` = full container width. */
   viewportWidth?: number | null
-  /** When true, render two drag handles to resize the iframe live. */
+  /** Render drag handles for live width resize (responsive mode). */
   resizable?: boolean
-  /** Called with the new width as the user drags (responsive mode only). */
   onResize?: (next: number) => void
-  /** Called whenever the iframe's rendered pixel width changes. */
   onIframeWidthChange?: (width: number) => void
 }
 
-const HOVER_STYLE_ID = 'better-editor-hover-style'
-const TOOLBAR_ID = 'better-editor-block-toolbar'
-
-const TOOLBAR_HTML = `
-  <button data-action="move-up" title="Move up" aria-label="Move block up">${ICON_SVG.chevronUp}</button>
-  <button data-action="move-down" title="Move down" aria-label="Move block down">${ICON_SVG.chevronDown}</button>
-  <button data-action="duplicate" title="Duplicate" aria-label="Duplicate block">${ICON_SVG.copy}</button>
-  <button data-action="add" title="Add block below" aria-label="Add block below">${ICON_SVG.plus}</button>
-  <button data-action="delete" title="Delete" aria-label="Delete block">${ICON_SVG.trash}</button>
-`
-
-const TOOLBAR_CSS = `
-  #${TOOLBAR_ID} {
-    position: absolute;
-    z-index: 2147483647;
-    display: none;
-    gap: 2px;
-    padding: 3px;
-    border-radius: 4px;
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
-    font-family: system-ui, sans-serif;
-  }
-  #${TOOLBAR_ID}.is-visible { display: inline-flex; }
-  #${TOOLBAR_ID} button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 26px;
-    padding: 0;
-    border: 0;
-    border-radius: 3px;
-    background: transparent;
-    color: inherit;
-    cursor: pointer;
-  }
-  #${TOOLBAR_ID} button:hover { background: rgba(255, 255, 255, 0.18); }
-  #${TOOLBAR_ID} button[data-action="delete"]:hover { background: rgba(0, 0, 0, 0.25); }
-`
-
-// `:hover` propagates up the DOM, so hovering any descendant marks every
-// ancestor block as hovered too — parent outline + tint persist while
-// the cursor is anywhere inside it. The descendant selector overrides
-// the color for nested blocks. `.better-editor-active` is JS-applied to
-// the leaf so the outline persists when the cursor moves to the floating
-// toolbar (which lives in document.body, outside the block tree).
-const makeIdHoverCss = (top: string, nested: string, width: number) => `
-  [data-better-editor-id] { cursor: pointer; }
-  [data-better-editor-id]:hover,
-  [data-better-editor-id].better-editor-active {
-    outline: ${width}px solid ${top};
-    outline-offset: -${width}px;
-    background-color: color-mix(in srgb, ${top} 10%, transparent);
-  }
-  [data-better-editor-id] [data-better-editor-id]:hover,
-  [data-better-editor-id] [data-better-editor-id].better-editor-active {
-    outline-color: ${nested};
-    background-color: color-mix(in srgb, ${nested} 10%, transparent);
-  }
-`
-
 /**
- * Renders the frontend draft URL in an iframe and wires up:
- *  - Hover highlight on blocks via injected `<style>`, targeting elements
- *    with `data-better-editor-id`. Top-level vs nested colors come from
- *    the BetterEditorSettings global.
- *  - Click-to-focus: walk up to the nearest `[data-better-editor-id]` and
- *    post `{ type: 'focus-block', id }` to the parent. The overlay
- *    resolves the id to a form-state path. Works at any nesting depth.
- *  - Save forwarding: on successful save, posts `payload-document-event`
- *    into the iframe so the consumer's `<RefreshRouteOnSave />` re-fetches.
- *
- * Same-origin only. If contentDocument is inaccessible, the iframe falls
- * back to view-only (hover + click do nothing).
+ * Renders the frontend draft URL in an iframe and wires up the in-iframe
+ * hover styles + click-to-focus + hover toolbar, plus save-refresh
+ * forwarding. Same-origin only — if `contentDocument` is inaccessible,
+ * the iframe falls back to view-only.
  */
 export const PreviewFrame: React.FC<PreviewFrameProps> = ({
   previewURL,
@@ -117,165 +45,65 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
   onIframeWidthChange,
 }) => {
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
-  const clickHandlerRef = useRef<((e: MouseEvent) => void) | null>(null)
-  const hoverHandlerRef = useRef<((e: MouseEvent) => void) | null>(null)
-  const scrollHandlerRef = useRef<(() => void) | null>(null)
-  const toolbarClickHandlerRef = useRef<((e: MouseEvent) => void) | null>(null)
+  // Combined teardown for all bindings on the current iframe document.
+  // Replaced on every iframe `load`.
+  const teardownRef = useRef<(() => void) | null>(null)
+  const controllerRef = useRef<HoverToolbarController | null>(null)
   const [isResizing, setIsResizing] = useState(false)
   const { mostRecentUpdate } = useDocumentEvents()
   const { id } = useDocumentInfo()
 
-  const setupHoverToolbar = useCallback(
-    (
-      doc: Document,
-      topColor: string,
-      nestedColor: string,
-      position: HoverToolbarPosition,
-    ) => {
-      let toolbar = doc.getElementById(TOOLBAR_ID) as HTMLDivElement | null
-      if (!toolbar) {
-        toolbar = doc.createElement('div')
-        toolbar.id = TOOLBAR_ID
-        toolbar.innerHTML = TOOLBAR_HTML
-        doc.body.appendChild(toolbar)
-      } else {
-        toolbar.innerHTML = TOOLBAR_HTML
-      }
+  // Latest settings in a ref so the load-listener effect doesn't re-bind
+  // on every color tweak; the settings effect below calls update() instead.
+  const settingsRef = useRef({
+    hoverColorTopLevel,
+    hoverColorNested,
+    hoverOutlineWidth,
+    showHoverToolbar,
+    hoverToolbarPosition,
+  })
+  settingsRef.current = {
+    hoverColorTopLevel,
+    hoverColorNested,
+    hoverOutlineWidth,
+    showHoverToolbar,
+    hoverToolbarPosition,
+  }
 
-      let currentBlockId: string | null = null
-      let currentBlockEl: HTMLElement | null = null
+  // Idempotent: tears down previous bindings before installing new ones.
+  const bindToDocument = (doc: Document) => {
+    teardownRef.current?.()
+    controllerRef.current?.destroy()
+    controllerRef.current = null
 
-      const positionToolbar = () => {
-        if (!currentBlockEl || !toolbar) return
-        const rect = currentBlockEl.getBoundingClientRect()
-        const view = doc.defaultView
-        if (!view) return
-        const tbWidth = toolbar.offsetWidth || 120
-        const tbHeight = toolbar.offsetHeight || 32
-        const inset = 4
-        const isTop = position.startsWith('top')
-        const isRight = position.endsWith('right')
-        const top = isTop
-          ? view.scrollY + rect.top + inset
-          : view.scrollY + rect.bottom - tbHeight - inset
-        const left = isRight
-          ? view.scrollX + rect.right - tbWidth - inset
-          : view.scrollX + rect.left + inset
-        toolbar.style.top = `${top}px`
-        toolbar.style.left = `${left}px`
-        toolbar.style.right = 'auto'
-      }
+    const s = settingsRef.current
 
-      const clearActive = () => {
-        doc
-          .querySelectorAll('.better-editor-active')
-          .forEach((node) => node.classList.remove('better-editor-active'))
-      }
-      const showFor = (el: HTMLElement) => {
-        const blockId = el.getAttribute('data-better-editor-id')
-        if (!blockId) return
-        currentBlockId = blockId
-        currentBlockEl = el
-        // Mark the leaf + every ancestor block so outlines stay visible
-        // when the cursor moves to the toolbar (toolbar lives in body,
-        // outside the block tree, so :hover propagation doesn't apply).
-        clearActive()
-        let cur: HTMLElement | null = el
-        while (cur) {
-          cur.classList.add('better-editor-active')
-          cur = cur.parentElement?.closest<HTMLElement>('[data-better-editor-id]') ?? null
-        }
-        // Toolbar matches the outline color: top-level vs nested.
-        const isNested = !!el.parentElement?.closest('[data-better-editor-id]')
-        toolbar!.style.background = isNested ? nestedColor : topColor
-        toolbar!.classList.add('is-visible')
-        // Wait for layout so offsetWidth reflects the freshly-injected DOM.
-        requestAnimationFrame(positionToolbar)
-      }
-      const hide = () => {
-        clearActive()
-        currentBlockId = null
-        currentBlockEl = null
-        toolbar!.classList.remove('is-visible')
-      }
+    const removeStyles = installHoverStyles(doc, {
+      topColor: s.hoverColorTopLevel,
+      nestedColor: s.hoverColorNested,
+      outlineWidth: s.hoverOutlineWidth,
+    })
 
-      if (hoverHandlerRef.current) {
-        doc.removeEventListener('mouseover', hoverHandlerRef.current)
-      }
-      if (scrollHandlerRef.current) {
-        doc.defaultView?.removeEventListener('scroll', scrollHandlerRef.current, true)
-      }
-      if (toolbarClickHandlerRef.current) {
-        toolbar.removeEventListener('click', toolbarClickHandlerRef.current)
-      }
+    const removeClick = installClickToFocus(doc, (blockId) => {
+      window.parent.postMessage(
+        { type: 'focus-block', id: blockId },
+        window.location.origin,
+      )
+    })
 
-      const onMove = (e: MouseEvent) => {
-        const target = e.target as HTMLElement | null
-        if (!target) return
-        // Inside the toolbar: keep current selection.
-        if (toolbar && toolbar.contains(target)) return
-        const el = target.closest<HTMLElement>('[data-better-editor-id]')
-        if (!el) {
-          hide()
-          return
-        }
-        if (el === currentBlockEl) return
-        // Cursor wandered onto an ancestor of the current leaf — that
-        // happens when crossing the gap between sibling children inside
-        // a parent block. Keep the leaf so the toolbar doesn't flicker.
-        // The parent's outline still shows (CSS `:hover` propagates).
-        if (currentBlockEl && el.contains(currentBlockEl)) return
-        showFor(el)
-      }
-      const onScroll = () => positionToolbar()
-      const onToolbarClick = (e: MouseEvent) => {
-        const btn = (e.target as HTMLElement | null)?.closest<HTMLElement>('button[data-action]')
-        if (!btn || !currentBlockId) return
-        e.preventDefault()
-        e.stopPropagation()
-        const action = btn.getAttribute('data-action')
-        window.parent.postMessage(
-          { type: 'block-action', id: currentBlockId, action },
-          window.location.origin,
-        )
-      }
-
-      doc.addEventListener('mouseover', onMove)
-      doc.defaultView?.addEventListener('scroll', onScroll, true)
-      toolbar.addEventListener('click', onToolbarClick)
-
-      hoverHandlerRef.current = onMove
-      scrollHandlerRef.current = onScroll
-      toolbarClickHandlerRef.current = onToolbarClick
-    },
-    [],
-  )
-
-  const setupIframe = useCallback(() => {
-    const iframe = iframeRef.current
-    if (!iframe) return
-
-    let doc: Document | null
-    try {
-      doc = iframe.contentDocument
-    } catch {
-      return
-    }
-    if (!doc) return
-
-    // Re-inject hover CSS on every navigation/reload.
-    const existing = doc.getElementById(HOVER_STYLE_ID)
-    if (existing) existing.remove()
-    const style = doc.createElement('style')
-    style.id = HOVER_STYLE_ID
-    style.textContent =
-      makeIdHoverCss(hoverColorTopLevel, hoverColorNested, hoverOutlineWidth) + TOOLBAR_CSS
-    doc.head.appendChild(style)
-
-    if (showHoverToolbar) {
-      setupHoverToolbar(doc, hoverColorTopLevel, hoverColorNested, hoverToolbarPosition)
+    if (s.showHoverToolbar) {
+      controllerRef.current = new HoverToolbarController(doc, {
+        position: s.hoverToolbarPosition,
+        onAction: (blockId, action) => {
+          window.parent.postMessage(
+            { type: 'block-action', id: blockId, action },
+            window.location.origin,
+          )
+        },
+      })
     } else {
-      // Clean up any toolbar from a previous setup with showHoverToolbar=true
+      // Clean up any toolbar left over from a previous setup that had
+      // showHoverToolbar=true (e.g. user toggled it off mid-session).
       const existingToolbar = doc.getElementById(TOOLBAR_ID)
       if (existingToolbar) existingToolbar.remove()
       doc
@@ -283,38 +111,104 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
         .forEach((el) => el.classList.remove('better-editor-active'))
     }
 
-    if (clickHandlerRef.current) {
-      doc.removeEventListener('click', clickHandlerRef.current, true)
+    teardownRef.current = () => {
+      removeStyles()
+      removeClick()
+      controllerRef.current?.destroy()
+      controllerRef.current = null
+    }
+  }
+
+  // Bind on iframe `load`; the effect cleanup tears down on unmount.
+  useEffect(() => {
+    const iframe = iframeRef.current
+    if (!iframe) return
+
+    const onLoad = () => {
+      let doc: Document | null = null
+      try {
+        doc = iframe.contentDocument
+      } catch {
+        // Cross-origin: fall back to view-only.
+        return
+      }
+      if (!doc) return
+      bindToDocument(doc)
     }
 
-    const onClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null
-      if (!target) return
-      const idEl = target.closest<HTMLElement>('[data-better-editor-id]')
-      if (!idEl) return
-      const id = idEl.getAttribute('data-better-editor-id')
-      if (!id) return
-      e.preventDefault()
-      e.stopPropagation()
-      window.postMessage({ type: 'focus-block', id }, window.location.origin)
+    // Bind immediately if the iframe already finished loading.
+    if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
+      onLoad()
     }
+    iframe.addEventListener('load', onLoad)
 
-    doc.addEventListener('click', onClick, true)
-    clickHandlerRef.current = onClick
+    return () => {
+      iframe.removeEventListener('load', onLoad)
+      teardownRef.current?.()
+      teardownRef.current = null
+      controllerRef.current?.destroy()
+      controllerRef.current = null
+    }
+    // Intentionally empty deps: bindings are reapplied via the settings
+    // effect below (controller.update + style re-injection), not by
+    // re-running this whole effect.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Apply setting changes without recreating the controller (preserves
+  // its DOM node + current selection).
+  useEffect(() => {
+    const iframe = iframeRef.current
+    if (!iframe) return
+    let doc: Document | null = null
+    try {
+      doc = iframe.contentDocument
+    } catch {
+      return
+    }
+    if (!doc) return
+
+    // Color/outline updates are just CSS variable writes — the static
+    // CSS picks them up. No re-injection needed.
+    setHoverVars(doc, {
+      topColor: hoverColorTopLevel,
+      nestedColor: hoverColorNested,
+      outlineWidth: hoverOutlineWidth,
+    })
+
+    if (showHoverToolbar) {
+      if (controllerRef.current) {
+        controllerRef.current.update({
+          position: hoverToolbarPosition,
+          onAction: (blockId, action) => {
+            window.parent.postMessage(
+              { type: 'block-action', id: blockId, action },
+              window.location.origin,
+            )
+          },
+        })
+      } else {
+        controllerRef.current = new HoverToolbarController(doc, {
+          position: hoverToolbarPosition,
+          onAction: (blockId, action) => {
+            window.parent.postMessage(
+              { type: 'block-action', id: blockId, action },
+              window.location.origin,
+            )
+          },
+        })
+      }
+    } else if (controllerRef.current) {
+      controllerRef.current.destroy()
+      controllerRef.current = null
+    }
   }, [
     hoverColorTopLevel,
     hoverColorNested,
     hoverOutlineWidth,
     showHoverToolbar,
     hoverToolbarPosition,
-    setupHoverToolbar,
   ])
-
-  // Re-inject hover CSS when hover settings change (without waiting for the
-  // iframe to navigate / re-fire onLoad).
-  useEffect(() => {
-    setupIframe()
-  }, [setupIframe])
 
   // Track the iframe's actual rendered width and report it up so the
   // preview toolbar can display it.
@@ -330,31 +224,8 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     return () => ro.disconnect()
   }, [onIframeWidthChange])
 
-  useEffect(() => {
-    return () => {
-      const iframe = iframeRef.current
-      if (!iframe) return
-      try {
-        const doc = iframe.contentDocument
-        if (doc && clickHandlerRef.current) {
-          doc.removeEventListener('click', clickHandlerRef.current, true)
-        }
-        if (doc && hoverHandlerRef.current) {
-          doc.removeEventListener('mouseover', hoverHandlerRef.current)
-        }
-        if (doc && scrollHandlerRef.current) {
-          doc.defaultView?.removeEventListener('scroll', scrollHandlerRef.current, true)
-        }
-      } catch {
-        // ignore cross-origin
-      }
-      clickHandlerRef.current = null
-      hoverHandlerRef.current = null
-      scrollHandlerRef.current = null
-      toolbarClickHandlerRef.current = null
-    }
-  }, [])
-
+  // Forward Payload's "document saved" event into the iframe so the
+  // consumer's `<RefreshRouteOnSave />` re-fetches the draft.
   useEffect(() => {
     if (!mostRecentUpdate) return
     if (id != null && mostRecentUpdate.id !== id) return
@@ -451,7 +322,6 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
         className="better-editor-frame"
         src={previewURL}
         title="Better Editor preview"
-        onLoad={setupIframe}
         style={
           constrained
             ? { width: `${viewportWidth}px`, maxWidth: '100%' }

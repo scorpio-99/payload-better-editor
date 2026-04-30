@@ -4,26 +4,17 @@ import { TOOLBAR_ID } from './hover-css'
 import { TOOLBAR_HTML } from './toolbar-html'
 
 export type HoverToolbarOptions = {
-  topColor: string
-  nestedColor: string
   position: HoverToolbarPosition
   onAction: (id: string, action: BlockActionMessage['action']) => void
 }
 
 /**
- * Owns the floating action toolbar that appears over the currently-hovered
- * block inside the preview iframe. Encapsulates:
- *  - the toolbar DOM element (lives in `doc.body`)
- *  - the "sticky leaf" selection (currentBlockId / currentBlockEl)
- *  - mouseover listener (on the document) that picks new leaves
- *  - scroll listener (on the document's window, capture phase) that
- *    re-positions the toolbar so it tracks the block as the user scrolls
- *  - the toolbar's own click listener that dispatches block-action calls
- *
- * Construction binds all listeners. `update()` re-applies colors / position
- * without recreating the DOM node so visible state survives setting tweaks.
- * `destroy()` removes every listener, the toolbar node, and any
- * `.better-editor-active` markers we left on the page.
+ * Floating action toolbar over the hovered block inside the preview
+ * iframe. Sticky-leaf selection — when the cursor crosses an ancestor
+ * (e.g. the gap between sibling children) the toolbar stays on the
+ * current leaf so it doesn't flicker. Colors are CSS-driven via the
+ * `--bee-top` / `--bee-nested` custom properties; the toolbar's tint is
+ * picked up automatically via the `data-nested` attribute.
  */
 export class HoverToolbarController {
   private doc: Document
@@ -53,7 +44,6 @@ export class HoverToolbarController {
     this.onMove = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null
       if (!target) return
-      // Inside the toolbar: keep current selection.
       if (this.toolbar.contains(target)) return
       const el = target.closest<HTMLElement>('[data-better-editor-id]')
       if (!el) {
@@ -61,10 +51,8 @@ export class HoverToolbarController {
         return
       }
       if (el === this.currentBlockEl) return
-      // Cursor wandered onto an ancestor of the current leaf — that
-      // happens when crossing the gap between sibling children inside
-      // a parent block. Keep the leaf so the toolbar doesn't flicker.
-      // The parent's outline still shows (CSS `:hover` propagates).
+      // Sticky leaf: keep the toolbar on the current leaf when the cursor
+      // crosses an ancestor (parent's outline still shows via CSS).
       if (this.currentBlockEl && el.contains(this.currentBlockEl)) return
       this.showFor(el)
     }
@@ -86,17 +74,10 @@ export class HoverToolbarController {
     this.toolbar.addEventListener('click', this.onToolbarClick)
   }
 
-  /** Reapply colors/position without recreating the DOM node. */
+  /** Reapply position config without recreating the DOM node. */
   update(opts: HoverToolbarOptions): void {
     this.opts = opts
-    // If we currently have a selection, re-tint the toolbar to match the
-    // new top/nested colors and re-run the position calc against the
-    // new `position` corner.
-    if (this.currentBlockEl) {
-      const isNested = !!this.currentBlockEl.parentElement?.closest('[data-better-editor-id]')
-      this.toolbar.style.background = isNested ? opts.nestedColor : opts.topColor
-      this.positionToolbar()
-    }
+    if (this.currentBlockEl) this.positionToolbar()
   }
 
   destroy(): void {
@@ -143,18 +124,16 @@ export class HoverToolbarController {
     if (!blockId) return
     this.currentBlockId = blockId
     this.currentBlockEl = el
-    // Mark the leaf + every ancestor block so outlines stay visible
-    // when the cursor moves to the toolbar (toolbar lives in body,
-    // outside the block tree, so :hover propagation doesn't apply).
+    // Mark leaf + ancestors so outlines persist when the cursor moves
+    // onto the toolbar (toolbar lives in body, no :hover propagation).
     this.clearActive()
     let cur: HTMLElement | null = el
     while (cur) {
       cur.classList.add('better-editor-active')
       cur = cur.parentElement?.closest<HTMLElement>('[data-better-editor-id]') ?? null
     }
-    // Toolbar matches the outline color: top-level vs nested.
     const isNested = !!el.parentElement?.closest('[data-better-editor-id]')
-    this.toolbar.style.background = isNested ? this.opts.nestedColor : this.opts.topColor
+    this.toolbar.dataset.nested = isNested ? '1' : '0'
     this.toolbar.classList.add('is-visible')
     // Wait for layout so offsetWidth reflects the freshly-injected DOM.
     const view = this.doc.defaultView

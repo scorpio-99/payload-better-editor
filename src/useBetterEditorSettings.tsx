@@ -58,11 +58,7 @@ const TOOLBAR_POSITIONS = [
   'bottom-left',
 ] as const
 
-/**
- * Fetches the BetterEditorSettings global once on mount and exposes it via
- * context. Renders children immediately with defaults so the editor is usable
- * during the (short) fetch window. If the request fails, defaults stick.
- */
+/** Fetches the BetterEditorSettings global once; defaults during fetch. */
 export const BetterEditorSettingsProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {

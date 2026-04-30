@@ -27,31 +27,23 @@ export type UseSidebarResizeReturn = {
   onResizeStart: (e: React.MouseEvent<HTMLDivElement>) => void
 }
 
-/**
- * Drag-to-resize state for the editor sidebar. Persists the latest width
- * in localStorage so it sticks across editor opens / reloads. The
- * `sidebarPosition` argument inverts the drag direction so left and right
- * sidebars both feel natural.
- */
+/** Drag-to-resize the sidebar; persisted in localStorage. */
 export const useSidebarResize = (
   sidebarPosition: 'left' | 'right',
 ): UseSidebarResizeReturn => {
   const [sidebarWidth, setSidebarWidth] = useState<number>(() => readPersistedWidth())
   const [isResizing, setIsResizing] = useState(false)
 
-  // Persist drag-resized width across editor opens / page reloads.
   useEffect(() => {
     if (typeof window === 'undefined') return
     try {
       window.localStorage.setItem(SIDEBAR_WIDTH_KEY, String(sidebarWidth))
     } catch {
-      // storage unavailable / quota — silently fall back to in-memory
+      // storage unavailable / quota exceeded
     }
   }, [sidebarWidth])
 
-  // Drag-to-resize: handle measures the body width on mousedown so we can
-  // translate cursor moves into a sidebar width regardless of sidebar
-  // position (left/right swap just inverts the delta direction).
+  // Left/right position inverts the drag direction so both feel natural.
   const onResizeStart = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       e.preventDefault()

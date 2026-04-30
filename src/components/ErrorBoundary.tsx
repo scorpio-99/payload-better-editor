@@ -4,6 +4,8 @@ import React from 'react'
 
 type Props = {
   onClose: () => void
+  /** Called before the boundary resets — used to clear stale state. */
+  onReset?: () => void
   children: React.ReactNode
 }
 
@@ -11,13 +13,7 @@ type State = {
   error: Error | null
 }
 
-/**
- * Last-resort safety net for the overlay. If a block-render or sidebar
- * mount throws (bad schema, third-party block bug, …), we surface a
- * recoverable UI instead of taking down the whole admin shell. Reset
- * unmounts + remounts the children, Close hands control back to the
- * toggle.
- */
+/** Catches render errors inside the overlay; falls back to a recoverable UI. */
 export class OverlayErrorBoundary extends React.Component<Props, State> {
   state: State = { error: null }
 
@@ -32,6 +28,7 @@ export class OverlayErrorBoundary extends React.Component<Props, State> {
   }
 
   reset = () => {
+    this.props.onReset?.()
     this.setState({ error: null })
   }
 

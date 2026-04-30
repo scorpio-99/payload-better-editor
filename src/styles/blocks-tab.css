@@ -1,0 +1,163 @@
+/* Blocks tab — header (kicker / heading / path / Deselect),
+   action toolbar, dividers, Block Name input, empty-state CTA. */
+
+.better-editor-tab__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.better-editor-tab__kicker {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--theme-elevation-500);
+}
+
+.better-editor-tab__heading {
+  margin: 2px 0 4px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.better-editor-tab__path {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  color: var(--theme-elevation-500);
+}
+
+.better-editor-tab__clear {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.better-editor-tab__clear:hover {
+  background: var(--theme-elevation-100);
+}
+
+/* Visual break between the block-tab header (kicker / heading / actions /
+   block-name) and the block's own field tabs (Content / Row Settings / …)
+   so the structural shift is obvious. Symmetric vertical margin — the
+   render-fields rule (in sidebar.css) has its own 16px margin-top, which
+   collapses into the divider's 20px so the gap looks the same on both sides. */
+.better-editor-tab__divider {
+  margin: 20px 0;
+  border: 0;
+  border-top: 1px solid var(--theme-elevation-150);
+}
+
+/* Block Name input */
+
+.better-editor-tab__block-name {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 12px;
+}
+
+.better-editor-tab__block-name-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--theme-elevation-500);
+}
+
+.better-editor-tab__block-name-input {
+  padding: 8px 10px;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 4px;
+  background: var(--theme-input-bg, transparent);
+  color: inherit;
+  font: inherit;
+}
+
+.better-editor-tab__block-name-input:focus {
+  outline: 2px solid var(--theme-text);
+  outline-offset: 1px;
+}
+
+/* Action toolbar (move / duplicate / add / delete) */
+
+.better-editor-tab__actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.better-editor-tab__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.better-editor-tab__action:hover:not(:disabled) {
+  background: var(--theme-elevation-100);
+}
+
+.better-editor-tab__action:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.better-editor-tab__action--danger:hover:not(:disabled) {
+  background: var(--theme-error-100, #fee2e2);
+  color: var(--theme-error-700, #b91c1c);
+  border-color: var(--theme-error-500, #ef4444);
+}
+
+/* Empty-state with "Add Block" CTA */
+
+.better-editor-tab--empty {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+}
+
+.better-editor-tab__empty-text {
+  margin: 0;
+  color: var(--theme-elevation-500);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.better-editor-tab__add-block {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px dashed var(--theme-elevation-200);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.better-editor-tab__add-block:hover {
+  background: var(--theme-elevation-100);
+  border-color: var(--theme-elevation-400);
+  border-style: solid;
+}

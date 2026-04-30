@@ -16,6 +16,33 @@ export type SidebarProps = {
 
 type TabKey = 'page' | 'block' | 'settings'
 
+const TABS: ReadonlyArray<{ key: TabKey; label: string }> = [
+  { key: 'page', label: 'Page' },
+  { key: 'block', label: 'Blocks' },
+  { key: 'settings', label: 'Settings' },
+]
+
+type SidebarTabProps = {
+  label: string
+  active: boolean
+  onClick: () => void
+}
+
+const SidebarTab: React.FC<SidebarTabProps> = ({ label, active, onClick }) => (
+  <button
+    type="button"
+    role="tab"
+    aria-selected={active}
+    className={
+      'better-editor-sidebar__tab' +
+      (active ? ' better-editor-sidebar__tab--active' : '')
+    }
+    onClick={onClick}
+  >
+    {label}
+  </button>
+)
+
 export const Sidebar: React.FC<SidebarProps> = ({
   selectedBlockPath,
   onClearSelection,
@@ -26,7 +53,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const [tab, setTab] = useState<TabKey>('page')
 
-  // Auto-switch to block tab when the user picks a block in the preview.
   useEffect(() => {
     if (selectedBlockPath) setTab('block')
   }, [selectedBlockPath])
@@ -39,42 +65,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       }
     >
       <div role="tablist" className="better-editor-sidebar__tabs">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'page'}
-          className={
-            'better-editor-sidebar__tab' +
-            (tab === 'page' ? ' better-editor-sidebar__tab--active' : '')
-          }
-          onClick={() => setTab('page')}
-        >
-          Page
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'block'}
-          className={
-            'better-editor-sidebar__tab' +
-            (tab === 'block' ? ' better-editor-sidebar__tab--active' : '')
-          }
-          onClick={() => setTab('block')}
-        >
-          Blocks
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'settings'}
-          className={
-            'better-editor-sidebar__tab' +
-            (tab === 'settings' ? ' better-editor-sidebar__tab--active' : '')
-          }
-          onClick={() => setTab('settings')}
-        >
-          Settings
-        </button>
+        {TABS.map((t) => (
+          <SidebarTab
+            key={t.key}
+            label={t.label}
+            active={tab === t.key}
+            onClick={() => setTab(t.key)}
+          />
+        ))}
       </div>
 
       <div className="better-editor-sidebar__content">

@@ -1,7 +1,9 @@
+import React from 'react'
+import { createRoot, type Root } from 'react-dom/client'
 import type { HoverToolbarPosition } from '../useBetterEditorSettings'
 import type { BlockActionMessage } from './protocol'
 import { TOOLBAR_ID } from './hover-css'
-import { TOOLBAR_HTML } from './toolbar-html'
+import { HoverToolbar } from './HoverToolbar'
 
 export type HoverToolbarOptions = {
   position: HoverToolbarPosition
@@ -14,32 +16,39 @@ export type HoverToolbarOptions = {
  * (e.g. the gap between sibling children) the toolbar stays on the
  * current leaf so it doesn't flicker. Colors are CSS-driven via the
  * `--bee-top` / `--bee-nested` custom properties; the toolbar's tint is
- * picked up automatically via the `data-nested` attribute.
+ * picked up automatically via the `data-nested` attribute. The button
+ * row itself is rendered via React (createRoot) so icons stay fully
+ * type-checked components.
  */
 export class HoverToolbarController {
   private doc: Document
   private opts: HoverToolbarOptions
   private toolbar: HTMLDivElement
+  private root: Root
   private currentBlockId: string | null = null
   private currentBlockEl: HTMLElement | null = null
   private onMove: (e: MouseEvent) => void
   private onScroll: () => void
-  private onToolbarClick: (e: MouseEvent) => void
 
   constructor(doc: Document, opts: HoverToolbarOptions) {
     this.doc = doc
     this.opts = opts
 
     let toolbar = doc.getElementById(TOOLBAR_ID) as HTMLDivElement | null
-    if (!toolbar) {
-      toolbar = doc.createElement('div')
-      toolbar.id = TOOLBAR_ID
-      toolbar.innerHTML = TOOLBAR_HTML
-      doc.body.appendChild(toolbar)
-    } else {
-      toolbar.innerHTML = TOOLBAR_HTML
-    }
+    if (toolbar) toolbar.remove()
+    toolbar = doc.createElement('div')
+    toolbar.id = TOOLBAR_ID
+    doc.body.appendChild(toolbar)
     this.toolbar = toolbar
+
+    this.root = createRoot(toolbar)
+    this.root.render(
+      React.createElement(HoverToolbar, {
+        onAction: (action) => {
+          if (this.currentBlockId) this.opts.onAction(this.currentBlockId, action)
+        },
+      }),
+    )
 
     this.onMove = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null
@@ -56,19 +65,8 @@ export class HoverToolbarController {
 
     this.onScroll = () => this.positionToolbar()
 
-    this.onToolbarClick = (e: MouseEvent) => {
-      const btn = (e.target as HTMLElement | null)?.closest<HTMLElement>('button[data-action]')
-      if (!btn || !this.currentBlockId) return
-      e.preventDefault()
-      e.stopPropagation()
-      const action = btn.getAttribute('data-action') as BlockActionMessage['action'] | null
-      if (!action) return
-      this.opts.onAction(this.currentBlockId, action)
-    }
-
     this.doc.addEventListener('mouseover', this.onMove)
     this.doc.defaultView?.addEventListener('scroll', this.onScroll, true)
-    this.toolbar.addEventListener('click', this.onToolbarClick)
   }
 
   /** Reapply position config without recreating the DOM node. */
@@ -80,8 +78,8 @@ export class HoverToolbarController {
   destroy(): void {
     this.doc.removeEventListener('mouseover', this.onMove)
     this.doc.defaultView?.removeEventListener('scroll', this.onScroll, true)
-    this.toolbar.removeEventListener('click', this.onToolbarClick)
     this.clearActive()
+    this.root.unmount()
     if (this.toolbar.parentNode) {
       this.toolbar.parentNode.removeChild(this.toolbar)
     }
@@ -132,13 +130,9 @@ export class HoverToolbarController {
     const isNested = !!el.parentElement?.closest('[data-better-editor-id]')
     this.toolbar.dataset.nested = isNested ? '1' : '0'
     this.toolbar.classList.add('is-visible')
-    // Wait for layout so offsetWidth reflects the freshly-injected DOM.
     const view = this.doc.defaultView
-    if (view) {
-      view.requestAnimationFrame(() => this.positionToolbar())
-    } else {
-      this.positionToolbar()
-    }
+    if (view) view.requestAnimationFrame(() => this.positionToolbar())
+    else this.positionToolbar()
   }
 
   private hide(): void {

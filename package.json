@@ -55,6 +55,9 @@
     "rimraf": "3.0.2",
     "typescript": "5.7.3"
   },
+  "dependencies": {
+    "lucide-react": "^1.0.0"
+  },
   "peerDependencies": {
     "@payloadcms/ui": "^3.81.0",
     "payload": "^3.81.0",

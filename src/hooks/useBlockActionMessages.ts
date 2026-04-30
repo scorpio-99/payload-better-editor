@@ -5,13 +5,7 @@ import { useAllFormFields, useForm } from '@payloadcms/ui'
 import { isParentInboundMessage } from '../preview/protocol'
 import { useEditorHistory } from '../useEditorHistory'
 
-/**
- * Walk the flat form-state map and find the block whose `id` field equals
- * `targetId`. Returns the path prefix (e.g. `layout.2.columns.0.blocks.1`)
- * or null if no row owns this id. Works for arbitrarily nested blocks
- * because Payload stores every block row's auto-generated id at
- * `<path>.id` regardless of depth.
- */
+/** Resolve a block's auto-generated `id` to its form-state path. */
 function findPathById(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fields: Record<string, any>,
@@ -36,23 +30,16 @@ export type UseBlockActionMessagesReturn = {
 }
 
 /**
- * Listens for postMessage events from the preview iframe (focus-block +
- * block-action) and applies the appropriate selection / form-state
- * mutations. Mutations are wrapped in `useEditorHistory().commit()` so
- * undo/redo stays consistent with sidebar-driven mutations.
- *
- * Returns an `addBelowRequestId` that bumps each time the iframe asks to
- * add a sibling block; BlockSettingsTab observes this to open the
- * BlocksDrawer scoped to the parent's allowed blocks.
+ * Receives `focus-block` and `block-action` postMessages from the iframe
+ * and applies selection / row mutations (via `commit()` so undo/redo
+ * stays consistent with sidebar-driven actions).
  */
 export const useBlockActionMessages = ({
   setSelectedBlockPath,
 }: UseBlockActionMessagesArgs): UseBlockActionMessagesReturn => {
   const [addBelowRequestId, setAddBelowRequestId] = useState<number>(0)
 
-  // Subscribe to the document's form state so we can resolve a clicked
-  // block's id back to its form-state path. Kept in a ref so the
-  // postMessage listener doesn't have to re-bind on every form change.
+  // Form state in a ref so the message listener doesn't re-bind on every change.
   const [allFields] = useAllFormFields()
   const allFieldsRef = useRef(allFields)
   useEffect(() => {
@@ -84,10 +71,8 @@ export const useBlockActionMessages = ({
       const rows = allFieldsRef.current[parentPath]?.rows
       const rowCount = Array.isArray(rows) ? rows.length : 0
 
-      // "add" is handled separately — no mutation here. We just select
-      // the clicked block and ping BlockSettingsTab to open its
-      // BlocksDrawer; the actual ADD_ROW dispatch (and snapshot) lives
-      // in addRowAfterSelected when the drawer's user picks a block.
+      // "add" doesn't mutate here; the BlocksDrawer (opened via
+      // addBelowRequestId) handles the actual ADD_ROW.
       if (data.action === 'add') {
         setSelectedBlockPath(path)
         setAddBelowRequestId(Date.now())

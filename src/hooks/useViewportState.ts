@@ -31,13 +31,10 @@ export type UseViewportStateReturn = {
 }
 
 /**
- * Tracks the current preview viewport (desktop / tablet / mobile / responsive
- * / fullscreen), the responsive-mode draggable width, and the iframe's
- * actual rendered width. Persists the responsive width across opens.
- *
- * `viewportWidth` is the iframe constraint to apply: null for desktop +
- * fullscreen (full available width), settings-driven for tablet/mobile,
- * draggable `responsiveWidth` for responsive mode.
+ * Viewport state for the preview iframe — current mode, draggable width
+ * for responsive mode (persisted across opens), and the iframe's actual
+ * rendered width. `viewportWidth` is `null` when the iframe should fill
+ * its container (desktop + fullscreen).
  */
 export const useViewportState = (settings: BetterEditorSettings): UseViewportStateReturn => {
   const [viewport, setViewport] = useState<Viewport>('desktop')
@@ -46,18 +43,15 @@ export const useViewportState = (settings: BetterEditorSettings): UseViewportSta
   )
   const [iframeWidth, setIframeWidth] = useState<number | null>(null)
 
-  // Persist the responsive-mode width across opens (separate from sidebar).
   useEffect(() => {
     if (typeof window === 'undefined') return
     try {
       window.localStorage.setItem(RESPONSIVE_WIDTH_KEY, String(responsiveWidth))
     } catch {
-      // ignore
+      // storage unavailable / quota exceeded
     }
   }, [responsiveWidth])
 
-  // Resolve the active viewport width from settings + responsive state.
-  // Fullscreen + Desktop both render at full available preview width.
   const viewportWidth =
     viewport === 'desktop' || viewport === 'fullscreen'
       ? null

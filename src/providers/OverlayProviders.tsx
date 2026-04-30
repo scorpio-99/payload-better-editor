@@ -11,12 +11,7 @@ export type OverlayProvidersProps = {
   children: React.ReactNode
 }
 
-/**
- * Standard provider stack for the LiveEditorOverlay: error boundary
- * (with reset → clears stale selection), settings fetch + cache, and the
- * undo/redo history. Kept in its own component so the overlay's body can
- * call `useBetterEditorSettings()` / `useEditorHistory()` directly.
- */
+/** Provider stack: ErrorBoundary > Settings > History. */
 export const OverlayProviders: React.FC<OverlayProvidersProps> = ({
   onClose,
   onReset,

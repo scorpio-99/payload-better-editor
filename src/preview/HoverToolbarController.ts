@@ -79,10 +79,16 @@ export class HoverToolbarController {
     this.doc.removeEventListener('mouseover', this.onMove)
     this.doc.defaultView?.removeEventListener('scroll', this.onScroll, true)
     this.clearActive()
-    this.root.unmount()
-    if (this.toolbar.parentNode) {
-      this.toolbar.parentNode.removeChild(this.toolbar)
-    }
+    // Defer unmount + DOM removal to a microtask. React 19 throws if
+    // root.unmount() is called synchronously while another tree is
+    // mid-render (which happens because our cleanup fires from an
+    // effect during the parent's commit phase).
+    const root = this.root
+    const toolbar = this.toolbar
+    queueMicrotask(() => {
+      root.unmount()
+      if (toolbar.parentNode) toolbar.parentNode.removeChild(toolbar)
+    })
     this.currentBlockId = null
     this.currentBlockEl = null
   }

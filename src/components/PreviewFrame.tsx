@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
-import { useDocumentEvents, useDocumentInfo } from '@payloadcms/ui'
 
 import type { HoverToolbarPosition } from '../useBetterEditorSettings'
 import { HoverToolbarController } from '../preview/HoverToolbarController'
@@ -57,8 +56,6 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
   useEffect(() => {
     setIsLoading(true)
   }, [previewURL])
-  const { mostRecentUpdate } = useDocumentEvents()
-  const { id } = useDocumentInfo()
 
   // Latest settings in a ref so the load-listener effect doesn't re-bind
   // on every color tweak; the settings effect below calls update() instead.
@@ -231,28 +228,6 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     ro.observe(iframe)
     return () => ro.disconnect()
   }, [onIframeWidthChange])
-
-  // Forward Payload's "document saved" event into the iframe so the
-  // consumer's `<RefreshRouteOnSave />` re-fetches the draft.
-  useEffect(() => {
-    if (!mostRecentUpdate) return
-    if (id != null && mostRecentUpdate.id !== id) return
-    if (!previewURL) return
-    const iframe = iframeRef.current
-    if (!iframe?.contentWindow) return
-
-    let targetOrigin: string
-    try {
-      targetOrigin = new URL(previewURL, window.location.origin).origin
-    } catch {
-      targetOrigin = window.location.origin
-    }
-
-    iframe.contentWindow.postMessage(
-      { type: 'payload-document-event' },
-      targetOrigin,
-    )
-  }, [mostRecentUpdate, id, previewURL])
 
   if (!isPreviewEnabled) {
     return (

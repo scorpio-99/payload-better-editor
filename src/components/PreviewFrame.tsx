@@ -50,6 +50,13 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
   const teardownRef = useRef<(() => void) | null>(null)
   const controllerRef = useRef<HoverToolbarController | null>(null)
   const [isResizing, setIsResizing] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Reset the loading flag when the iframe src changes (navigation /
+  // viewport switch), so the skeleton reappears until the new doc loads.
+  useEffect(() => {
+    setIsLoading(true)
+  }, [previewURL])
   const { mostRecentUpdate } = useDocumentEvents()
   const { id } = useDocumentInfo()
 
@@ -125,6 +132,7 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     if (!iframe) return
 
     const onLoad = () => {
+      setIsLoading(false)
       let doc: Document | null = null
       try {
         doc = iframe.contentDocument
@@ -328,6 +336,18 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
             : undefined
         }
       />
+      {isLoading ? (
+        <div
+          className="better-editor-frame__skeleton"
+          role="status"
+          aria-label="Loading preview"
+        >
+          <div className="better-editor-frame__skeleton-bar better-editor-frame__skeleton-bar--lg" />
+          <div className="better-editor-frame__skeleton-bar" />
+          <div className="better-editor-frame__skeleton-bar better-editor-frame__skeleton-bar--sm" />
+          <div className="better-editor-frame__skeleton-block" />
+        </div>
+      ) : null}
       {resizable ? (
         <div
           className="better-editor-frame__handle better-editor-frame__handle--right"

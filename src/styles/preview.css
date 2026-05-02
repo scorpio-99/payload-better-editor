@@ -91,6 +91,49 @@
   pointer-events: none;
 }
 
+/* Loading skeleton — overlays the iframe while it boots. Subtle pulsing
+   bars + a content block, all neutral grays so it works on light/dark. */
+.better-editor-frame__skeleton {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 32px;
+  background: var(--theme-bg, #fff);
+  pointer-events: none;
+}
+
+.better-editor-frame__skeleton-bar,
+.better-editor-frame__skeleton-block {
+  background: var(--theme-elevation-100);
+  border-radius: 4px;
+  animation: better-editor-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.better-editor-frame__skeleton-bar {
+  height: 14px;
+  width: 60%;
+}
+.better-editor-frame__skeleton-bar--lg {
+  height: 28px;
+  width: 40%;
+  margin-bottom: 4px;
+}
+.better-editor-frame__skeleton-bar--sm {
+  width: 30%;
+}
+.better-editor-frame__skeleton-block {
+  flex: 1;
+  margin-top: 8px;
+  min-height: 120px;
+}
+
+@keyframes better-editor-skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
 /* Width chip in the preview toolbar (live iframe pixel width) */
 
 .better-editor__width-chip {

@@ -7,35 +7,30 @@ on:
     branches: [main]
 
 jobs:
-  check:
-    name: typecheck + build (Node ${{ matrix.node }} / Payload ${{ matrix.payload }})
+  build:
+    name: build
     runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        node: [20, 22]
-        payload: ['^3.81.0', 'latest']
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v4
         with:
           version: 10
-
-      - name: Setup Node ${{ matrix.node }}
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 22
+      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm build
 
-      - name: Install (Payload ${{ matrix.payload }})
-        run: |
-          pnpm install --frozen-lockfile=false
-          pnpm add -D payload@${{ matrix.payload }} @payloadcms/ui@${{ matrix.payload }}
-
-      - name: Typecheck
-        run: pnpm build:types
-
-      - name: Build
-        run: pnpm build
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm lint

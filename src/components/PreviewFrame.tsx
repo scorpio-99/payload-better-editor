@@ -157,7 +157,6 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     // Intentionally empty deps: bindings are reapplied via the settings
     // effect below (controller.update + style re-injection), not by
     // re-running this whole effect.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Apply setting changes without recreating the controller (preserves

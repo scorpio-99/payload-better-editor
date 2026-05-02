@@ -20,6 +20,7 @@ export const DocumentSettingsTab: React.FC = () => (
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function stripBlocks(fields: any[]): any[] {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result: any[] = []
   for (const field of fields) {
     if (!field || typeof field !== 'object') {

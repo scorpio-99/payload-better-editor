@@ -50,16 +50,6 @@ export function RenderBlocks({ blocks }) {
 
 Works at arbitrary nesting depth — a click on a block inside a Columns block walks up to the innermost `[data-better-editor-id]` and selects that block.
 
-### 3. Install `<RefreshRouteOnSave />` on the frontend
-```tsx
-import { RefreshRouteOnSave } from '@payloadcms/live-preview-react'
-
-// in your page during draft mode
-{draft && <RefreshRouteOnSave refresh={router.refresh} serverURL={serverURL} />}
-```
-
-After every save in the editor the plugin posts a `payload-document-event` into the iframe — this listener turns it into a `router.refresh()`.
-
 ## Plugin options
 Passed to `betterEditor({ … })`:
 

@@ -11,9 +11,9 @@ import {
   Tablet as L_Tablet,
   Smartphone as L_Smartphone,
   MoveHorizontal as L_MoveHorizontal,
-  Maximize2 as L_Maximize2,
-  Undo2 as L_Undo2,
-  Redo2 as L_Redo2,
+  Expand as L_Expand,
+  Undo as L_Undo,
+  Redo as L_Redo,
   PanelLeft as L_PanelLeft,
   type LucideProps,
 } from 'lucide-react'
@@ -38,7 +38,7 @@ export const DesktopIcon = sized(L_Monitor)
 export const TabletIcon = sized(L_Tablet)
 export const MobileIcon = sized(L_Smartphone)
 export const ResponsiveIcon = sized(L_MoveHorizontal)
-export const FullscreenIcon = sized(L_Maximize2)
-export const UndoIcon = sized(L_Undo2)
-export const RedoIcon = sized(L_Redo2)
+export const FullscreenIcon = sized(L_Expand)
+export const UndoIcon = sized(L_Undo)
+export const RedoIcon = sized(L_Redo)
 export const LayoutIcon = sized(L_PanelLeft)

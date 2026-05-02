@@ -1,9 +1,7 @@
 # payload-better-editor — Developer Guide
-
-Full installation, configuration, and architecture reference. For a feature overview see the [README](./README.md).
+Full installation and configuration reference. For a feature overview see the [README](./README.md).
 
 ## Installation
-
 ```bash
 pnpm add payload-better-editor
 # or
@@ -11,9 +9,7 @@ npm install payload-better-editor
 ```
 
 ## Setup
-
 ### 1. Register the plugin
-
 ```ts
 // payload.config.ts
 import { betterEditor } from 'payload-better-editor'
@@ -40,7 +36,6 @@ The plugin relies on Payload's standard `admin.livePreview.url`. Without it, the
 The plugin also auto-registers a `BetterEditorSettings` global (slug `better-editor-settings`, group "Site") for editor-wide options the user can change in the admin without redeploying.
 
 ### 2. Add `data-better-editor-id` to your block wrappers
-
 Each rendered block needs a unique `data-better-editor-id` so the editor can resolve clicks back to a form-state path. Use the block row's `id`:
 
 ```tsx
@@ -56,7 +51,6 @@ export function RenderBlocks({ blocks }) {
 Works at arbitrary nesting depth — a click on a block inside a Columns block walks up to the innermost `[data-better-editor-id]` and selects that block.
 
 ### 3. Install `<RefreshRouteOnSave />` on the frontend
-
 ```tsx
 import { RefreshRouteOnSave } from '@payloadcms/live-preview-react'
 
@@ -67,7 +61,6 @@ import { RefreshRouteOnSave } from '@payloadcms/live-preview-react'
 After every save in the editor the plugin posts a `payload-document-event` into the iframe — this listener turns it into a `router.refresh()`.
 
 ## Plugin options
-
 Passed to `betterEditor({ … })`:
 
 | Option | Type | Default | Description |
@@ -77,7 +70,6 @@ Passed to `betterEditor({ … })`:
 | `blocksField` | `string` | `'layout'` | Name of the document field holding the top-level blocks array |
 
 ## Runtime settings
-
 `BetterEditorSettings` global, editable in the admin. Defaults shown.
 
 | Field | Type | Default | Description |
@@ -92,20 +84,5 @@ Passed to `betterEditor({ … })`:
 | `showHoverToolbar` | `boolean` | `true` | Show the floating action toolbar on hovered blocks |
 | `hoverToolbarPosition` | `'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left'` | `'top-right'` | Toolbar anchor corner |
 
-## Architecture
-
-The overlay is portaled into Payload's `__main-wrapper` so the admin status row + chrome stay visible. Because everything runs inside the document's `<Form>`, `useForm` / `useField` / `RenderFields` bind to the exact same form state as the classic edit view — saving works through Payload's normal Save / Publish buttons.
-
-**Block selection:** every block in the preview emits `data-better-editor-id="<row-id>"`. Clicks in the iframe walk up to the innermost matching ancestor and post `{ type: 'focus-block', id }` to the parent window. The overlay scans the form-state map for `<path>.id === <row-id>` and uses the resolved path to render the block's fields in the sidebar.
-
-**Block mutations** (move / duplicate / add / delete) dispatch Payload's native row actions through `useForm().dispatchFields(...)` and `addFieldRow(...)`, paired with `setModified(true)` so autosave + live-preview refresh fire as on a manual edit.
-
-**Undo/Redo** snapshots the entire form state before each mutation and restores via `REPLACE_STATE`.
-
-**Hover toolbar** inside the iframe is a React tree mounted via `createRoot` into the iframe document. Hover styles + tint use CSS custom properties (`--bee-top`, `--bee-nested`, `--bee-outline-width`) set on the iframe `:root`, so settings updates only touch those vars — no full CSS re-injection.
-
-Same-origin iframe access only — cross-origin previews fall back to view-only mode.
-
 ## Contributing
-
 See [CONTRIBUTING.md](./CONTRIBUTING.md).

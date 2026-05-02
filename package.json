@@ -43,13 +43,14 @@
     "build:types": "tsc --outDir dist --rootDir ./src",
     "clean": "rimraf {dist,*.tsbuildinfo}",
     "copyfiles": "copyfiles -u 1 \"src/**/*.{html,css,scss,ttf,woff,woff2,eot,svg,jpg,png,json}\" dist/",
-    "lint": "eslint",
+    "lint": "eslint ./src",
     "lint:fix": "eslint ./src --fix"
   },
   "dependencies": {
     "lucide-react": "^0.563.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.18.0",
     "@payloadcms/next": "3.84.1",
     "@payloadcms/ui": "3.84.1",
     "@swc/cli": "0.6.0",
@@ -57,11 +58,14 @@
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "copyfiles": "2.4.1",
+    "eslint": "^9.18.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
     "payload": "3.84.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "rimraf": "3.0.2",
-    "typescript": "5.7.3"
+    "typescript": "5.7.3",
+    "typescript-eslint": "^8.20.0"
   },
   "peerDependencies": {
     "payload": "^3.0.0"

@@ -50,6 +50,24 @@ export function RenderBlocks({ blocks }) {
 
 Works at arbitrary nesting depth — a click on a block inside a Columns block walks up to the innermost `[data-better-editor-id]` and selects that block.
 
+**Lexical-embedded blocks** — if a block-typed field appears inside a Lexical RichText, wrap each JSX converter the same way:
+
+```tsx
+const jsxConverters: JSXConvertersFunction = ({ defaultConverters }) => ({
+  ...defaultConverters,
+  blocks: {
+    banner: ({ node }) => (
+      <div data-better-editor-id={node.fields.id}>
+        <BannerBlock {...node.fields} />
+      </div>
+    ),
+    // …same for every block type registered in the editor
+  },
+})
+```
+
+**Scope** — the editor resolves `blocks`-field rows. `array`-field rows (e.g. an array of column objects inside a Content block) are not selectable; mark only the rows that live inside a `blocks` field.
+
 ## Plugin options
 Passed to `betterEditor({ … })`:
 

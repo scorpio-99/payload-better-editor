@@ -10,17 +10,21 @@ export const betterEditorSettingsGlobal: GlobalConfig = {
   },
   admin: {
     group: 'Site',
+    description: 'Editor-wide preferences for the Better Editor overlay.',
   },
   fields: [
     {
       type: 'tabs',
       tabs: [
+        // --- Sidebar -------------------------------------------------------
         {
-          label: 'Layout',
+          label: 'Sidebar',
+          description: 'Where the sidebar sits and how its fields are stacked.',
           fields: [
             {
               name: 'sidebarPosition',
               type: 'select',
+              label: 'Position',
               defaultValue: 'right',
               options: [
                 { label: 'Right', value: 'right' },
@@ -30,46 +34,51 @@ export const betterEditorSettingsGlobal: GlobalConfig = {
             {
               name: 'forceFullWidthFields',
               type: 'checkbox',
+              label: 'Stack fields full-width',
               defaultValue: true,
-              label: 'Force full-width fields in sidebar',
               admin: {
                 description:
-                  'Stack all sidebar fields vertically by overriding their admin.width. Disable to respect the field config (e.g. four 25%-wide selects on a single row).',
+                  'Override admin.width on sidebar fields so they always span the full row.',
               },
             },
+          ],
+        },
+
+        // --- Viewport ------------------------------------------------------
+        {
+          label: 'Viewport',
+          description: 'Pixel widths for the Tablet and Mobile preview modes.',
+          fields: [
             {
               type: 'row',
               fields: [
                 {
                   name: 'tabletWidth',
                   type: 'number',
+                  label: 'Tablet (px)',
                   defaultValue: 800,
                   min: 320,
                   max: 1600,
-                  admin: {
-                    width: '50%',
-                    placeholder: '800',
-                    description: 'Width in pixels for the Tablet preview viewport.',
-                  },
+                  admin: { width: '50%', placeholder: '800' },
                 },
                 {
                   name: 'mobileWidth',
                   type: 'number',
+                  label: 'Mobile (px)',
                   defaultValue: 400,
                   min: 240,
                   max: 800,
-                  admin: {
-                    width: '50%',
-                    placeholder: '400',
-                    description: 'Width in pixels for the Mobile preview viewport.',
-                  },
+                  admin: { width: '50%', placeholder: '400' },
                 },
               ],
             },
           ],
         },
+
+        // --- Outline -------------------------------------------------------
         {
-          label: 'Hover',
+          label: 'Outline',
+          description: 'Outline + tint shown on the hovered block.',
           fields: [
             {
               type: 'row',
@@ -77,21 +86,23 @@ export const betterEditorSettingsGlobal: GlobalConfig = {
                 {
                   name: 'hoverColorTopLevel',
                   type: 'text',
+                  label: 'Top-level color',
                   defaultValue: '#3b82f6',
-                  label: 'Top-Level Hover Color',
                   admin: {
                     width: '50%',
-                    description: 'Hex color for top-level block outline.',
+                    placeholder: '#3b82f6',
+                    description: 'Hex color (e.g. `#3b82f6`).',
                   },
                 },
                 {
                   name: 'hoverColorNested',
                   type: 'text',
+                  label: 'Nested color',
                   defaultValue: '#f59e0b',
-                  label: 'Nested Hover Color',
                   admin: {
                     width: '50%',
-                    description: 'Hex color for nested block outline.',
+                    placeholder: '#f59e0b',
+                    description: 'Hex color for blocks nested inside another block.',
                   },
                 },
               ],
@@ -99,26 +110,34 @@ export const betterEditorSettingsGlobal: GlobalConfig = {
             {
               name: 'hoverOutlineWidth',
               type: 'number',
+              label: 'Outline width (px)',
               defaultValue: 2,
               min: 1,
               max: 5,
               admin: {
-                description: 'Hover outline width in pixels (1–5).',
+                placeholder: '2',
+                description: 'Outline thickness in pixels (1–5).',
               },
             },
+          ],
+        },
+
+        // --- Toolbar -------------------------------------------------------
+        {
+          label: 'Toolbar',
+          description:
+            'Floating Move / Duplicate / Delete toolbar that appears on the hovered block.',
+          fields: [
             {
               name: 'showHoverToolbar',
               type: 'checkbox',
+              label: 'Enabled',
               defaultValue: true,
-              label: 'Show hover toolbar in preview',
-              admin: {
-                description:
-                  'Floating toolbar with Move / Duplicate / Delete buttons that appears on the hovered block. Disable if you prefer working only via the sidebar.',
-              },
             },
             {
               name: 'hoverToolbarPosition',
               type: 'select',
+              label: 'Anchor corner',
               defaultValue: 'top-right',
               options: [
                 { label: 'Top right', value: 'top-right' },
@@ -126,9 +145,6 @@ export const betterEditorSettingsGlobal: GlobalConfig = {
                 { label: 'Bottom right', value: 'bottom-right' },
                 { label: 'Bottom left', value: 'bottom-left' },
               ],
-              admin: {
-                description: 'Anchor corner for the hover toolbar.',
-              },
             },
           ],
         },

@@ -39,9 +39,8 @@ export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({
     }
   }, [collectionSlug, globalSlug, getPreference])
 
-  // Persist changes after hydration — skip the initial default-state write
-  // so we don't overwrite a stored `open: true` with `false` before the
-  // initial read finishes.
+  // Persist after hydration; skip the initial default-state write so we
+  // don't overwrite a stored `open: true` with `false`.
   useEffect(() => {
     if (!hasHydratedRef.current) return
     const key = prefKey(collectionSlug, globalSlug)

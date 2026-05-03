@@ -2,13 +2,13 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useAllFormFields, useForm } from '@payloadcms/ui'
-import { isParentInboundMessage } from '../preview/protocol'
+import { listenForParentInbound } from '../internal/postmessage'
+import { splitFieldPath } from '../internal/path'
 import { useEditorHistory } from '../useEditorHistory'
 
 /** Resolve a block's auto-generated `id` to its form-state path. */
 function findPathById(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  fields: Record<string, any>,
+  fields: Record<string, { value?: unknown }>,
   targetId: string,
 ): string | null {
   for (const key in fields) {
@@ -50,24 +50,25 @@ export const useBlockActionMessages = ({
   const history = useEditorHistory()
 
   useEffect(() => {
-    const onMessage = (e: MessageEvent) => {
-      const data = e.data
-      if (!isParentInboundMessage(data)) return
-
+    return listenForParentInbound((data) => {
       if (data.type === 'focus-block') {
-        const path = findPathById(allFieldsRef.current, data.id)
+        const path = findPathById(
+          allFieldsRef.current as Record<string, { value?: unknown }>,
+          data.id,
+        )
         if (path) setSelectedBlockPath(path)
         return
       }
 
       // block-action
-      const path = findPathById(allFieldsRef.current, data.id)
+      const path = findPathById(
+        allFieldsRef.current as Record<string, { value?: unknown }>,
+        data.id,
+      )
       if (!path) return
-      const lastDot = path.lastIndexOf('.')
-      if (lastDot < 0) return
-      const parentPath = path.slice(0, lastDot)
-      const rowIndex = Number(path.slice(lastDot + 1))
-      if (Number.isNaN(rowIndex)) return
+      const split = splitFieldPath(path)
+      if (!split) return
+      const { parent: parentPath, index: rowIndex } = split
       const rows = allFieldsRef.current[parentPath]?.rows
       const rowCount = Array.isArray(rows) ? rows.length : 0
 
@@ -119,9 +120,7 @@ export const useBlockActionMessages = ({
         default:
           return
       }
-    }
-    window.addEventListener('message', onMessage)
-    return () => window.removeEventListener('message', onMessage)
+    })
   }, [dispatchFields, history, setSelectedBlockPath])
 
   return { addBelowRequestId }

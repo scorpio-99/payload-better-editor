@@ -12,7 +12,8 @@ import { useDocConfig } from '../hooks/useDocConfig'
 import { AddBlockDrawer } from './blocks/AddBlockDrawer'
 import { BlockActionsToolbar } from './blocks/BlockActionsToolbar'
 import { useBlockActions } from './blocks/useBlockActions'
-import { findNamedField, resolveBlockSchema, type AnyField } from './blocks/schema'
+import { findNamedField, resolveBlockSchema } from './blocks/schema'
+import type { AnyClientBlock } from '../internal/types'
 import { PlusIcon } from '../icons'
 
 // `permissions={true}` skips RenderFields' client-side read gate; the
@@ -73,7 +74,11 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
     return findNamedField(docFields, blocksField, docSlug || '')
   }, [docFields, blocksField, docSlug])
 
-  const availableBlocks = (blocksFieldInfo?.field?.blocks as AnyField[] | undefined) || []
+  const blocksFieldField = blocksFieldInfo?.field
+  const availableBlocks: AnyClientBlock[] =
+    blocksFieldField && blocksFieldField.type === 'blocks'
+      ? ((blocksFieldField.blocks || []) as AnyClientBlock[])
+      : []
   const blocksSchemaPath = blocksFieldInfo?.schemaPath || ''
   const topLevelRows = fields[blocksField]?.rows
   const addRowIndex = Array.isArray(topLevelRows) ? topLevelRows.length : 0

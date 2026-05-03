@@ -11,7 +11,6 @@ export type OverlayProvidersProps = {
   children: React.ReactNode
 }
 
-/** Provider stack: ErrorBoundary > Settings > History. */
 export const OverlayProviders: React.FC<OverlayProvidersProps> = ({
   onClose,
   onReset,

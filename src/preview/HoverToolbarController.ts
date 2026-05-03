@@ -1,6 +1,7 @@
 import React from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import type { HoverToolbarPosition } from '../useBetterEditorSettings'
+import { ACTIVE_CLASS, ACTIVE_SELECTOR, BLOCK_ID_ATTR, BLOCK_ID_SELECTOR } from '../internal/constants'
 import type { BlockActionMessage } from './protocol'
 import { TOOLBAR_ID } from './hover-css'
 import { HoverToolbar } from './HoverToolbar'
@@ -10,21 +11,12 @@ export type HoverToolbarOptions = {
   onAction: (id: string, action: BlockActionMessage['action']) => void
 }
 
-/**
- * Floating action toolbar over the hovered block inside the preview
- * iframe. Sticky-leaf selection — when the cursor crosses an ancestor
- * (e.g. the gap between sibling children) the toolbar stays on the
- * current leaf so it doesn't flicker. Colors are CSS-driven via the
- * `--bee-top` / `--bee-nested` custom properties; the toolbar's tint is
- * picked up automatically via the `data-nested` attribute. The button
- * row itself is rendered via React (createRoot) so icons stay fully
- * type-checked components.
- */
 export class HoverToolbarController {
   private doc: Document
   private opts: HoverToolbarOptions
   private toolbar: HTMLDivElement
   private root: Root
+  private destroyed = false
   private currentBlockId: string | null = null
   private currentBlockEl: HTMLElement | null = null
   private onMove: (e: MouseEvent) => void
@@ -54,7 +46,7 @@ export class HoverToolbarController {
       const target = e.target as HTMLElement | null
       if (!target) return
       if (this.toolbar.contains(target)) return
-      const el = target.closest<HTMLElement>('[data-better-editor-id]')
+      const el = target.closest<HTMLElement>(BLOCK_ID_SELECTOR)
       if (!el) {
         this.hide()
         return
@@ -69,24 +61,27 @@ export class HoverToolbarController {
     this.doc.defaultView?.addEventListener('scroll', this.onScroll, true)
   }
 
-  /** Reapply position config without recreating the DOM node. */
   update(opts: HoverToolbarOptions): void {
     this.opts = opts
     if (this.currentBlockEl) this.positionToolbar()
   }
 
   destroy(): void {
+    if (this.destroyed) return
+    this.destroyed = true
     this.doc.removeEventListener('mouseover', this.onMove)
     this.doc.defaultView?.removeEventListener('scroll', this.onScroll, true)
     this.clearActive()
-    // Defer unmount + DOM removal to a microtask. React 19 throws if
-    // root.unmount() is called synchronously while another tree is
-    // mid-render (which happens because our cleanup fires from an
-    // effect during the parent's commit phase).
+    // React 19 throws if root.unmount() runs synchronously while another
+    // tree is mid-render; defer so it lands after the parent commit.
     const root = this.root
     const toolbar = this.toolbar
     queueMicrotask(() => {
-      root.unmount()
+      try {
+        root.unmount()
+      } catch {
+        /* root already unmounted */
+      }
       if (toolbar.parentNode) toolbar.parentNode.removeChild(toolbar)
     })
     this.currentBlockId = null
@@ -115,13 +110,11 @@ export class HoverToolbarController {
   }
 
   private clearActive(): void {
-    this.doc
-      .querySelectorAll('.better-editor-active')
-      .forEach((node) => node.classList.remove('better-editor-active'))
+    this.doc.querySelectorAll(ACTIVE_SELECTOR).forEach((node) => node.classList.remove(ACTIVE_CLASS))
   }
 
   private showFor(el: HTMLElement): void {
-    const blockId = el.getAttribute('data-better-editor-id')
+    const blockId = el.getAttribute(BLOCK_ID_ATTR)
     if (!blockId) return
     this.currentBlockId = blockId
     this.currentBlockEl = el
@@ -130,10 +123,10 @@ export class HoverToolbarController {
     this.clearActive()
     let cur: HTMLElement | null = el
     while (cur) {
-      cur.classList.add('better-editor-active')
-      cur = cur.parentElement?.closest<HTMLElement>('[data-better-editor-id]') ?? null
+      cur.classList.add(ACTIVE_CLASS)
+      cur = cur.parentElement?.closest<HTMLElement>(BLOCK_ID_SELECTOR) ?? null
     }
-    const isNested = !!el.parentElement?.closest('[data-better-editor-id]')
+    const isNested = !!el.parentElement?.closest(BLOCK_ID_SELECTOR)
     this.toolbar.dataset.nested = isNested ? '1' : '0'
     this.toolbar.classList.add('is-visible')
     const view = this.doc.defaultView

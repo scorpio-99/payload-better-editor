@@ -2,11 +2,6 @@
 
 import React, { useEffect, useRef } from 'react'
 
-/**
- * Drives the browser Fullscreen API for the overlay root. `onExitFullscreen`
- * fires when the user exits via Esc / browser UI so callers can sync their
- * viewport state.
- */
 export const useFullscreenOverlay = (
   isFullscreen: boolean,
   onExitFullscreen: () => void,

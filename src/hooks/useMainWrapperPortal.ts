@@ -2,11 +2,6 @@
 
 import { useEffect, useState } from 'react'
 
-/**
- * Returns Payload's `__main-wrapper` as a portal mount node when
- * `enabled`. Applies scroll-lock + viewport-height clamp on the wrapper;
- * cleanup restores everything.
- */
 export const useMainWrapperPortal = (enabled: boolean): HTMLElement | null => {
   const [mountNode, setMountNode] = useState<HTMLElement | null>(null)
 

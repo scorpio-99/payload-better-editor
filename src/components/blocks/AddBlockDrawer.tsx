@@ -2,16 +2,16 @@
 
 import React from 'react'
 import { BlocksDrawer } from '@payloadcms/ui'
-import type { AnyField } from './schema'
+import type { AnyClientBlock } from '../../internal/types'
 
 export type AddBlockDrawerProps = {
   slug: string
-  blocks: AnyField[]
+  blocks: AnyClientBlock[]
   addRow: (index: number, blockType?: string) => void
   addRowIndex: number
 }
 
-/** `BlocksDrawer` wrapper with our default labels + the `blocks` cast. */
+/** `BlocksDrawer` wrapper that fixes our default labels. */
 export const AddBlockDrawer: React.FC<AddBlockDrawerProps> = ({
   slug,
   blocks,
@@ -21,8 +21,7 @@ export const AddBlockDrawer: React.FC<AddBlockDrawerProps> = ({
   <BlocksDrawer
     addRow={addRow}
     addRowIndex={addRowIndex}
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    blocks={blocks as any}
+    blocks={blocks}
     drawerSlug={slug}
     labels={{ singular: 'Block', plural: 'Blocks' }}
   />

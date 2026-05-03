@@ -2,7 +2,6 @@
 
 import { useDocumentInfo } from '@payloadcms/ui'
 
-/** Narrow `useDocumentInfo()` to `{ fields, slug }` with optional-prop guards. */
 export const useDocConfig = () => {
   const { docConfig } = useDocumentInfo()
   return {

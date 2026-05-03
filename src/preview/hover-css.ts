@@ -1,15 +1,8 @@
 export const HOVER_STYLE_ID = 'better-editor-hover-style'
 export const TOOLBAR_ID = 'better-editor-block-toolbar'
 
-/**
- * Static CSS for hover state + toolbar. Dynamic values (colors, outline
- * width) come from CSS custom properties set on the iframe's `:root`
- * via `setHoverVars()` — settings updates only touch those 3 vars.
- *
- * `:hover` propagates, so ancestor blocks stay outlined while the cursor
- * is anywhere inside them. `.better-editor-active` is JS-applied to keep
- * the outline visible when the cursor moves to the floating toolbar.
- */
+// Dynamic values come from CSS vars set via setHoverVars(); .better-editor-active
+// keeps the outline visible when the cursor moves to the floating toolbar.
 export const HOVER_CSS = `
   [data-better-editor-id] { cursor: pointer; }
   [data-better-editor-id]:hover,
@@ -61,7 +54,6 @@ export type HoverVars = {
   outlineWidth: number
 }
 
-/** Set the 3 CSS variables the static CSS reads. */
 export const setHoverVars = (doc: Document, vars: HoverVars): void => {
   const root = doc.documentElement
   root.style.setProperty('--bee-top', vars.topColor)

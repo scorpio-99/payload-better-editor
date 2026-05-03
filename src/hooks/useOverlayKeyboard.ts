@@ -8,12 +8,6 @@ export type UseOverlayKeyboardArgs = {
   history: ReturnType<typeof useEditorHistory>
 }
 
-/**
- * Global keyboard shortcuts while the overlay is mounted:
- *  - Esc: close
- *  - Cmd/Ctrl+Z: undo
- *  - Cmd/Ctrl+Shift+Z or Cmd/Ctrl+Y: redo
- */
 export const useOverlayKeyboard = ({ onClose, history }: UseOverlayKeyboardArgs): void => {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

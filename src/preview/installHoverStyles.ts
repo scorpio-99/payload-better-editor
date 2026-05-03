@@ -1,9 +1,5 @@
 import { HOVER_CSS, HOVER_STYLE_ID, setHoverVars, type HoverVars } from './hover-css'
 
-/**
- * Inject the static hover + toolbar CSS into the iframe document and set
- * the dynamic CSS variables. Returns a teardown that removes both.
- */
 export const installHoverStyles = (doc: Document, vars: HoverVars): (() => void) => {
   const existing = doc.getElementById(HOVER_STYLE_ID)
   if (existing) existing.remove()

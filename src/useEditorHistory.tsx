@@ -6,8 +6,8 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useReducer,
   useRef,
-  useState,
 } from 'react'
 import { useAllFormFields, useForm } from '@payloadcms/ui'
 
@@ -38,11 +38,46 @@ export const useEditorHistory = () => useContext(Ctx)
 
 const MAX_HISTORY = 50
 
-/**
- * Snapshot-based undo/redo. In-memory, capped at MAX_HISTORY entries,
- * resets on overlay unmount. Linear history — new edits after an undo
- * clear the redo stack.
- */
+type HistoryState = {
+  undo: Snapshot[]
+  redo: Snapshot[]
+}
+
+type HistoryAction =
+  | { type: 'push'; snapshot: Snapshot }
+  | { type: 'undo'; current: Snapshot }
+  | { type: 'redo'; current: Snapshot }
+
+const initialState: HistoryState = { undo: [], redo: [] }
+
+const reducer = (state: HistoryState, action: HistoryAction): HistoryState => {
+  switch (action.type) {
+    case 'push': {
+      const next = [...state.undo, action.snapshot]
+      return {
+        undo: next.length > MAX_HISTORY ? next.slice(-MAX_HISTORY) : next,
+        redo: [],
+      }
+    }
+    case 'undo': {
+      if (state.undo.length === 0) return state
+      return {
+        undo: state.undo.slice(0, -1),
+        redo: [...state.redo, action.current],
+      }
+    }
+    case 'redo': {
+      if (state.redo.length === 0) return state
+      return {
+        undo: [...state.undo, action.current],
+        redo: state.redo.slice(0, -1),
+      }
+    }
+    default:
+      return state
+  }
+}
+
 export const EditorHistoryProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
@@ -53,26 +88,16 @@ export const EditorHistoryProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [fields])
 
   const { dispatchFields, setModified } = useForm()
-  const [undoStack, setUndoStack] = useState<Snapshot[]>([])
-  const [redoStack, setRedoStack] = useState<Snapshot[]>([])
-  // Refs mirror the stacks so undo/redo can read latest values without
-  // calling setState inside another setState updater (React 18+ flags
-  // that as "set state during render").
-  const undoStackRef = useRef(undoStack)
-  const redoStackRef = useRef(redoStack)
+  const [state, dispatch] = useReducer(reducer, initialState)
+  const stateRef = useRef(state)
   useEffect(() => {
-    undoStackRef.current = undoStack
-  }, [undoStack])
-  useEffect(() => {
-    redoStackRef.current = redoStack
-  }, [redoStack])
+    stateRef.current = state
+  }, [state])
   const restoringRef = useRef(false)
 
   const pushSnapshot = useCallback(() => {
     if (restoringRef.current) return
-    const next = [...undoStackRef.current, fieldsRef.current]
-    setUndoStack(next.length > MAX_HISTORY ? next.slice(-MAX_HISTORY) : next)
-    setRedoStack([])
+    dispatch({ type: 'push', snapshot: fieldsRef.current })
   }, [])
 
   const commit = useCallback(
@@ -85,27 +110,23 @@ export const EditorHistoryProvider: React.FC<{ children: React.ReactNode }> = ({
   )
 
   const undo = useCallback(() => {
-    const stack = undoStackRef.current
+    const { undo: stack } = stateRef.current
     if (stack.length === 0) return
     const target = stack[stack.length - 1]
-    setUndoStack(stack.slice(0, -1))
-    setRedoStack([...redoStackRef.current, fieldsRef.current])
+    dispatch({ type: 'undo', current: fieldsRef.current })
     restoringRef.current = true
     dispatchFields({ type: 'REPLACE_STATE', state: target })
     setModified(true)
-    // Release on the next tick so the resulting form re-render doesn't
-    // re-enter pushSnapshot via any side effects.
     setTimeout(() => {
       restoringRef.current = false
     }, 0)
   }, [dispatchFields, setModified])
 
   const redo = useCallback(() => {
-    const stack = redoStackRef.current
+    const { redo: stack } = stateRef.current
     if (stack.length === 0) return
     const target = stack[stack.length - 1]
-    setRedoStack(stack.slice(0, -1))
-    setUndoStack([...undoStackRef.current, fieldsRef.current])
+    dispatch({ type: 'redo', current: fieldsRef.current })
     restoringRef.current = true
     dispatchFields({ type: 'REPLACE_STATE', state: target })
     setModified(true)
@@ -120,10 +141,10 @@ export const EditorHistoryProvider: React.FC<{ children: React.ReactNode }> = ({
       commit,
       undo,
       redo,
-      canUndo: undoStack.length > 0,
-      canRedo: redoStack.length > 0,
+      canUndo: state.undo.length > 0,
+      canRedo: state.redo.length > 0,
     }),
-    [pushSnapshot, commit, undo, redo, undoStack.length, redoStack.length],
+    [pushSnapshot, commit, undo, redo, state.undo.length, state.redo.length],
   )
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>

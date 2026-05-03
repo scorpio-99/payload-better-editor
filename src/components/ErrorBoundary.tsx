@@ -4,7 +4,6 @@ import React from 'react'
 
 type Props = {
   onClose: () => void
-  /** Called before the boundary resets — used to clear stale state. */
   onReset?: () => void
   children: React.ReactNode
 }
@@ -13,7 +12,6 @@ type State = {
   error: Error | null
 }
 
-/** Catches render errors inside the overlay; falls back to a recoverable UI. */
 export class OverlayErrorBoundary extends React.Component<Props, State> {
   state: State = { error: null }
 
@@ -22,9 +20,7 @@ export class OverlayErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
-    if (typeof console !== 'undefined') {
-      console.error('[better-editor] overlay crashed', error, info)
-    }
+    console.error('[better-editor] overlay crashed', error, info)
   }
 
   reset = () => {

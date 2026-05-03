@@ -22,18 +22,18 @@
   ],
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "import": "./src/index.ts",
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
     },
     "./client": {
-      "import": "./dist/client.js",
-      "types": "./dist/client.d.ts",
-      "default": "./dist/client.js"
+      "import": "./src/client.ts",
+      "types": "./src/client.ts",
+      "default": "./src/client.ts"
     }
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "files": [
     "dist"
   ],
@@ -46,29 +46,11 @@
     "lint": "eslint ./src",
     "lint:fix": "eslint ./src --fix"
   },
-  "dependencies": {
-    "lucide-react": "^0.563.0"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.18.0",
-    "@payloadcms/next": "3.84.1",
-    "@payloadcms/ui": "3.84.1",
-    "@swc/cli": "0.6.0",
-    "@types/node": "22.19.9",
-    "@types/react": "19.2.14",
-    "@types/react-dom": "19.2.3",
-    "copyfiles": "2.4.1",
-    "eslint": "^9.18.0",
-    "eslint-plugin-react-hooks": "^5.1.0",
-    "payload": "3.84.1",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "rimraf": "3.0.2",
-    "typescript": "5.7.3",
-    "typescript-eslint": "^8.20.0"
-  },
   "peerDependencies": {
-    "payload": "^3.0.0"
+    "lucide-react": "^0.378.0",
+    "payload": "^3.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "engines": {
     "node": "^18.20.2 || >=20.9.0",
@@ -76,6 +58,20 @@
   },
   "publishConfig": {
     "access": "public",
-    "registry": "https://registry.npmjs.org/"
+    "registry": "https://registry.npmjs.org/",
+    "exports": {
+      ".": {
+        "import": "./dist/index.js",
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./client": {
+        "import": "./dist/client.js",
+        "types": "./dist/client.d.ts",
+        "default": "./dist/client.js"
+      }
+    },
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts"
   }
 }

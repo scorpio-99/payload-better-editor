@@ -39,6 +39,33 @@
   background: #fff;
 }
 
+.better-editor-frame__empty {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: var(--theme-elevation-50);
+  color: var(--theme-elevation-500);
+  text-align: center;
+}
+
+.better-editor-frame__empty p {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.better-editor-frame__empty code {
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--theme-elevation-150);
+  color: var(--theme-text);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, monospace);
+  font-size: 12px;
+}
+
 /* Wrapper is always rendered (even at full width) so React doesn't remount
    the iframe when the user switches viewports. The constrained modifier
    applies the device-frame look. */

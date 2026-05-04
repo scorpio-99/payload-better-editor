@@ -7,13 +7,11 @@ import { DocumentFieldsTab } from './DocumentFieldsTab'
 const isNotSidebar = (f: ClientField): boolean =>
   !('admin' in f) || f.admin?.position !== 'sidebar'
 
+// The blocks tab owns layout-block editing; stripping `blocks` fields here
+// avoids rendering them twice and keeps this tab focused on document meta.
 const stripBlocks = (fields: ClientField[]): ClientField[] => {
   const result: ClientField[] = []
   for (const field of fields) {
-    if (!field || typeof field !== 'object') {
-      result.push(field)
-      continue
-    }
     const type = field.type
 
     if (type === 'blocks') continue

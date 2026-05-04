@@ -28,6 +28,8 @@ export type PreviewFrameProps = {
 
 type BlockAction = BlockActionMessage['action']
 
+// contentDocument throws when the iframe is cross-origin; null signals
+// "skip in-iframe instrumentation" to the caller.
 const getSameOriginDocument = (iframe: HTMLIFrameElement): Document | null => {
   try {
     return iframe.contentDocument
@@ -52,6 +54,7 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   const teardownRef = useRef<(() => void) | null>(null)
   const controllerRef = useRef<HoverToolbarController | null>(null)
+  const isBoundRef = useRef(false)
   const [isResizing, setIsResizing] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -107,11 +110,13 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
         })
       }
 
+      isBoundRef.current = true
       teardownRef.current = () => {
         removeStyles()
         removeClick()
         controllerRef.current?.destroy()
         controllerRef.current = null
+        isBoundRef.current = false
       }
     },
     [dispatchBlockAction, onFocusBlock],
@@ -143,8 +148,11 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
   }, [bindToDocument])
 
   // Apply setting changes without recreating the controller (preserves
-  // its DOM node + current selection).
+  // its DOM node + current selection). Skipped before the iframe load
+  // commits — operating on the about:blank document would leak a
+  // controller whose DOM gets wiped by navigation.
   useEffect(() => {
+    if (!isBoundRef.current) return
     const iframe = iframeRef.current
     if (!iframe) return
     const doc = getSameOriginDocument(iframe)
@@ -217,7 +225,14 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
 
   // Track in-flight drag so unmount mid-drag can release body styles + listeners.
   const dragCleanupRef = useRef<(() => void) | null>(null)
-  useEffect(() => () => dragCleanupRef.current?.(), [])
+  const isMountedRef = useRef(true)
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+      dragCleanupRef.current?.()
+    }
+  }, [])
 
   const onHandleMouseDown = useCallback(
     (side: 'left' | 'right') => (e: React.MouseEvent) => {
@@ -237,7 +252,7 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
         window.removeEventListener('mouseup', onUp)
         document.body.style.cursor = ''
         document.body.style.userSelect = ''
-        setIsResizing(false)
+        if (isMountedRef.current) setIsResizing(false)
         dragCleanupRef.current = null
       }
       const onUp = () => cleanup()
@@ -273,14 +288,23 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
   }
 
   const constrained = typeof viewportWidth === 'number' && viewportWidth > 0
-  const viewportClassName = [
-    'better-editor-frame__viewport',
-    constrained && 'better-editor-frame__viewport--constrained',
-    resizable && 'better-editor-frame__viewport--resizable',
-    isResizing && 'better-editor-frame__viewport--resizing',
-  ]
-    .filter(Boolean)
-    .join(' ')
+  const viewportClassName = useMemo(
+    () =>
+      [
+        'better-editor-frame__viewport',
+        constrained && 'better-editor-frame__viewport--constrained',
+        resizable && 'better-editor-frame__viewport--resizable',
+        isResizing && 'better-editor-frame__viewport--resizing',
+      ]
+        .filter(Boolean)
+        .join(' '),
+    [constrained, resizable, isResizing],
+  )
+
+  const iframeStyle = useMemo(
+    () => (constrained ? { width: `${viewportWidth}px`, maxWidth: '100%' as const } : undefined),
+    [constrained, viewportWidth],
+  )
 
   // Iframe always lives in the same wrapper across viewport modes so React
   // doesn't remount it (which would reload the page and drop the
@@ -301,9 +325,7 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
         className="better-editor-frame"
         src={previewURL}
         title="Better Editor preview"
-        style={
-          constrained ? { width: `${viewportWidth}px`, maxWidth: '100%' } : undefined
-        }
+        style={iframeStyle}
       />
       {isLoading ? (
         <div

@@ -9,11 +9,10 @@ export type UseOverlayKeyboardArgs = {
 }
 
 export const useOverlayKeyboard = ({ onClose, history }: UseOverlayKeyboardArgs): void => {
+  // Mutable ref keeps the global keydown listener bound once across re-renders
+  // while still calling the latest handlers.
   const handlersRef = useRef<UseOverlayKeyboardArgs>({ onClose, history })
-
-  useEffect(() => {
-    handlersRef.current = { onClose, history }
-  }, [onClose, history])
+  handlersRef.current = { onClose, history }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -25,7 +24,7 @@ export const useOverlayKeyboard = ({ onClose, history }: UseOverlayKeyboardArgs)
       const k = e.key.toLowerCase()
       if (k === 'z') {
         e.preventDefault()
-        const h = handlersRef.current.history
+        const { history: h } = handlersRef.current
         if (e.shiftKey) h.redo()
         else h.undo()
       } else if (k === 'y') {

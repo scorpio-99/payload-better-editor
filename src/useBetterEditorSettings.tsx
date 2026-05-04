@@ -6,11 +6,11 @@ import {
   DEFAULT_BETTER_EDITOR_SETTINGS,
   HOVER_TOOLBAR_POSITIONS,
   SIDEBAR_POSITIONS,
-  type HoverToolbarPosition as InternalHoverToolbarPosition,
+  type HoverToolbarPosition,
   type SidebarPosition,
 } from './internal/constants'
 
-export type HoverToolbarPosition = InternalHoverToolbarPosition
+export type { HoverToolbarPosition }
 
 export type BetterEditorSettings = {
   sidebarPosition: SidebarPosition
@@ -28,9 +28,9 @@ export const DEFAULT_SIDEBAR_WIDTH = 400
 export const MIN_SIDEBAR_WIDTH = 250
 export const MAX_SIDEBAR_WIDTH = 800
 
-export const DEFAULT_SETTINGS: BetterEditorSettings = { ...DEFAULT_BETTER_EDITOR_SETTINGS }
+const DEFAULTS: BetterEditorSettings = { ...DEFAULT_BETTER_EDITOR_SETTINGS }
 
-const Ctx = createContext<BetterEditorSettings>(DEFAULT_SETTINGS)
+const Ctx = createContext<BetterEditorSettings>(DEFAULTS)
 
 export const useBetterEditorSettings = (): BetterEditorSettings => useContext(Ctx)
 
@@ -47,21 +47,21 @@ const pickNonEmptyString = (value: unknown, fallback: string): string =>
   typeof value === 'string' && value.length > 0 ? value : fallback
 
 const normalizeSettings = (raw: unknown): BetterEditorSettings => {
-  if (!raw || typeof raw !== 'object') return DEFAULT_SETTINGS
+  if (!raw || typeof raw !== 'object') return DEFAULTS
   const d = raw as Partial<BetterEditorSettings>
   return {
-    sidebarPosition: pickEnum(d.sidebarPosition, SIDEBAR_POSITIONS, DEFAULT_SETTINGS.sidebarPosition),
-    forceFullWidthFields: pickBool(d.forceFullWidthFields, DEFAULT_SETTINGS.forceFullWidthFields),
-    tabletWidth: pickFiniteNumber(d.tabletWidth, DEFAULT_SETTINGS.tabletWidth),
-    mobileWidth: pickFiniteNumber(d.mobileWidth, DEFAULT_SETTINGS.mobileWidth),
-    hoverColorTopLevel: pickNonEmptyString(d.hoverColorTopLevel, DEFAULT_SETTINGS.hoverColorTopLevel),
-    hoverColorNested: pickNonEmptyString(d.hoverColorNested, DEFAULT_SETTINGS.hoverColorNested),
-    hoverOutlineWidth: pickFiniteNumber(d.hoverOutlineWidth, DEFAULT_SETTINGS.hoverOutlineWidth),
-    showHoverToolbar: pickBool(d.showHoverToolbar, DEFAULT_SETTINGS.showHoverToolbar),
+    sidebarPosition: pickEnum(d.sidebarPosition, SIDEBAR_POSITIONS, DEFAULTS.sidebarPosition),
+    forceFullWidthFields: pickBool(d.forceFullWidthFields, DEFAULTS.forceFullWidthFields),
+    tabletWidth: pickFiniteNumber(d.tabletWidth, DEFAULTS.tabletWidth),
+    mobileWidth: pickFiniteNumber(d.mobileWidth, DEFAULTS.mobileWidth),
+    hoverColorTopLevel: pickNonEmptyString(d.hoverColorTopLevel, DEFAULTS.hoverColorTopLevel),
+    hoverColorNested: pickNonEmptyString(d.hoverColorNested, DEFAULTS.hoverColorNested),
+    hoverOutlineWidth: pickFiniteNumber(d.hoverOutlineWidth, DEFAULTS.hoverOutlineWidth),
+    showHoverToolbar: pickBool(d.showHoverToolbar, DEFAULTS.showHoverToolbar),
     hoverToolbarPosition: pickEnum(
       d.hoverToolbarPosition,
       HOVER_TOOLBAR_POSITIONS,
-      DEFAULT_SETTINGS.hoverToolbarPosition,
+      DEFAULTS.hoverToolbarPosition,
     ),
   }
 }
@@ -69,7 +69,7 @@ const normalizeSettings = (raw: unknown): BetterEditorSettings => {
 export const BetterEditorSettingsProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [settings, setSettings] = useState<BetterEditorSettings>(DEFAULT_SETTINGS)
+  const [settings, setSettings] = useState<BetterEditorSettings>(DEFAULTS)
 
   useEffect(() => {
     const controller = new AbortController()

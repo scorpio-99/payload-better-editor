@@ -65,10 +65,11 @@ export const useBlockActionMessages = ({
         }
 
         if (data.action === 'add') {
-          // ADD_ROW happens once the BlocksDrawer mounts and reacts to
-          // addBelowRequestId.
+          // Monotonic counter: BlockSettingsTab compares the latest id
+          // against its lastHandledRequestRef. Date.now() risked
+          // collisions when two clicks landed in the same millisecond.
           select(path)
-          setAddBelowRequestId(Date.now())
+          setAddBelowRequestId((id) => id + 1)
           return
         }
 

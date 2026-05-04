@@ -30,14 +30,14 @@ export const useViewportState = (settings: BetterEditorSettings): UseViewportSta
     writeString(STORAGE_RESPONSIVE_WIDTH, String(responsiveWidth))
   }, [responsiveWidth])
 
-  const viewportWidth =
-    viewport === 'desktop' || viewport === 'fullscreen'
-      ? null
-      : viewport === 'tablet'
-        ? settings.tabletWidth
-        : viewport === 'mobile'
-          ? settings.mobileWidth
-          : responsiveWidth
+  const widthByViewport: Record<Viewport, number | null> = {
+    desktop: null,
+    fullscreen: null,
+    tablet: settings.tabletWidth,
+    mobile: settings.mobileWidth,
+    responsive: responsiveWidth,
+  }
+  const viewportWidth = widthByViewport[viewport]
 
   return {
     viewport,

@@ -109,31 +109,23 @@ export const EditorHistoryProvider: React.FC<{ children: React.ReactNode }> = ({
     [pushSnapshot, setModified],
   )
 
-  const undo = useCallback(() => {
-    const { undo: stack } = stateRef.current
-    if (stack.length === 0) return
-    const target = stack[stack.length - 1]
-    dispatch({ type: 'undo', current: fieldsRef.current })
-    restoringRef.current = true
-    dispatchFields({ type: 'REPLACE_STATE', state: target })
-    setModified(true)
-    setTimeout(() => {
-      restoringRef.current = false
-    }, 0)
-  }, [dispatchFields, setModified])
-
-  const redo = useCallback(() => {
-    const { redo: stack } = stateRef.current
-    if (stack.length === 0) return
-    const target = stack[stack.length - 1]
-    dispatch({ type: 'redo', current: fieldsRef.current })
-    restoringRef.current = true
-    dispatchFields({ type: 'REPLACE_STATE', state: target })
-    setModified(true)
-    setTimeout(() => {
-      restoringRef.current = false
-    }, 0)
-  }, [dispatchFields, setModified])
+  const restore = useCallback(
+    (direction: 'undo' | 'redo') => {
+      const stack = stateRef.current[direction]
+      if (stack.length === 0) return
+      const target = stack[stack.length - 1]
+      dispatch({ type: direction, current: fieldsRef.current })
+      restoringRef.current = true
+      dispatchFields({ type: 'REPLACE_STATE', state: target })
+      setModified(true)
+      setTimeout(() => {
+        restoringRef.current = false
+      }, 0)
+    },
+    [dispatchFields, setModified],
+  )
+  const undo = useCallback(() => restore('undo'), [restore])
+  const redo = useCallback(() => restore('redo'), [restore])
 
   const value = useMemo<HistoryContextValue>(
     () => ({

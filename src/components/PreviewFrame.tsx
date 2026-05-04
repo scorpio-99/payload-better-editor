@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { useDocumentEvents } from '@payloadcms/ui'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useDocumentEvents, useDocumentInfo } from '@payloadcms/ui'
 
 import type { HoverToolbarPosition } from '../useBetterEditorSettings'
 import { HoverToolbarController } from '../preview/HoverToolbarController'
@@ -194,18 +194,23 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
   ])
 
   const { mostRecentUpdate } = useDocumentEvents()
-  useEffect(() => {
-    if (!mostRecentUpdate) return
-    const iframe = iframeRef.current
-    if (!iframe?.contentWindow || !previewURL) return
-    let targetOrigin: string
+  const { id } = useDocumentInfo()
+  const previewOrigin = useMemo(() => {
+    if (!previewURL) return null
     try {
-      targetOrigin = new URL(previewURL, window.location.origin).origin
+      return new URL(previewURL, window.location.origin).origin
     } catch {
-      return
+      return null
     }
-    iframe.contentWindow.postMessage({ type: 'payload-document-event' }, targetOrigin)
-  }, [mostRecentUpdate, previewURL])
+  }, [previewURL])
+  useEffect(() => {
+    if (!mostRecentUpdate || !previewOrigin) return
+    if (id != null && mostRecentUpdate.id !== id) return
+    iframeRef.current?.contentWindow?.postMessage(
+      { type: 'payload-document-event' },
+      previewOrigin,
+    )
+  }, [mostRecentUpdate, id, previewOrigin])
 
   useEffect(() => {
     const iframe = iframeRef.current

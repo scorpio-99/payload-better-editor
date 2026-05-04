@@ -26,25 +26,27 @@ export type UseBlockActionMessagesReturn = {
   addBelowRequestId: number
 }
 
-/**
- * Receives `focus-block` and `block-action` postMessages from the iframe
- * and applies selection / row mutations (via `commit()` so undo/redo
- * stays consistent with sidebar-driven actions).
- */
 export const useBlockActionMessages = ({
   setSelectedBlockPath,
 }: UseBlockActionMessagesArgs): UseBlockActionMessagesReturn => {
   const [addBelowRequestId, setAddBelowRequestId] = useState<number>(0)
 
-  // Form state in a ref so the message listener doesn't re-bind on every change.
+  // Form state in a ref so the listener doesn't re-bind on every keystroke.
   const [allFields] = useAllFormFields()
   const allFieldsRef = useRef(allFields)
-  useEffect(() => {
-    allFieldsRef.current = allFields
-  }, [allFields])
+  allFieldsRef.current = allFields
 
+  // History context value changes whenever undo/redo depth flips; refs
+  // prevent re-binding the postMessage listener on every commit.
   const { dispatchFields } = useForm()
+  const dispatchFieldsRef = useRef(dispatchFields)
+  dispatchFieldsRef.current = dispatchFields
   const history = useEditorHistory()
+  const historyRef = useRef(history)
+  historyRef.current = history
+
+  const setSelectedBlockPathRef = useRef(setSelectedBlockPath)
+  setSelectedBlockPathRef.current = setSelectedBlockPath
 
   useEffect(
     () =>
@@ -53,15 +55,19 @@ export const useBlockActionMessages = ({
         const path = findPathById(fields, data.id)
         if (!path) return
 
+        const select = setSelectedBlockPathRef.current
+        const dispatch = dispatchFieldsRef.current
+        const { commit } = historyRef.current
+
         if (data.type === 'focus-block') {
-          setSelectedBlockPath(path)
+          select(path)
           return
         }
 
         if (data.action === 'add') {
-          // The actual ADD_ROW happens once the BlocksDrawer mounts (it
-          // reacts to addBelowRequestId).
-          setSelectedBlockPath(path)
+          // ADD_ROW happens once the BlocksDrawer mounts and reacts to
+          // addBelowRequestId.
+          select(path)
           setAddBelowRequestId(Date.now())
           return
         }
@@ -76,43 +82,39 @@ export const useBlockActionMessages = ({
         switch (data.action) {
           case 'move-up':
             if (rowIndex === 0) return
-            history.commit(() =>
-              dispatchFields({
+            commit(() =>
+              dispatch({
                 type: 'MOVE_ROW',
                 path: parentPath,
                 moveFromIndex: rowIndex,
                 moveToIndex: rowIndex - 1,
               }),
             )
-            setSelectedBlockPath(`${parentPath}.${rowIndex - 1}`)
+            select(`${parentPath}.${rowIndex - 1}`)
             break
           case 'move-down':
             if (rowIndex >= rowCount - 1) return
-            history.commit(() =>
-              dispatchFields({
+            commit(() =>
+              dispatch({
                 type: 'MOVE_ROW',
                 path: parentPath,
                 moveFromIndex: rowIndex,
                 moveToIndex: rowIndex + 1,
               }),
             )
-            setSelectedBlockPath(`${parentPath}.${rowIndex + 1}`)
+            select(`${parentPath}.${rowIndex + 1}`)
             break
           case 'duplicate':
-            history.commit(() =>
-              dispatchFields({ type: 'DUPLICATE_ROW', path: parentPath, rowIndex }),
-            )
-            setSelectedBlockPath(`${parentPath}.${rowIndex + 1}`)
+            commit(() => dispatch({ type: 'DUPLICATE_ROW', path: parentPath, rowIndex }))
+            select(`${parentPath}.${rowIndex + 1}`)
             break
           case 'delete':
-            history.commit(() =>
-              dispatchFields({ type: 'REMOVE_ROW', path: parentPath, rowIndex }),
-            )
-            setSelectedBlockPath(null)
+            commit(() => dispatch({ type: 'REMOVE_ROW', path: parentPath, rowIndex }))
+            select(null)
             break
         }
       }),
-    [dispatchFields, history, setSelectedBlockPath],
+    [],
   )
 
   return { addBelowRequestId }

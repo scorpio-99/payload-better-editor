@@ -44,10 +44,11 @@ export const useViewportState = (settings: BetterEditorSettings): UseViewportSta
   )
   const [iframeWidth, setIframeWidth] = useState<number | null>(null)
 
-  const skipFirstWrite = useRef(true)
+  // Skip persisting the value we just hydrated from storage.
+  const hydratedRef = useRef(false)
   useEffect(() => {
-    if (skipFirstWrite.current) {
-      skipFirstWrite.current = false
+    if (!hydratedRef.current) {
+      hydratedRef.current = true
       return
     }
     writeString(STORAGE_RESPONSIVE_WIDTH, String(responsiveWidth))

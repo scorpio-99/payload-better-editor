@@ -16,11 +16,10 @@ export const betterEditor =
     const enabledSlugs = new Set(pluginOptions?.collections ?? [])
     const blocksField = pluginOptions?.blocksField || DEFAULT_BLOCKS_FIELD
 
-    const globals = config.globals ?? []
-    if (!globals.some((g) => g.slug === betterEditorSettingsGlobal.slug)) {
-      globals.push(betterEditorSettingsGlobal)
-    }
-    config.globals = globals
+    const existingGlobals = config.globals ?? []
+    config.globals = existingGlobals.some((g) => g.slug === betterEditorSettingsGlobal.slug)
+      ? existingGlobals
+      : [...existingGlobals, betterEditorSettingsGlobal]
 
     if (enabledSlugs.size === 0 || !config.collections) return config
 

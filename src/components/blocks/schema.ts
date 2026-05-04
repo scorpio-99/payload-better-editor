@@ -1,9 +1,3 @@
-/**
- * Pure schema-walking helpers for the block sidebar — no React, no
- * Payload UI imports. Translate between form-state paths
- * (e.g. `layout.6.columns.0.blocks.1`) and underlying field configs.
- */
-
 import type { ClientTab } from 'payload'
 import type { AnyClientBlock, AnyClientField, FormFieldsState } from '../../internal/types'
 
@@ -32,26 +26,21 @@ export function findNamedField(
     }
 
     if (field.type === 'tabs') {
-      for (const tab of field.tabs) {
+      for (const tab of field.tabs ?? []) {
         const tabSchemaPath = tabHasName(tab) ? `${schemaPath}.${tab.name}` : schemaPath
-        const found = findNamedField(tab.fields || [], name, tabSchemaPath)
+        const found = findNamedField(tab.fields ?? [], name, tabSchemaPath)
         if (found) return found
       }
     } else if (field.type === 'collapsible' || field.type === 'row') {
-      const found = findNamedField(field.fields || [], name, schemaPath)
+      const found = findNamedField(field.fields ?? [], name, schemaPath)
       if (found) return found
     }
-    // Groups intentionally don't descend here: their fields are reached
-    // via the group's own name as the next path segment, not by walking
-    // through them transparently.
+    // Groups are not transparent: their inner fields are reached via the
+    // group's own name as the next path segment.
   }
   return null
 }
 
-/**
- * Walk a form-state path like `layout.6.columns.0.blocks.1` and return
- * the resolved block config + matching schema path.
- */
 export function resolveBlockSchema(
   docFields: AnyClientField[],
   docSlug: string,
@@ -72,7 +61,7 @@ export function resolveBlockSchema(
     const indexStr = segments[i + 1]
     if (indexStr === undefined) break
     const index = Number(indexStr)
-    if (Number.isNaN(index)) return null
+    if (!Number.isInteger(index) || index < 0) return null
 
     const found = findNamedField(currentFields, fieldName, currentSchemaPath)
     if (!found) return null
@@ -82,20 +71,21 @@ export function resolveBlockSchema(
 
     if (field.type === 'blocks') {
       const rows = formFields[currentPath]?.rows
-      const row = Array.isArray(rows) ? (rows[index] as { blockType?: string } | undefined) : undefined
+      if (!Array.isArray(rows) || index >= rows.length) return null
+      const row = rows[index] as { blockType?: string } | undefined
       if (!row?.blockType) return null
       blockType = row.blockType
-      const blocks: AnyClientBlock[] = field.blocks || []
-      blockConfig = blocks.find((b) => b.slug === blockType) || null
+      const blocks: AnyClientBlock[] = field.blocks ?? []
+      blockConfig = blocks.find((b) => b.slug === blockType) ?? null
       if (!blockConfig) return null
       // Capture parent before descending — used by "add sibling block".
       blocksFieldSchemaPath = currentSchemaPath
       blocksFieldBlocks = blocks
-      currentFields = (blockConfig.fields || []) as AnyClientField[]
+      currentFields = (blockConfig.fields ?? []) as AnyClientField[]
       currentSchemaPath = `${currentSchemaPath}.${blockType}`
       currentPath = `${currentPath}.${index}`
     } else if (field.type === 'array') {
-      currentFields = (field.fields || []) as AnyClientField[]
+      currentFields = (field.fields ?? []) as AnyClientField[]
       currentPath = `${currentPath}.${index}`
     } else {
       return null

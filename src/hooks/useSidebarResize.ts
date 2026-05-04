@@ -26,42 +26,45 @@ export const useSidebarResize = (
   )
   const [isResizing, setIsResizing] = useState(false)
 
-  // Skip the no-op write on initial mount (value just came from storage).
-  const skipFirstWrite = useRef(true)
+  const widthRef = useRef(sidebarWidth)
+  widthRef.current = sidebarWidth
+
+  const positionRef = useRef(sidebarPosition)
+  positionRef.current = sidebarPosition
+
+  // Skip persisting the value we just hydrated from storage.
+  const hydratedRef = useRef(false)
   useEffect(() => {
-    if (skipFirstWrite.current) {
-      skipFirstWrite.current = false
+    if (!hydratedRef.current) {
+      hydratedRef.current = true
       return
     }
     writeString(STORAGE_SIDEBAR_WIDTH, String(sidebarWidth))
   }, [sidebarWidth])
 
-  const onResizeStart = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      e.preventDefault()
-      const startX = e.clientX
-      const startWidth = sidebarWidth
-      const direction = sidebarPosition === 'right' ? -1 : 1
+  const onResizeStart = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    const startX = e.clientX
+    const startWidth = widthRef.current
+    const direction = positionRef.current === 'right' ? -1 : 1
 
-      setIsResizing(true)
-      document.body.style.cursor = 'col-resize'
-      document.body.style.userSelect = 'none'
+    setIsResizing(true)
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
 
-      const onMove = (ev: MouseEvent) => {
-        setSidebarWidth(clampSidebar(startWidth + (ev.clientX - startX) * direction))
-      }
-      const onUp = () => {
-        window.removeEventListener('mousemove', onMove)
-        window.removeEventListener('mouseup', onUp)
-        document.body.style.cursor = ''
-        document.body.style.userSelect = ''
-        setIsResizing(false)
-      }
-      window.addEventListener('mousemove', onMove)
-      window.addEventListener('mouseup', onUp)
-    },
-    [sidebarWidth, sidebarPosition],
-  )
+    const onMove = (ev: MouseEvent) => {
+      setSidebarWidth(clampSidebar(startWidth + (ev.clientX - startX) * direction))
+    }
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+      setIsResizing(false)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }, [])
 
   return { sidebarWidth, isResizing, onResizeStart }
 }

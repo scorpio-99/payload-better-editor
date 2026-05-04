@@ -9,8 +9,11 @@ export type UseOverlayKeyboardArgs = {
 }
 
 export const useOverlayKeyboard = ({ onClose, history }: UseOverlayKeyboardArgs): void => {
-  const handlersRef = useRef({ onClose, history })
-  handlersRef.current = { onClose, history }
+  const handlersRef = useRef<UseOverlayKeyboardArgs>({ onClose, history })
+
+  useEffect(() => {
+    handlersRef.current = { onClose, history }
+  }, [onClose, history])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

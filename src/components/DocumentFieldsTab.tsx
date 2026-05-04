@@ -5,6 +5,8 @@ import type { ClientField } from 'payload'
 import { RenderFields } from '@payloadcms/ui'
 import { useDocConfig } from '../hooks/useDocConfig'
 
+// Bypass RenderFields' client-side read gate; the server still enforces
+// access on save.
 const FULL_ACCESS = true as const
 
 export type DocumentFieldsTabProps = {
@@ -36,7 +38,7 @@ export const DocumentFieldsTab: React.FC<DocumentFieldsTabProps> = ({
         fields={fields}
         parentPath=""
         parentIndexPath=""
-        parentSchemaPath={slug || ''}
+        parentSchemaPath={slug}
         permissions={FULL_ACCESS}
       />
     </div>

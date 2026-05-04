@@ -17,7 +17,6 @@ export type BlockActionsToolbarProps = {
   onDelete: () => void
 }
 
-/** Presentational 5-button toolbar — handlers + flags come from props. */
 export const BlockActionsToolbar: React.FC<BlockActionsToolbarProps> = ({
   canMoveUp,
   canMoveDown,

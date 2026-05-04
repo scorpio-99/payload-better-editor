@@ -8,14 +8,17 @@ export const useFullscreenOverlay = (
 ): React.RefObject<HTMLDivElement | null> => {
   const overlayRef = useRef<HTMLDivElement | null>(null)
   const onExitRef = useRef(onExitFullscreen)
-  onExitRef.current = onExitFullscreen
+
+  useEffect(() => {
+    onExitRef.current = onExitFullscreen
+  }, [onExitFullscreen])
 
   useEffect(() => {
     const root = overlayRef.current
     if (!root) return
 
     if (isFullscreen && !document.fullscreenElement) {
-      // Some browsers block requestFullscreen outside a user gesture.
+      // Some browsers reject requestFullscreen outside a user gesture.
       root.requestFullscreen?.().catch(() => {})
     } else if (!isFullscreen && document.fullscreenElement === root) {
       document.exitFullscreen?.().catch(() => {})
@@ -23,7 +26,6 @@ export const useFullscreenOverlay = (
 
     if (!isFullscreen) return
 
-    // Sync local state when the user exits via browser chrome (Esc, F11).
     const onFsChange = () => {
       if (!document.fullscreenElement) onExitRef.current()
     }

@@ -26,27 +26,42 @@ export type ViewportToggleProps = {
   onChange: (next: Viewport) => void
 }
 
+type ButtonProps = {
+  item: Item
+  active: boolean
+  onSelect: (id: Viewport) => void
+}
+
+const ViewportButton: React.FC<ButtonProps> = ({ item, active, onSelect }) => {
+  const { id, label, Icon } = item
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={active}
+      className={
+        active
+          ? 'better-editor-viewport__btn better-editor-viewport__btn--active'
+          : 'better-editor-viewport__btn'
+      }
+      onClick={() => onSelect(id)}
+      title={label}
+      aria-label={label}
+    >
+      <Icon />
+    </button>
+  )
+}
+
 export const ViewportToggle: React.FC<ViewportToggleProps> = ({ value, onChange }) => (
   <div className="better-editor-viewport" role="radiogroup" aria-label="Preview viewport">
-    {ITEMS.map(({ id, label, Icon }) => {
-      const active = value === id
-      return (
-        <button
-          key={id}
-          type="button"
-          role="radio"
-          aria-checked={active}
-          className={
-            'better-editor-viewport__btn' +
-            (active ? ' better-editor-viewport__btn--active' : '')
-          }
-          onClick={() => onChange(id)}
-          title={label}
-          aria-label={label}
-        >
-          <Icon />
-        </button>
-      )
-    })}
+    {ITEMS.map((item) => (
+      <ViewportButton
+        key={item.id}
+        item={item}
+        active={value === item.id}
+        onSelect={onChange}
+      />
+    ))}
   </div>
 )

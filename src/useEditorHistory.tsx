@@ -12,8 +12,6 @@ import React, {
 import type { FormState } from 'payload'
 import { useAllFormFields, useForm } from '@payloadcms/ui'
 
-type Snapshot = FormState
-
 type HistoryContextValue = {
   pushSnapshot: () => void
   /** Push a snapshot, run the mutation, mark the form modified. */
@@ -24,7 +22,7 @@ type HistoryContextValue = {
   canRedo: boolean
 }
 
-const noop = () => {}
+const noop = (): void => {}
 
 const DEFAULT_VALUE: HistoryContextValue = {
   pushSnapshot: noop,
@@ -42,25 +40,25 @@ export const useEditorHistory = (): HistoryContextValue => useContext(Ctx)
 const MAX_HISTORY = 50
 
 type HistoryState = {
-  undo: Snapshot[]
-  redo: Snapshot[]
+  undo: FormState[]
+  redo: FormState[]
 }
 
 type HistoryAction =
-  | { type: 'push'; snapshot: Snapshot }
-  | { type: 'undo'; current: Snapshot }
-  | { type: 'redo'; current: Snapshot }
+  | { type: 'push'; snapshot: FormState }
+  | { type: 'undo'; current: FormState }
+  | { type: 'redo'; current: FormState }
 
 const initialState: HistoryState = { undo: [], redo: [] }
 
 const reducer = (state: HistoryState, action: HistoryAction): HistoryState => {
   switch (action.type) {
     case 'push': {
-      const next = [...state.undo, action.snapshot]
-      return {
-        undo: next.length > MAX_HISTORY ? next.slice(-MAX_HISTORY) : next,
-        redo: [],
-      }
+      const next =
+        state.undo.length >= MAX_HISTORY
+          ? [...state.undo.slice(-(MAX_HISTORY - 1)), action.snapshot]
+          : [...state.undo, action.snapshot]
+      return { undo: next, redo: [] }
     }
     case 'undo': {
       if (state.undo.length === 0) return state
@@ -83,14 +81,20 @@ export const EditorHistoryProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [fields] = useAllFormFields()
-  const fieldsRef = useRef<Snapshot>(fields)
+  const fieldsRef = useRef<FormState>(fields)
   fieldsRef.current = fields
 
   const { dispatchFields, setModified } = useForm()
   const [state, dispatch] = useReducer(reducer, initialState)
-  const stateRef = useRef(state)
-  stateRef.current = state
   const restoringRef = useRef(false)
+  const restoreTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(
+    () => () => {
+      if (restoreTimerRef.current !== null) clearTimeout(restoreTimerRef.current)
+    },
+    [],
+  )
 
   const pushSnapshot = useCallback(() => {
     if (restoringRef.current) return
@@ -107,35 +111,40 @@ export const EditorHistoryProvider: React.FC<{ children: React.ReactNode }> = ({
   )
 
   const restore = useCallback(
-    (direction: 'undo' | 'redo') => {
-      const stack = stateRef.current[direction]
-      if (stack.length === 0) return
-      const target = stack[stack.length - 1]
+    (direction: 'undo' | 'redo', target: FormState) => {
       dispatch({ type: direction, current: fieldsRef.current })
       restoringRef.current = true
       dispatchFields({ type: 'REPLACE_STATE', state: target })
       setModified(true)
-      // Cleared after the React commit so a transient pushSnapshot
-      // triggered by the REPLACE_STATE effect cannot poison redo.
-      setTimeout(() => {
+      // Cleared after the React commit so a transient pushSnapshot triggered
+      // by the REPLACE_STATE effect cannot poison redo.
+      if (restoreTimerRef.current !== null) clearTimeout(restoreTimerRef.current)
+      restoreTimerRef.current = setTimeout(() => {
         restoringRef.current = false
+        restoreTimerRef.current = null
       }, 0)
     },
     [dispatchFields, setModified],
   )
-  const undo = useCallback(() => restore('undo'), [restore])
-  const redo = useCallback(() => restore('redo'), [restore])
+
+  const undo = useCallback(() => {
+    const stack = state.undo
+    if (stack.length === 0) return
+    restore('undo', stack[stack.length - 1])
+  }, [state.undo, restore])
+
+  const redo = useCallback(() => {
+    const stack = state.redo
+    if (stack.length === 0) return
+    restore('redo', stack[stack.length - 1])
+  }, [state.redo, restore])
+
+  const canUndo = state.undo.length > 0
+  const canRedo = state.redo.length > 0
 
   const value = useMemo<HistoryContextValue>(
-    () => ({
-      pushSnapshot,
-      commit,
-      undo,
-      redo,
-      canUndo: state.undo.length > 0,
-      canRedo: state.redo.length > 0,
-    }),
-    [pushSnapshot, commit, undo, redo, state.undo.length, state.redo.length],
+    () => ({ pushSnapshot, commit, undo, redo, canUndo, canRedo }),
+    [pushSnapshot, commit, undo, redo, canUndo, canRedo],
   )
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>

@@ -1,12 +1,7 @@
 import React from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import type { HoverToolbarPosition } from '../useBetterEditorSettings'
-import {
-  ACTIVE_CLASS,
-  ACTIVE_SELECTOR,
-  BLOCK_ID_ATTR,
-  BLOCK_ID_SELECTOR,
-} from '../internal/constants'
+import { ACTIVE_CLASS, BLOCK_ID_ATTR, BLOCK_ID_SELECTOR } from '../internal/constants'
 import type { BlockActionMessage } from './protocol'
 import { TOOLBAR_ID } from './hover-css'
 import { HoverToolbar } from './HoverToolbar'
@@ -17,6 +12,9 @@ export type HoverToolbarOptions = {
 }
 
 const TOOLBAR_INSET = 4
+// Used during the first showFor before the toolbar has laid out and
+// reported a real offsetWidth/Height. Picked to roughly match the
+// rendered size so the initial flash lands close to the final spot.
 const FALLBACK_TB_WIDTH = 120
 const FALLBACK_TB_HEIGHT = 32
 
@@ -28,6 +26,7 @@ export class HoverToolbarController {
   private destroyed = false
   private currentBlockId: string | null = null
   private currentBlockEl: HTMLElement | null = null
+  private activeChain: HTMLElement[] = []
   private positionRaf = 0
   private readonly onMove: (e: MouseEvent) => void
   private readonly onScroll: () => void
@@ -124,28 +123,32 @@ export class HoverToolbarController {
     style.right = 'auto'
   }
 
+  // Targeted clear (only nodes we marked) avoids a full-document
+  // querySelectorAll on every hover transition.
   private clearActive(): void {
-    this.doc
-      .querySelectorAll(ACTIVE_SELECTOR)
-      .forEach((node) => node.classList.remove(ACTIVE_CLASS))
+    for (const node of this.activeChain) node.classList.remove(ACTIVE_CLASS)
+    this.activeChain = []
   }
 
   private showFor(el: HTMLElement): void {
     const blockId = el.getAttribute(BLOCK_ID_ATTR)
     if (!blockId) return
+    this.clearActive()
     this.currentBlockId = blockId
     this.currentBlockEl = el
     // Mark leaf + ancestors so outlines persist when the cursor moves
     // onto the toolbar (toolbar lives in body, no :hover propagation).
-    this.clearActive()
+    const chain: HTMLElement[] = []
     for (
       let cur: HTMLElement | null = el;
       cur;
       cur = cur.parentElement?.closest<HTMLElement>(BLOCK_ID_SELECTOR) ?? null
     ) {
       cur.classList.add(ACTIVE_CLASS)
+      chain.push(cur)
     }
-    const isNested = !!el.parentElement?.closest(BLOCK_ID_SELECTOR)
+    this.activeChain = chain
+    const isNested = chain.length > 1
     this.toolbar.dataset.nested = isNested ? '1' : '0'
     this.toolbar.classList.add('is-visible')
     const view = this.doc.defaultView

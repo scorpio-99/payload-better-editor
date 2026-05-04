@@ -6,7 +6,7 @@ export type BlockActionMessage = {
 }
 export type ParentInboundMessage = FocusBlockMessage | BlockActionMessage
 
-const BLOCK_ACTIONS: ReadonlySet<BlockActionMessage['action']> = new Set([
+const BLOCK_ACTIONS: ReadonlySet<string> = new Set<BlockActionMessage['action']>([
   'move-up',
   'move-down',
   'duplicate',
@@ -20,7 +20,7 @@ export const isParentInboundMessage = (data: unknown): data is ParentInboundMess
   if (typeof d.id !== 'string') return false
   if (d.type === 'focus-block') return true
   if (d.type === 'block-action') {
-    return typeof d.action === 'string' && BLOCK_ACTIONS.has(d.action as BlockActionMessage['action'])
+    return typeof d.action === 'string' && BLOCK_ACTIONS.has(d.action)
   }
   return false
 }

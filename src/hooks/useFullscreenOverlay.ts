@@ -7,11 +7,11 @@ export const useFullscreenOverlay = (
   onExitFullscreen: () => void,
 ): React.RefObject<HTMLDivElement | null> => {
   const overlayRef = useRef<HTMLDivElement | null>(null)
-  const onExitRef = useRef(onExitFullscreen)
 
-  useEffect(() => {
-    onExitRef.current = onExitFullscreen
-  }, [onExitFullscreen])
+  // Mutable ref so the fullscreenchange listener can call the latest handler
+  // without re-binding when the consumer recreates its callback.
+  const onExitRef = useRef(onExitFullscreen)
+  onExitRef.current = onExitFullscreen
 
   useEffect(() => {
     const root = overlayRef.current

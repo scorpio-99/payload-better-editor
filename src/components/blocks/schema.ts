@@ -26,13 +26,13 @@ export function findNamedField(
     }
 
     if (field.type === 'tabs') {
-      for (const tab of field.tabs ?? []) {
+      for (const tab of field.tabs) {
         const tabSchemaPath = tabHasName(tab) ? `${schemaPath}.${tab.name}` : schemaPath
-        const found = findNamedField(tab.fields ?? [], name, tabSchemaPath)
+        const found = findNamedField(tab.fields, name, tabSchemaPath)
         if (found) return found
       }
     } else if (field.type === 'collapsible' || field.type === 'row') {
-      const found = findNamedField(field.fields ?? [], name, schemaPath)
+      const found = findNamedField(field.fields, name, schemaPath)
       if (found) return found
     }
     // Groups are not transparent: their inner fields are reached via the
@@ -75,17 +75,17 @@ export function resolveBlockSchema(
       const row = rows[index] as { blockType?: string } | undefined
       if (!row?.blockType) return null
       blockType = row.blockType
-      const blocks: AnyClientBlock[] = field.blocks ?? []
+      const blocks = field.blocks
       blockConfig = blocks.find((b) => b.slug === blockType) ?? null
       if (!blockConfig) return null
       // Capture parent before descending — used by "add sibling block".
       blocksFieldSchemaPath = currentSchemaPath
       blocksFieldBlocks = blocks
-      currentFields = (blockConfig.fields ?? []) as AnyClientField[]
+      currentFields = blockConfig.fields
       currentSchemaPath = `${currentSchemaPath}.${blockType}`
       currentPath = `${currentPath}.${index}`
     } else if (field.type === 'array') {
-      currentFields = (field.fields ?? []) as AnyClientField[]
+      currentFields = field.fields
       currentPath = `${currentPath}.${index}`
     } else {
       return null

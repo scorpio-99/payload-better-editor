@@ -22,6 +22,9 @@ const TABS: ReadonlyArray<{ key: TabKey; label: string }> = [
   { key: 'settings', label: 'Settings' },
 ]
 
+const ROOT_CLASS = 'better-editor-sidebar'
+const TAB_CLASS = `${ROOT_CLASS}__tab`
+
 type SidebarTabProps = {
   tabKey: TabKey
   label: string
@@ -34,11 +37,7 @@ const SidebarTab: React.FC<SidebarTabProps> = ({ tabKey, label, active, onSelect
     type="button"
     role="tab"
     aria-selected={active}
-    className={
-      active
-        ? 'better-editor-sidebar__tab better-editor-sidebar__tab--active'
-        : 'better-editor-sidebar__tab'
-    }
+    className={active ? `${TAB_CLASS} ${TAB_CLASS}--active` : TAB_CLASS}
     onClick={() => onSelect(tabKey)}
   >
     {label}
@@ -61,12 +60,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   }, [selectedBlockPath])
 
   const className = forceFullWidthFields
-    ? 'better-editor-sidebar better-editor-sidebar--force-full-width'
-    : 'better-editor-sidebar'
+    ? `${ROOT_CLASS} ${ROOT_CLASS}--force-full-width`
+    : ROOT_CLASS
 
   return (
     <div className={className}>
-      <div role="tablist" className="better-editor-sidebar__tabs">
+      <div role="tablist" className={`${ROOT_CLASS}__tabs`}>
         {TABS.map((t) => (
           <SidebarTab
             key={t.key}
@@ -78,7 +77,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         ))}
       </div>
 
-      <div className="better-editor-sidebar__content">
+      <div className={`${ROOT_CLASS}__content`}>
         {tab === 'page' && <DocumentSettingsTab />}
         {tab === 'block' && (
           <BlockSettingsTab

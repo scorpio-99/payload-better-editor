@@ -26,19 +26,22 @@ const RESIZE_HANDLE_PX = 6
 const cx = (...parts: Array<string | false | null | undefined>): string =>
   parts.filter(Boolean).join(' ')
 
-export const LiveEditorOverlay: React.FC<LiveEditorOverlayProps> = (props) => {
+export const LiveEditorOverlay: React.FC<LiveEditorOverlayProps> = ({
+  onClose,
+  blocksField,
+}) => {
   // Selection state lives outside OverlayProviders so the error boundary's
   // onReset can clear it without remounting providers.
   const [selectedBlockPath, setSelectedBlockPath] = useState<string | null>(null)
   const clearSelection = useCallback(() => setSelectedBlockPath(null), [])
 
   return (
-    <OverlayProviders onClose={props.onClose} onReset={clearSelection}>
+    <OverlayProviders onClose={onClose} onReset={clearSelection}>
       <LiveEditorOverlayInner
-        {...props}
+        onClose={onClose}
+        blocksField={blocksField}
         selectedBlockPath={selectedBlockPath}
         setSelectedBlockPath={setSelectedBlockPath}
-        clearSelection={clearSelection}
       />
     </OverlayProviders>
   )
@@ -47,7 +50,6 @@ export const LiveEditorOverlay: React.FC<LiveEditorOverlayProps> = (props) => {
 type InnerProps = LiveEditorOverlayProps & {
   selectedBlockPath: string | null
   setSelectedBlockPath: React.Dispatch<React.SetStateAction<string | null>>
-  clearSelection: () => void
 }
 
 const LiveEditorOverlayInner: React.FC<InnerProps> = ({
@@ -55,15 +57,12 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
   blocksField,
   selectedBlockPath,
   setSelectedBlockPath,
-  clearSelection,
 }) => {
   const settings = useBetterEditorSettings()
   const history = useEditorHistory()
   const { previewURL, isPreviewEnabled } = useLivePreviewContext()
 
-  const { sidebarWidth, isResizing, onResizeStart } = useSidebarResize(
-    settings.sidebarPosition,
-  )
+  const { sidebarWidth, isResizing, onResizeStart } = useSidebarResize(settings.sidebarPosition)
   const {
     viewport,
     setViewport,
@@ -76,6 +75,11 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
 
   const exitFullscreen = useCallback(() => setViewport('desktop'), [setViewport])
   const overlayRef = useFullscreenOverlay(isFullscreen, exitFullscreen)
+
+  const clearSelection = useCallback(
+    () => setSelectedBlockPath(null),
+    [setSelectedBlockPath],
+  )
 
   const { addBelowRequestId } = useBlockActionMessages({
     selectedBlockPath,

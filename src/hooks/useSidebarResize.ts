@@ -32,6 +32,8 @@ export const useSidebarResize = (
   const positionRef = useRef(sidebarPosition)
   positionRef.current = sidebarPosition
 
+  const dragCleanupRef = useRef<(() => void) | null>(null)
+
   // Skip persisting the value we just hydrated from storage.
   const hydratedRef = useRef(false)
   useEffect(() => {
@@ -41,6 +43,9 @@ export const useSidebarResize = (
     }
     writeString(STORAGE_SIDEBAR_WIDTH, String(sidebarWidth))
   }, [sidebarWidth])
+
+  // Release listeners + body styles if the consumer unmounts mid-drag.
+  useEffect(() => () => dragCleanupRef.current?.(), [])
 
   const onResizeStart = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault()
@@ -55,15 +60,17 @@ export const useSidebarResize = (
     const onMove = (ev: MouseEvent) => {
       setSidebarWidth(clampSidebar(startWidth + (ev.clientX - startX) * direction))
     }
-    const onUp = () => {
+    const cleanup = () => {
       window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseup', onUp)
+      window.removeEventListener('mouseup', cleanup)
       document.body.style.cursor = ''
       document.body.style.userSelect = ''
       setIsResizing(false)
+      dragCleanupRef.current = null
     }
+    dragCleanupRef.current = cleanup
     window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', onUp)
+    window.addEventListener('mouseup', cleanup)
   }, [])
 
   return { sidebarWidth, isResizing, onResizeStart }

@@ -16,7 +16,6 @@ export const betterEditorSettingsGlobal: GlobalConfig = {
     {
       type: 'tabs',
       tabs: [
-        // --- Sidebar -------------------------------------------------------
         {
           label: 'Sidebar',
           description: 'Where the sidebar sits and how its fields are stacked.',
@@ -43,8 +42,6 @@ export const betterEditorSettingsGlobal: GlobalConfig = {
             },
           ],
         },
-
-        // --- Viewport ------------------------------------------------------
         {
           label: 'Viewport',
           description: 'Pixel widths for the Tablet and Mobile preview modes.',
@@ -74,8 +71,6 @@ export const betterEditorSettingsGlobal: GlobalConfig = {
             },
           ],
         },
-
-        // --- Outline -------------------------------------------------------
         {
           label: 'Outline',
           description: 'Outline + tint shown on the hovered block.',
@@ -121,8 +116,6 @@ export const betterEditorSettingsGlobal: GlobalConfig = {
             },
           ],
         },
-
-        // --- Toolbar -------------------------------------------------------
         {
           label: 'Toolbar',
           description:

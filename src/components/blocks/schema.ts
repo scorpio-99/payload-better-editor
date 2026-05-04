@@ -4,44 +4,41 @@
  * (e.g. `layout.6.columns.0.blocks.1`) and underlying field configs.
  */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AnyField = Record<string, any>
+import type { ClientTab, SanitizedFieldPermissions } from 'payload'
+import type { AnyClientBlock, AnyClientField, FormFieldsState } from '../../internal/types'
 
 export type Resolved = {
   blockType: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  blockFields: any[]
+  blockFields: AnyClientField[]
   schemaPath: string
   parentPath: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  permissions: any
+  permissions: SanitizedFieldPermissions
   blocksFieldSchemaPath: string
-  blocksFieldBlocks: AnyField[]
+  blocksFieldBlocks: AnyClientBlock[]
 }
 
-/** Walk tabs / collapsible / row containers to find a named field. */
+const tabHasName = (tab: ClientTab): tab is ClientTab & { name: string } =>
+  typeof (tab as { name?: unknown }).name === 'string'
+
 export function findNamedField(
-  fields: AnyField[],
+  fields: AnyClientField[],
   name: string,
   schemaPath: string,
-): { field: AnyField; schemaPath: string } | null {
+): { field: AnyClientField; schemaPath: string } | null {
   for (const field of fields) {
     if (!field || typeof field !== 'object') continue
 
-    if (typeof field.name === 'string' && field.name === name) {
+    if ('name' in field && typeof field.name === 'string' && field.name === name) {
       return { field, schemaPath: `${schemaPath}.${name}` }
     }
 
-    const type = field.type
-
-    if (type === 'tabs' && Array.isArray(field.tabs)) {
+    if (field.type === 'tabs') {
       for (const tab of field.tabs) {
-        const tabSchemaPath =
-          typeof tab?.name === 'string' ? `${schemaPath}.${tab.name}` : schemaPath
-        const found = findNamedField(tab?.fields || [], name, tabSchemaPath)
+        const tabSchemaPath = tabHasName(tab) ? `${schemaPath}.${tab.name}` : schemaPath
+        const found = findNamedField(tab.fields || [], name, tabSchemaPath)
         if (found) return found
       }
-    } else if (type === 'collapsible' || type === 'row') {
+    } else if (field.type === 'collapsible' || field.type === 'row') {
       const found = findNamedField(field.fields || [], name, schemaPath)
       if (found) return found
     }
@@ -57,19 +54,19 @@ export function findNamedField(
  * the resolved block config + matching schema path.
  */
 export function resolveBlockSchema(
-  docFields: AnyField[],
+  docFields: AnyClientField[],
   docSlug: string,
   path: string,
-  formFields: Record<string, AnyField>,
+  formFields: FormFieldsState,
 ): Resolved | null {
   const segments = path.split('.')
-  let currentFields: AnyField[] = docFields
+  let currentFields: AnyClientField[] = docFields
   let currentSchemaPath = docSlug
   let currentPath = ''
   let blockType: string | null = null
-  let blockConfig: AnyField | null = null
+  let blockConfig: AnyClientBlock | null = null
   let blocksFieldSchemaPath = ''
-  let blocksFieldBlocks: AnyField[] = []
+  let blocksFieldBlocks: AnyClientBlock[] = []
 
   for (let i = 0; i < segments.length; i += 2) {
     const fieldName = segments[i]
@@ -86,19 +83,20 @@ export function resolveBlockSchema(
 
     if (field.type === 'blocks') {
       const rows = formFields[currentPath]?.rows
-      const row = Array.isArray(rows) ? rows[index] : undefined
+      const row = Array.isArray(rows) ? (rows[index] as { blockType?: string } | undefined) : undefined
       if (!row?.blockType) return null
-      blockType = row.blockType as string
-      blockConfig = (field.blocks || []).find((b: AnyField) => b.slug === blockType) || null
+      blockType = row.blockType
+      const blocks = (field.blocks || []) as AnyClientBlock[]
+      blockConfig = blocks.find((b) => b.slug === blockType) || null
       if (!blockConfig) return null
       // Capture parent before descending — used by "add sibling block".
       blocksFieldSchemaPath = currentSchemaPath
-      blocksFieldBlocks = (field.blocks || []) as AnyField[]
-      currentFields = blockConfig.fields || []
+      blocksFieldBlocks = blocks
+      currentFields = (blockConfig.fields || []) as AnyClientField[]
       currentSchemaPath = `${currentSchemaPath}.${blockType}`
       currentPath = `${currentPath}.${index}`
     } else if (field.type === 'array') {
-      currentFields = field.fields || []
+      currentFields = (field.fields || []) as AnyClientField[]
       currentPath = `${currentPath}.${index}`
     } else {
       return null
@@ -112,7 +110,7 @@ export function resolveBlockSchema(
     blockFields: currentFields,
     schemaPath: currentSchemaPath,
     parentPath: currentPath,
-    permissions: {},
+    permissions: {} as SanitizedFieldPermissions,
     blocksFieldSchemaPath,
     blocksFieldBlocks,
   }

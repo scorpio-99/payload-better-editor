@@ -1,22 +1,18 @@
 'use client'
 
 import React, { useMemo } from 'react'
+import type { ClientField } from 'payload'
 import { RenderFields } from '@payloadcms/ui'
 import { useDocConfig } from '../hooks/useDocConfig'
 
-// `permissions={true}` skips RenderFields' client-side read gate; the
-// server-side write check still runs on save.
 const FULL_ACCESS = true as const
 
 export type DocumentFieldsTabProps = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  filter: (field: any) => boolean
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  transform?: (fields: any[]) => any[]
+  filter: (field: ClientField) => boolean
+  transform?: (fields: ClientField[]) => ClientField[]
   emptyText: string
 }
 
-/** Shared base for the Page and Settings tabs. */
 export const DocumentFieldsTab: React.FC<DocumentFieldsTabProps> = ({
   filter,
   transform,

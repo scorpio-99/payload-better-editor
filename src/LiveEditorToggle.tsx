@@ -5,18 +5,15 @@ import { createPortal } from 'react-dom'
 import { useDocumentInfo, usePreferences } from '@payloadcms/ui'
 import { LiveEditorOverlay } from './LiveEditorOverlay'
 import { useMainWrapperPortal } from './hooks/useMainWrapperPortal'
+import { togglePreferenceKey } from './internal/constants'
 import { LayoutIcon } from './icons'
 
 type Pref = { open?: boolean }
-
-const prefKey = (collectionSlug?: string, globalSlug?: string) =>
-  `better-editor:${collectionSlug ? `collection-${collectionSlug}` : `global-${globalSlug ?? 'unknown'}`}`
 
 export type LiveEditorToggleProps = {
   blocksField: string
 }
 
-/** Open/close button + portal mount for the LiveEditorOverlay. */
 export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({
   blocksField,
 }) => {
@@ -25,10 +22,9 @@ export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({
   const { getPreference, setPreference } = usePreferences()
   const hasHydratedRef = useRef(false)
 
-  // Restore the last saved open/closed state once, on mount per document.
   useEffect(() => {
     let cancelled = false
-    const key = prefKey(collectionSlug, globalSlug)
+    const key = togglePreferenceKey(collectionSlug, globalSlug)
     void getPreference<Pref>(key).then((pref) => {
       if (cancelled) return
       if (pref?.open) setOpen(true)
@@ -39,11 +35,9 @@ export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({
     }
   }, [collectionSlug, globalSlug, getPreference])
 
-  // Persist after hydration; skip the initial default-state write so we
-  // don't overwrite a stored `open: true` with `false`.
   useEffect(() => {
     if (!hasHydratedRef.current) return
-    const key = prefKey(collectionSlug, globalSlug)
+    const key = togglePreferenceKey(collectionSlug, globalSlug)
     void setPreference<Pref>(key, { open }, true)
   }, [open, collectionSlug, globalSlug, setPreference])
 

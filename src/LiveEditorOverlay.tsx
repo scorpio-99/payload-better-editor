@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import { useLivePreviewContext } from '@payloadcms/ui'
 import { PreviewFrame } from './components/PreviewFrame'
 import { Sidebar } from './components/Sidebar'
@@ -22,14 +22,10 @@ export type LiveEditorOverlayProps = {
 }
 
 export const LiveEditorOverlay: React.FC<LiveEditorOverlayProps> = (props) => {
-  // Lifted so the error boundary's onReset can clear a stale path
-  // (likely cause of a crash when the underlying block was just deleted).
   const [selectedBlockPath, setSelectedBlockPath] = useState<string | null>(null)
+  const handleReset = useCallback(() => setSelectedBlockPath(null), [])
   return (
-    <OverlayProviders
-      onClose={props.onClose}
-      onReset={() => setSelectedBlockPath(null)}
-    >
+    <OverlayProviders onClose={props.onClose} onReset={handleReset}>
       <LiveEditorOverlayInner
         {...props}
         selectedBlockPath={selectedBlockPath}
@@ -87,22 +83,42 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
   const handleOrder = 1
   const sidebarOrder = isLeft ? 0 : 2
 
+  const className =
+    'better-editor' +
+    (isResizing ? ' better-editor--resizing' : '') +
+    (isFullscreen ? ' better-editor--fullscreen' : '')
+
+  const bodyStyle = useMemo<React.CSSProperties>(
+    () => ({ gridTemplateColumns: gridCols }),
+    [gridCols],
+  )
+  const previewStyle = useMemo<React.CSSProperties>(
+    () => ({ order: previewOrder }),
+    [previewOrder],
+  )
+  const handleStyle = useMemo<React.CSSProperties>(
+    () => ({ order: handleOrder }),
+    [handleOrder],
+  )
+  const sidebarStyle = useMemo<React.CSSProperties>(
+    () => ({ order: sidebarOrder }),
+    [sidebarOrder],
+  )
+
+  const handleClearSelection = useCallback(
+    () => setSelectedBlockPath(null),
+    [setSelectedBlockPath],
+  )
+
   return (
     <div
       ref={overlayRef}
-      className={
-        'better-editor' +
-        (isResizing ? ' better-editor--resizing' : '') +
-        (isFullscreen ? ' better-editor--fullscreen' : '')
-      }
+      className={className}
       role="dialog"
       aria-label="Better Editor"
     >
-      <div
-        className="better-editor__body"
-        style={{ gridTemplateColumns: gridCols } as React.CSSProperties}
-      >
-        <div className="better-editor__preview" style={{ order: previewOrder }}>
+      <div className="better-editor__body" style={bodyStyle}>
+        <div className="better-editor__preview" style={previewStyle}>
           <div className="better-editor__preview-toolbar">
             <div className="better-editor__history">
               <button
@@ -156,16 +172,16 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
           <>
             <div
               className="better-editor__resize-handle"
-              style={{ order: handleOrder }}
+              style={handleStyle}
               role="separator"
               aria-orientation="vertical"
               aria-label="Resize sidebar"
               onMouseDown={onResizeStart}
             />
-            <aside className="better-editor__sidebar" style={{ order: sidebarOrder }}>
+            <aside className="better-editor__sidebar" style={sidebarStyle}>
               <Sidebar
                 selectedBlockPath={selectedBlockPath}
-                onClearSelection={() => setSelectedBlockPath(null)}
+                onClearSelection={handleClearSelection}
                 onSelectPath={setSelectedBlockPath}
                 forceFullWidthFields={settings.forceFullWidthFields}
                 blocksField={blocksField}

@@ -2,6 +2,7 @@
 
 import { useAllFormFields, useForm } from '@payloadcms/ui'
 import { useEditorHistory } from '../../useEditorHistory'
+import { splitFieldPath } from '../../internal/path'
 
 type Args = {
   selectedBlockPath: string | null
@@ -23,13 +24,9 @@ export const useBlockActions = ({
   const { addFieldRow, dispatchFields } = useForm()
   const { commit } = useEditorHistory()
 
-  const lastDot = selectedBlockPath ? selectedBlockPath.lastIndexOf('.') : -1
-  const parentPath =
-    selectedBlockPath && lastDot >= 0 ? selectedBlockPath.slice(0, lastDot) : ''
-  const rowIndex =
-    selectedBlockPath && lastDot >= 0
-      ? Number(selectedBlockPath.slice(lastDot + 1))
-      : NaN
+  const split = selectedBlockPath ? splitFieldPath(selectedBlockPath) : null
+  const parentPath = split?.parent ?? ''
+  const rowIndex = split ? split.index : NaN
   const parentRows = parentPath ? fields[parentPath]?.rows : undefined
   const rowCount = Array.isArray(parentRows) ? parentRows.length : 0
   const canMoveUp = !Number.isNaN(rowIndex) && rowIndex > 0

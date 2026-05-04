@@ -1,18 +1,15 @@
 'use client'
 
 import React from 'react'
+import type { ClientField } from 'payload'
 import { DocumentFieldsTab } from './DocumentFieldsTab'
 
-/**
- * Settings tab — document-level metadata (slug, publishedAt, updatedBy,
- * featuredImage, etc.). Picks up any top-level field with
- * `admin.position: 'sidebar'` — pure Payload convention, no hardcoded
- * field names.
- */
+const isSidebarField = (f: ClientField): boolean =>
+  'admin' in f && f.admin?.position === 'sidebar'
+
 export const DocumentMetaTab: React.FC = () => (
   <DocumentFieldsTab
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    filter={(f: any) => f?.admin?.position === 'sidebar'}
+    filter={isSidebarField}
     emptyText="No document settings."
   />
 )

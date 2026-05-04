@@ -1,12 +1,15 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { useDocumentEvents } from '@payloadcms/ui'
 
 import type { HoverToolbarPosition } from '../useBetterEditorSettings'
 import { HoverToolbarController } from '../preview/HoverToolbarController'
 import { TOOLBAR_ID, setHoverVars } from '../preview/hover-css'
 import { installClickToFocus } from '../preview/installClickToFocus'
 import { installHoverStyles } from '../preview/installHoverStyles'
+import { ACTIVE_CLASS, clampViewport } from '../internal/constants'
+import { postToParent } from '../internal/postmessage'
 
 export type PreviewFrameProps = {
   previewURL: string | undefined
@@ -24,12 +27,8 @@ export type PreviewFrameProps = {
   onIframeWidthChange?: (width: number) => void
 }
 
-/**
- * Renders the frontend draft URL in an iframe and wires up the in-iframe
- * hover styles + click-to-focus + hover toolbar, plus save-refresh
- * forwarding. Same-origin only — if `contentDocument` is inaccessible,
- * the iframe falls back to view-only.
- */
+type BlockAction = 'move-up' | 'move-down' | 'duplicate' | 'add' | 'delete'
+
 export const PreviewFrame: React.FC<PreviewFrameProps> = ({
   previewURL,
   isPreviewEnabled,
@@ -44,15 +43,11 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
   onIframeWidthChange,
 }) => {
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
-  // Combined teardown for all bindings on the current iframe document.
-  // Replaced on every iframe `load`.
   const teardownRef = useRef<(() => void) | null>(null)
   const controllerRef = useRef<HoverToolbarController | null>(null)
   const [isResizing, setIsResizing] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
-  // Reset the loading flag when the iframe src changes (navigation /
-  // viewport switch), so the skeleton reappears until the new doc loads.
   useEffect(() => {
     setIsLoading(true)
   }, [previewURL])
@@ -74,6 +69,10 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     hoverToolbarPosition,
   }
 
+  const dispatchBlockAction = useCallback((blockId: string, action: BlockAction) => {
+    postToParent({ type: 'block-action', id: blockId, action })
+  }, [])
+
   // Idempotent: tears down previous bindings before installing new ones.
   const bindToDocument = (doc: Document) => {
     teardownRef.current?.()
@@ -89,21 +88,13 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     })
 
     const removeClick = installClickToFocus(doc, (blockId) => {
-      window.parent.postMessage(
-        { type: 'focus-block', id: blockId },
-        window.location.origin,
-      )
+      postToParent({ type: 'focus-block', id: blockId })
     })
 
     if (s.showHoverToolbar) {
       controllerRef.current = new HoverToolbarController(doc, {
         position: s.hoverToolbarPosition,
-        onAction: (blockId, action) => {
-          window.parent.postMessage(
-            { type: 'block-action', id: blockId, action },
-            window.location.origin,
-          )
-        },
+        onAction: dispatchBlockAction,
       })
     } else {
       // Clean up any toolbar left over from a previous setup that had
@@ -111,8 +102,8 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
       const existingToolbar = doc.getElementById(TOOLBAR_ID)
       if (existingToolbar) existingToolbar.remove()
       doc
-        .querySelectorAll('.better-editor-active')
-        .forEach((el) => el.classList.remove('better-editor-active'))
+        .querySelectorAll(`.${ACTIVE_CLASS}`)
+        .forEach((el) => el.classList.remove(ACTIVE_CLASS))
     }
 
     teardownRef.current = () => {
@@ -123,7 +114,6 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     }
   }
 
-  // Bind on iframe `load`; the effect cleanup tears down on unmount.
   useEffect(() => {
     const iframe = iframeRef.current
     if (!iframe) return
@@ -141,7 +131,6 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
       bindToDocument(doc)
     }
 
-    // Bind immediately if the iframe already finished loading.
     if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
       onLoad()
     }
@@ -168,12 +157,11 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     try {
       doc = iframe.contentDocument
     } catch {
+      // Cross-origin: fall back to view-only.
       return
     }
     if (!doc) return
 
-    // Color/outline updates are just CSS variable writes — the static
-    // CSS picks them up. No re-injection needed.
     setHoverVars(doc, {
       topColor: hoverColorTopLevel,
       nestedColor: hoverColorNested,
@@ -184,22 +172,12 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
       if (controllerRef.current) {
         controllerRef.current.update({
           position: hoverToolbarPosition,
-          onAction: (blockId, action) => {
-            window.parent.postMessage(
-              { type: 'block-action', id: blockId, action },
-              window.location.origin,
-            )
-          },
+          onAction: dispatchBlockAction,
         })
       } else {
         controllerRef.current = new HoverToolbarController(doc, {
           position: hoverToolbarPosition,
-          onAction: (blockId, action) => {
-            window.parent.postMessage(
-              { type: 'block-action', id: blockId, action },
-              window.location.origin,
-            )
-          },
+          onAction: dispatchBlockAction,
         })
       }
     } else if (controllerRef.current) {
@@ -212,10 +190,23 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     hoverOutlineWidth,
     showHoverToolbar,
     hoverToolbarPosition,
+    dispatchBlockAction,
   ])
 
-  // Track the iframe's actual rendered width and report it up so the
-  // preview toolbar can display it.
+  const { mostRecentUpdate } = useDocumentEvents()
+  useEffect(() => {
+    if (!mostRecentUpdate) return
+    const iframe = iframeRef.current
+    if (!iframe?.contentWindow || !previewURL) return
+    let targetOrigin: string
+    try {
+      targetOrigin = new URL(previewURL, window.location.origin).origin
+    } catch {
+      return
+    }
+    iframe.contentWindow.postMessage({ type: 'payload-document-event' }, targetOrigin)
+  }, [mostRecentUpdate, previewURL])
+
   useEffect(() => {
     const iframe = iframeRef.current
     if (!iframe || !onIframeWidthChange || typeof ResizeObserver === 'undefined') return
@@ -227,6 +218,35 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     ro.observe(iframe)
     return () => ro.disconnect()
   }, [onIframeWidthChange])
+
+  const onHandleMouseDown = useCallback(
+    (side: 'left' | 'right') => (e: React.MouseEvent) => {
+      if (!resizable || !onResize || !viewportWidth) return
+      e.preventDefault()
+      const startX = e.clientX
+      const startWidth = viewportWidth
+      // Iframe is centered, so dragging either edge by N px symmetrically
+      // grows the width by 2N. Right handle: positive delta increases width.
+      const dir = side === 'right' ? 2 : -2
+      setIsResizing(true)
+      const onMove = (ev: MouseEvent) => {
+        const delta = (ev.clientX - startX) * dir
+        onResize(clampViewport(startWidth + delta))
+      }
+      const onUp = () => {
+        window.removeEventListener('mousemove', onMove)
+        window.removeEventListener('mouseup', onUp)
+        document.body.style.cursor = ''
+        document.body.style.userSelect = ''
+        setIsResizing(false)
+      }
+      document.body.style.cursor = 'ew-resize'
+      document.body.style.userSelect = 'none'
+      window.addEventListener('mousemove', onMove)
+      window.addEventListener('mouseup', onUp)
+    },
+    [resizable, onResize, viewportWidth],
+  )
 
   if (!isPreviewEnabled) {
     return (
@@ -251,32 +271,6 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
   }
 
   const constrained = typeof viewportWidth === 'number' && viewportWidth > 0
-
-  const onHandleMouseDown = (side: 'left' | 'right') => (e: React.MouseEvent) => {
-    if (!resizable || !onResize || !viewportWidth) return
-    e.preventDefault()
-    const startX = e.clientX
-    const startWidth = viewportWidth
-    // Iframe is centered, so dragging either edge by N px symmetrically
-    // grows the width by 2N. Right handle: positive delta increases width.
-    const dir = side === 'right' ? 2 : -2
-    setIsResizing(true)
-    const onMove = (ev: MouseEvent) => {
-      const delta = (ev.clientX - startX) * dir
-      onResize(Math.max(240, Math.min(2400, startWidth + delta)))
-    }
-    const onUp = () => {
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseup', onUp)
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
-      setIsResizing(false)
-    }
-    document.body.style.cursor = 'ew-resize'
-    document.body.style.userSelect = 'none'
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', onUp)
-  }
 
   // Always render iframe inside the same wrapper div so React doesn't
   // remount it when toggling between constrained/full-width — that

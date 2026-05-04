@@ -6,20 +6,11 @@ import {
   MAX_SIDEBAR_WIDTH,
   MIN_SIDEBAR_WIDTH,
 } from '../useBetterEditorSettings'
+import { STORAGE_SIDEBAR_WIDTH } from '../internal/constants'
+import { readNumber, writeString } from '../internal/storage'
 
-const SIDEBAR_WIDTH_KEY = 'better-editor:sidebar-width'
-
-function readPersistedWidth(): number {
-  if (typeof window === 'undefined') return DEFAULT_SIDEBAR_WIDTH
-  try {
-    const raw = window.localStorage.getItem(SIDEBAR_WIDTH_KEY)
-    const parsed = raw == null ? NaN : Number(raw)
-    if (!Number.isFinite(parsed)) return DEFAULT_SIDEBAR_WIDTH
-    return Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, parsed))
-  } catch {
-    return DEFAULT_SIDEBAR_WIDTH
-  }
-}
+const clampSidebar = (n: number): number =>
+  Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, n))
 
 export type UseSidebarResizeReturn = {
   sidebarWidth: number
@@ -27,23 +18,18 @@ export type UseSidebarResizeReturn = {
   onResizeStart: (e: React.MouseEvent<HTMLDivElement>) => void
 }
 
-/** Drag-to-resize the sidebar; persisted in localStorage. */
 export const useSidebarResize = (
   sidebarPosition: 'left' | 'right',
 ): UseSidebarResizeReturn => {
-  const [sidebarWidth, setSidebarWidth] = useState<number>(() => readPersistedWidth())
+  const [sidebarWidth, setSidebarWidth] = useState<number>(() =>
+    readNumber(STORAGE_SIDEBAR_WIDTH, DEFAULT_SIDEBAR_WIDTH, clampSidebar),
+  )
   const [isResizing, setIsResizing] = useState(false)
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    try {
-      window.localStorage.setItem(SIDEBAR_WIDTH_KEY, String(sidebarWidth))
-    } catch {
-      // storage unavailable / quota exceeded
-    }
+    writeString(STORAGE_SIDEBAR_WIDTH, String(sidebarWidth))
   }, [sidebarWidth])
 
-  // Left/right position inverts the drag direction so both feel natural.
   const onResizeStart = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       e.preventDefault()
@@ -55,11 +41,7 @@ export const useSidebarResize = (
 
       const onMove = (ev: MouseEvent) => {
         const delta = (ev.clientX - startX) * direction
-        const next = Math.min(
-          MAX_SIDEBAR_WIDTH,
-          Math.max(MIN_SIDEBAR_WIDTH, startWidth + delta),
-        )
-        setSidebarWidth(next)
+        setSidebarWidth(clampSidebar(startWidth + delta))
       }
       const onUp = () => {
         window.removeEventListener('mousemove', onMove)

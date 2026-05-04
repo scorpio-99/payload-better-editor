@@ -28,8 +28,8 @@ export const useMainWrapperPortal = (enabled: boolean): HTMLElement | null => {
     if (!main.style.position) main.style.position = 'relative'
     main.style.overflow = 'hidden'
 
-    // Lock outer page scroll — wheel events from iframe/sidebar would
-    // otherwise scroll the admin shell along with them.
+    // Lock outer page scroll so wheel events from iframe/sidebar don't
+    // also scroll the admin shell underneath.
     html.style.overflow = 'hidden'
     body.style.overflow = 'hidden'
 

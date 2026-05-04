@@ -20,9 +20,7 @@ export type PreviewFrameProps = {
   hoverOutlineWidth: number
   showHoverToolbar: boolean
   hoverToolbarPosition: HoverToolbarPosition
-  /** Pixel width of the iframe; `null`/`undefined` = full container width. */
   viewportWidth?: number | null
-  /** Render drag handles for live width resize (responsive mode). */
   resizable?: boolean
   onResize?: (next: number) => void
   onIframeWidthChange?: (width: number) => void
@@ -217,6 +215,10 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     return () => ro.disconnect()
   }, [onIframeWidthChange])
 
+  // Track in-flight drag so unmount mid-drag can release body styles + listeners.
+  const dragCleanupRef = useRef<(() => void) | null>(null)
+  useEffect(() => () => dragCleanupRef.current?.(), [])
+
   const onHandleMouseDown = useCallback(
     (side: 'left' | 'right') => (e: React.MouseEvent) => {
       if (!resizable || !onResize || !viewportWidth) return
@@ -230,13 +232,16 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
       const onMove = (ev: MouseEvent) => {
         onResize(clampViewport(startWidth + (ev.clientX - startX) * dir))
       }
-      const onUp = () => {
+      const cleanup = () => {
         window.removeEventListener('mousemove', onMove)
         window.removeEventListener('mouseup', onUp)
         document.body.style.cursor = ''
         document.body.style.userSelect = ''
         setIsResizing(false)
+        dragCleanupRef.current = null
       }
+      const onUp = () => cleanup()
+      dragCleanupRef.current = cleanup
       document.body.style.cursor = 'ew-resize'
       document.body.style.userSelect = 'none'
       window.addEventListener('mousemove', onMove)
@@ -277,8 +282,8 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     .filter(Boolean)
     .join(' ')
 
-  // Iframe always lives in the same wrapper div across viewport modes so
-  // React doesn't remount it (which would reload the page and drop the
+  // Iframe always lives in the same wrapper across viewport modes so React
+  // doesn't remount it (which would reload the page and drop the
   // ResizeObserver registration).
   return (
     <div className={viewportClassName}>

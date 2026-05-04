@@ -19,13 +19,13 @@ const stripBlocks = (fields: ClientField[]): ClientField[] => {
     if (type === 'blocks') continue
 
     if (type === 'tabs') {
-      const newTabs: ClientTab[] = field.tabs.map((tab) => ({
-        ...tab,
-        fields: stripBlocks(tab.fields || []),
-      }))
-      const nonEmptyTabs = newTabs.filter((t) => (t.fields?.length ?? 0) > 0)
-      if (nonEmptyTabs.length === 0) continue
-      result.push({ ...field, tabs: nonEmptyTabs })
+      const newTabs: ClientTab[] = []
+      for (const tab of field.tabs) {
+        const inner = stripBlocks(tab.fields ?? [])
+        if (inner.length > 0) newTabs.push({ ...tab, fields: inner })
+      }
+      if (newTabs.length === 0) continue
+      result.push({ ...field, tabs: newTabs })
       continue
     }
 

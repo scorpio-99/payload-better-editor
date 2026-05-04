@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { DocumentSettingsTab } from './DocumentSettingsTab'
 import { DocumentMetaTab } from './DocumentMetaTab'
 import { BlockSettingsTab } from './BlockSettingsTab'
@@ -35,8 +35,9 @@ const SidebarTab: React.FC<SidebarTabProps> = ({ tabKey, label, active, onSelect
     role="tab"
     aria-selected={active}
     className={
-      'better-editor-sidebar__tab' +
-      (active ? ' better-editor-sidebar__tab--active' : '')
+      active
+        ? 'better-editor-sidebar__tab better-editor-sidebar__tab--active'
+        : 'better-editor-sidebar__tab'
     }
     onClick={() => onSelect(tabKey)}
   >
@@ -53,16 +54,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
   addBelowRequestId = 0,
 }) => {
   const [tab, setTab] = useState<TabKey>('page')
-  const selectTab = useCallback((key: TabKey) => setTab(key), [])
 
-  // Auto-jump to the block tab whenever a new block is selected from the iframe.
+  // Auto-jump to the block tab when the iframe selects a new block.
   useEffect(() => {
     if (selectedBlockPath) setTab('block')
   }, [selectedBlockPath])
 
-  const className =
-    'better-editor-sidebar' +
-    (forceFullWidthFields ? ' better-editor-sidebar--force-full-width' : '')
+  const className = forceFullWidthFields
+    ? 'better-editor-sidebar better-editor-sidebar--force-full-width'
+    : 'better-editor-sidebar'
 
   return (
     <div className={className}>
@@ -73,7 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             tabKey={t.key}
             label={t.label}
             active={tab === t.key}
-            onSelect={selectTab}
+            onSelect={setTab}
           />
         ))}
       </div>

@@ -20,9 +20,8 @@
 
 .better-editor__body {
   display: grid;
-  /* grid-template-columns is set inline (preview | resize-handle | sidebar).
-     Sidebar width is local, drag-resizable state — defaults on every open. */
-  grid-template-columns: 1fr 6px 380px;
+  /* grid-template-columns is set inline by LiveEditorOverlay (preview |
+     handle | sidebar) so the live drag-resize stays the source of truth. */
   height: 100%;
 }
 

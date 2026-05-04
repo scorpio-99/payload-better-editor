@@ -27,8 +27,11 @@ const cx = (...parts: Array<string | false | null | undefined>): string =>
   parts.filter(Boolean).join(' ')
 
 export const LiveEditorOverlay: React.FC<LiveEditorOverlayProps> = (props) => {
+  // Selection state lives outside OverlayProviders so the error boundary's
+  // onReset can clear it without remounting providers.
   const [selectedBlockPath, setSelectedBlockPath] = useState<string | null>(null)
   const clearSelection = useCallback(() => setSelectedBlockPath(null), [])
+
   return (
     <OverlayProviders onClose={props.onClose} onReset={clearSelection}>
       <LiveEditorOverlayInner
@@ -103,28 +106,7 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
       <div className="better-editor__body" style={{ gridTemplateColumns }}>
         <div className="better-editor__preview" style={{ order: isLeft ? 2 : 0 }}>
           <div className="better-editor__preview-toolbar">
-            <div className="better-editor__history">
-              <button
-                type="button"
-                className="better-editor__history-btn"
-                onClick={history.undo}
-                disabled={!history.canUndo}
-                title="Undo (Cmd/Ctrl+Z)"
-                aria-label="Undo"
-              >
-                <UndoIcon />
-              </button>
-              <button
-                type="button"
-                className="better-editor__history-btn"
-                onClick={history.redo}
-                disabled={!history.canRedo}
-                title="Redo (Cmd/Ctrl+Shift+Z)"
-                aria-label="Redo"
-              >
-                <RedoIcon />
-              </button>
-            </div>
+            <HistoryToolbar history={history} />
             <div className="better-editor__preview-toolbar-right">
               {iframeWidth ? (
                 <span className="better-editor__width-chip" aria-live="polite">
@@ -180,3 +162,32 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
     </div>
   )
 }
+
+type HistoryToolbarProps = {
+  history: ReturnType<typeof useEditorHistory>
+}
+
+const HistoryToolbar: React.FC<HistoryToolbarProps> = ({ history }) => (
+  <div className="better-editor__history">
+    <button
+      type="button"
+      className="better-editor__history-btn"
+      onClick={history.undo}
+      disabled={!history.canUndo}
+      title="Undo (Cmd/Ctrl+Z)"
+      aria-label="Undo"
+    >
+      <UndoIcon />
+    </button>
+    <button
+      type="button"
+      className="better-editor__history-btn"
+      onClick={history.redo}
+      disabled={!history.canRedo}
+      title="Redo (Cmd/Ctrl+Shift+Z)"
+      aria-label="Redo"
+    >
+      <RedoIcon />
+    </button>
+  </div>
+)

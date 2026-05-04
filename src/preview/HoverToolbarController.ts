@@ -28,6 +28,7 @@ export class HoverToolbarController {
   private destroyed = false
   private currentBlockId: string | null = null
   private currentBlockEl: HTMLElement | null = null
+  private positionRaf = 0
   private readonly onMove: (e: MouseEvent) => void
   private readonly onScroll: () => void
 
@@ -59,7 +60,9 @@ export class HoverToolbarController {
         this.hide()
         return
       }
-      if (el === this.currentBlockEl) return
+      // Re-bind on stale ref: the previous block element may have been
+      // replaced by React even though the new one matches the same selector.
+      if (el === this.currentBlockEl && el.isConnected) return
       this.showFor(el)
     }
 
@@ -79,6 +82,10 @@ export class HoverToolbarController {
     this.destroyed = true
     this.doc.removeEventListener('mouseover', this.onMove)
     this.doc.defaultView?.removeEventListener('scroll', this.onScroll, true)
+    if (this.positionRaf) {
+      this.doc.defaultView?.cancelAnimationFrame(this.positionRaf)
+      this.positionRaf = 0
+    }
     this.clearActive()
     this.currentBlockId = null
     this.currentBlockEl = null
@@ -118,7 +125,9 @@ export class HoverToolbarController {
   }
 
   private clearActive(): void {
-    this.doc.querySelectorAll(ACTIVE_SELECTOR).forEach((node) => node.classList.remove(ACTIVE_CLASS))
+    this.doc
+      .querySelectorAll(ACTIVE_SELECTOR)
+      .forEach((node) => node.classList.remove(ACTIVE_CLASS))
   }
 
   private showFor(el: HTMLElement): void {
@@ -140,8 +149,15 @@ export class HoverToolbarController {
     this.toolbar.dataset.nested = isNested ? '1' : '0'
     this.toolbar.classList.add('is-visible')
     const view = this.doc.defaultView
-    if (view) view.requestAnimationFrame(() => this.positionToolbar())
-    else this.positionToolbar()
+    if (view) {
+      if (this.positionRaf) view.cancelAnimationFrame(this.positionRaf)
+      this.positionRaf = view.requestAnimationFrame(() => {
+        this.positionRaf = 0
+        this.positionToolbar()
+      })
+    } else {
+      this.positionToolbar()
+    }
   }
 
   private hide(): void {

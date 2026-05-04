@@ -11,7 +11,6 @@ export type AddBlockDrawerProps = {
   addRowIndex: number
 }
 
-/** `BlocksDrawer` wrapper that fixes our default labels. */
 export const AddBlockDrawer: React.FC<AddBlockDrawerProps> = ({
   slug,
   blocks,

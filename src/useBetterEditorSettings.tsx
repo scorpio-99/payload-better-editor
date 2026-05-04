@@ -34,11 +34,8 @@ const Ctx = createContext<BetterEditorSettings>(DEFAULT_SETTINGS)
 
 export const useBetterEditorSettings = (): BetterEditorSettings => useContext(Ctx)
 
-const pickEnum = <T extends string>(
-  value: unknown,
-  allowed: readonly T[],
-  fallback: T,
-): T => (typeof value === 'string' && (allowed as readonly string[]).includes(value) ? (value as T) : fallback)
+const pickEnum = <T extends string>(value: unknown, allowed: readonly T[], fallback: T): T =>
+  allowed.includes(value as T) ? (value as T) : fallback
 
 const pickBool = (value: unknown, fallback: boolean): boolean =>
   typeof value === 'boolean' ? value : fallback
@@ -86,7 +83,14 @@ export const BetterEditorSettingsProvider: React.FC<{ children: React.ReactNode 
         if (data == null) return
         setSettings(normalizeSettings(data))
       })
-      .catch(() => {})
+      .catch((err: unknown) => {
+        // Aborts on unmount are expected; surface anything else in dev so a
+        // broken settings endpoint doesn't fail silently.
+        if (err instanceof DOMException && err.name === 'AbortError') return
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('[better-editor] failed to load settings global', err)
+        }
+      })
 
     return () => {
       controller.abort()

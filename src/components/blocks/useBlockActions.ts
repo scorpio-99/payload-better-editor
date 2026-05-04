@@ -10,11 +10,14 @@ type Args = {
   onClearSelection: () => void
 }
 
-/**
- * Row-mutation actions for the selected block. Each goes through
- * `commit()` so undo/redo + the form's modified flag stay in sync, and
- * the selection follows the block's new index after move / duplicate.
- */
+const rowCountAt = (
+  fields: ReturnType<typeof useAllFormFields>[0],
+  path: string,
+): number => {
+  const rows = fields[path]?.rows
+  return Array.isArray(rows) ? rows.length : 0
+}
+
 export const useBlockActions = ({
   selectedBlockPath,
   onSelectPath,
@@ -27,14 +30,16 @@ export const useBlockActions = ({
   const split = selectedBlockPath ? splitFieldPath(selectedBlockPath) : null
   const parentPath = split?.parent ?? ''
   const rowIndex = split ? split.index : NaN
-  const parentRows = parentPath ? fields[parentPath]?.rows : undefined
-  const rowCount = Array.isArray(parentRows) ? parentRows.length : 0
-  const canMoveUp = !Number.isNaN(rowIndex) && rowIndex > 0
-  const canMoveDown = !Number.isNaN(rowIndex) && rowIndex < rowCount - 1
-  const canMutate = !Number.isNaN(rowIndex) && parentPath !== ''
+  const rowCount = parentPath ? rowCountAt(fields, parentPath) : 0
+  const canMutate = !Number.isNaN(rowIndex) && parentPath !== '' && rowIndex < rowCount
+  const canMoveUp = canMutate && rowIndex > 0
+  const canMoveDown = canMutate && rowIndex < rowCount - 1
 
+  // Re-check bounds at call time: form state may have shifted between
+  // render and click (e.g. another action just removed the row).
   const moveUp = () => {
     if (!canMoveUp) return
+    if (rowIndex >= rowCountAt(fields, parentPath)) return
     commit(() => {
       dispatchFields({
         type: 'MOVE_ROW',
@@ -48,6 +53,7 @@ export const useBlockActions = ({
 
   const moveDown = () => {
     if (!canMoveDown) return
+    if (rowIndex >= rowCountAt(fields, parentPath) - 1) return
     commit(() => {
       dispatchFields({
         type: 'MOVE_ROW',
@@ -61,15 +67,16 @@ export const useBlockActions = ({
 
   const duplicate = () => {
     if (!canMutate) return
+    if (rowIndex >= rowCountAt(fields, parentPath)) return
     commit(() => {
       dispatchFields({ type: 'DUPLICATE_ROW', path: parentPath, rowIndex })
     })
-    // Duplicate is inserted immediately after the source row.
     onSelectPath(`${parentPath}.${rowIndex + 1}`)
   }
 
   const remove = () => {
     if (!canMutate) return
+    if (rowIndex >= rowCountAt(fields, parentPath)) return
     commit(() => {
       dispatchFields({ type: 'REMOVE_ROW', path: parentPath, rowIndex })
     })

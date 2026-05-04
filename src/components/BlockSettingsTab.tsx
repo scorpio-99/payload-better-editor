@@ -16,27 +16,15 @@ import { findNamedField, resolveBlockSchema } from './blocks/schema'
 import type { AnyClientBlock } from '../internal/types'
 import { PlusIcon } from '../icons'
 
-// `permissions={true}` skips RenderFields' client-side read gate; the
-// server-side write check still runs on save.
-const FULL_ACCESS = true as const
-
 export type BlockSettingsTabProps = {
   selectedBlockPath: string | null
   onClearSelection: () => void
   onSelectPath: (path: string | null) => void
   blocksField: string
-  /**
-   * Bump this id to open the add-below drawer externally — used by the
-   * iframe hover toolbar's `+` button.
-   */
+  /** Bump to open the add-after drawer externally (iframe `+` button). */
   addBelowRequestId?: number
 }
 
-/**
- * Renders the selected block's fields via Payload's native RenderFields,
- * plus an action toolbar and a Block Name input. Works at any nesting
- * depth (blocks inside tabs / collapsible / row / group / array).
- */
 export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
   selectedBlockPath,
   onClearSelection,
@@ -56,17 +44,15 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
     onClearSelection,
   })
 
-  // Open the add-after drawer when the external request id bumps.
-  // RAF defers to the next paint so the drawer is mounted (the sidebar
-  // tab may have just auto-switched to "Blocks").
+  // RAF defers to next paint so the drawer is mounted (the sidebar tab
+  // may have just auto-switched to "Blocks").
   const lastHandledRequestRef = useRef(0)
   useEffect(() => {
     if (!addBelowRequestId || addBelowRequestId === lastHandledRequestRef.current) return
     if (!selectedBlockPath) return
     lastHandledRequestRef.current = addBelowRequestId
-    requestAnimationFrame(() => {
-      toggleModal(addAfterDrawerSlug)
-    })
+    const raf = requestAnimationFrame(() => toggleModal(addAfterDrawerSlug))
+    return () => cancelAnimationFrame(raf)
   }, [addBelowRequestId, selectedBlockPath, toggleModal, addAfterDrawerSlug])
 
   const blocksFieldInfo = useMemo(() => {
@@ -177,7 +163,9 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
             parentPath={resolved.parentPath}
             parentIndexPath=""
             parentSchemaPath={resolved.schemaPath}
-            permissions={FULL_ACCESS}
+            // RenderFields' client read-gate is bypassed; the server-side
+            // write check still runs on save.
+            permissions={true}
           />
         </>
       )}
@@ -185,19 +173,19 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
   )
 }
 
-/** Isolated so `useField` only mounts when `path` is stable. */
 const BlockNameInput: React.FC<{ path: string }> = ({ path }) => {
   const { value, setValue } = useField<string>({ path })
+  const inputId = `be-blockname-${path}`
   return (
     <div className="better-editor-tab__block-name">
-      <label className="better-editor-tab__block-name-label" htmlFor={`be-blockname-${path}`}>
+      <label className="better-editor-tab__block-name-label" htmlFor={inputId}>
         Block Name
       </label>
       <input
-        id={`be-blockname-${path}`}
+        id={inputId}
         className="better-editor-tab__block-name-input"
         type="text"
-        value={(value as string) || ''}
+        value={value || ''}
         onChange={(e) => setValue(e.target.value)}
         placeholder="Optional label for this block"
       />

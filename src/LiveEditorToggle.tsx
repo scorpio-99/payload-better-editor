@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useDocumentInfo, usePreferences } from '@payloadcms/ui'
 import { LiveEditorOverlay } from './LiveEditorOverlay'
@@ -18,42 +18,44 @@ export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({
   blocksField,
 }) => {
   const [open, setOpen] = useState(false)
+  const [hydrated, setHydrated] = useState(false)
   const { collectionSlug, globalSlug } = useDocumentInfo()
   const { getPreference, setPreference } = usePreferences()
-  const hasHydratedRef = useRef(false)
+  const prefKey = togglePreferenceKey(collectionSlug, globalSlug)
 
   useEffect(() => {
     let cancelled = false
-    const key = togglePreferenceKey(collectionSlug, globalSlug)
-    void getPreference<Pref>(key).then((pref) => {
+    setHydrated(false)
+    void getPreference<Pref>(prefKey).then((pref) => {
       if (cancelled) return
       if (pref?.open) setOpen(true)
-      hasHydratedRef.current = true
+      setHydrated(true)
     })
     return () => {
       cancelled = true
     }
-  }, [collectionSlug, globalSlug, getPreference])
+  }, [prefKey, getPreference])
 
+  // Persist only after hydration so we don't clobber the stored value with
+  // the initial `false` before the fetch resolves.
   useEffect(() => {
-    if (!hasHydratedRef.current) return
-    const key = togglePreferenceKey(collectionSlug, globalSlug)
-    void setPreference<Pref>(key, { open }, true)
-  }, [open, collectionSlug, globalSlug, setPreference])
+    if (!hydrated) return
+    void setPreference<Pref>(prefKey, { open }, true)
+  }, [hydrated, open, prefKey, setPreference])
 
-  const handleToggle = useCallback(() => {
-    setOpen((v) => !v)
-  }, [])
+  const handleToggle = useCallback(() => setOpen((v) => !v), [])
+  const handleClose = useCallback(() => setOpen(false), [])
 
   const mountNode = useMainWrapperPortal(open)
+  const label = open ? 'Close Better Editor' : 'Open Better Editor'
 
   return (
     <>
       <button
-        aria-label={open ? 'Close Better Editor' : 'Open Better Editor'}
+        aria-label={label}
         className="preview-btn"
         onClick={handleToggle}
-        title={open ? 'Close Better Editor' : 'Open Better Editor'}
+        title={label}
         type="button"
       >
         <LayoutIcon />
@@ -61,10 +63,7 @@ export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({
 
       {open && mountNode
         ? createPortal(
-            <LiveEditorOverlay
-              onClose={() => setOpen(false)}
-              blocksField={blocksField}
-            />,
+            <LiveEditorOverlay onClose={handleClose} blocksField={blocksField} />,
             mountNode,
           )
         : null}

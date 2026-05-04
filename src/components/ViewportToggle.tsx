@@ -11,7 +11,9 @@ import {
 
 export type Viewport = 'desktop' | 'tablet' | 'mobile' | 'responsive' | 'fullscreen'
 
-const ITEMS: { id: Viewport; label: string; Icon: React.FC }[] = [
+type Item = { id: Viewport; label: string; Icon: React.FC }
+
+const ITEMS: ReadonlyArray<Item> = [
   { id: 'desktop', label: 'Desktop', Icon: DesktopIcon },
   { id: 'tablet', label: 'Tablet', Icon: TabletIcon },
   { id: 'mobile', label: 'Mobile', Icon: MobileIcon },
@@ -24,18 +26,19 @@ export type ViewportToggleProps = {
   onChange: (next: Viewport) => void
 }
 
-export const ViewportToggle: React.FC<ViewportToggleProps> = ({ value, onChange }) => {
-  return (
-    <div className="better-editor-viewport" role="radiogroup" aria-label="Preview viewport">
-      {ITEMS.map(({ id, label, Icon }) => (
+export const ViewportToggle: React.FC<ViewportToggleProps> = ({ value, onChange }) => (
+  <div className="better-editor-viewport" role="radiogroup" aria-label="Preview viewport">
+    {ITEMS.map(({ id, label, Icon }) => {
+      const active = value === id
+      return (
         <button
           key={id}
           type="button"
           role="radio"
-          aria-checked={value === id}
+          aria-checked={active}
           className={
             'better-editor-viewport__btn' +
-            (value === id ? ' better-editor-viewport__btn--active' : '')
+            (active ? ' better-editor-viewport__btn--active' : '')
           }
           onClick={() => onChange(id)}
           title={label}
@@ -43,7 +46,7 @@ export const ViewportToggle: React.FC<ViewportToggleProps> = ({ value, onChange 
         >
           <Icon />
         </button>
-      ))}
-    </div>
-  )
-}
+      )
+    })}
+  </div>
+)

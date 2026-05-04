@@ -18,11 +18,7 @@ import {
   type LucideProps,
 } from 'lucide-react'
 
-/**
- * Re-exports from `lucide-react` with our default size pinned to 16px
- * (lucide-react's own default is 24). Caller-supplied props win, so any
- * usage site can still override `size`, `strokeWidth`, etc.
- */
+// Pin default size to 16px (lucide's own default is 24); caller props win.
 const sized = (Icon: React.ComponentType<LucideProps>): React.FC<LucideProps> => {
   const Wrapped: React.FC<LucideProps> = (props) => <Icon size={16} {...props} />
   Wrapped.displayName = `Sized(${Icon.displayName ?? Icon.name})`

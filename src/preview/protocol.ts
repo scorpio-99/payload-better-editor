@@ -6,13 +6,21 @@ export type BlockActionMessage = {
 }
 export type ParentInboundMessage = FocusBlockMessage | BlockActionMessage
 
+const BLOCK_ACTIONS: ReadonlySet<BlockActionMessage['action']> = new Set([
+  'move-up',
+  'move-down',
+  'duplicate',
+  'add',
+  'delete',
+])
+
 export const isParentInboundMessage = (data: unknown): data is ParentInboundMessage => {
   if (!data || typeof data !== 'object') return false
   const d = data as Record<string, unknown>
-  if (d.type !== 'focus-block' && d.type !== 'block-action') return false
   if (typeof d.id !== 'string') return false
+  if (d.type === 'focus-block') return true
   if (d.type === 'block-action') {
-    if (typeof d.action !== 'string') return false
+    return typeof d.action === 'string' && BLOCK_ACTIONS.has(d.action as BlockActionMessage['action'])
   }
-  return true
+  return false
 }

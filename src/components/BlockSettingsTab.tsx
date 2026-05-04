@@ -76,9 +76,7 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
 
   const blocksFieldField = blocksFieldInfo?.field
   const availableBlocks: AnyClientBlock[] =
-    blocksFieldField && blocksFieldField.type === 'blocks'
-      ? ((blocksFieldField.blocks || []) as AnyClientBlock[])
-      : []
+    blocksFieldField && blocksFieldField.type === 'blocks' ? blocksFieldField.blocks || [] : []
   const blocksSchemaPath = blocksFieldInfo?.schemaPath || ''
   const topLevelRows = fields[blocksField]?.rows
   const addRowIndex = Array.isArray(topLevelRows) ? topLevelRows.length : 0

@@ -1,20 +1,26 @@
+import { ACTIVE_CLASS, BLOCK_ID_ATTR } from '../internal/constants'
+
 export const HOVER_STYLE_ID = 'better-editor-hover-style'
 export const TOOLBAR_ID = 'better-editor-block-toolbar'
 
-// Dynamic values come from CSS vars set via setHoverVars(); .better-editor-active
-// keeps the outline visible when the cursor moves to the floating toolbar.
+const VAR_TOP = '--bee-top'
+const VAR_NESTED = '--bee-nested'
+const VAR_OUTLINE_WIDTH = '--bee-outline-width'
+
+// `.${ACTIVE_CLASS}` keeps the outline visible while the cursor is over the
+// floating toolbar (toolbar lives in <body>, so :hover doesn't propagate).
 export const HOVER_CSS = `
-  [data-better-editor-id] { cursor: pointer; }
-  [data-better-editor-id]:hover,
-  [data-better-editor-id].better-editor-active {
-    outline: var(--bee-outline-width) solid var(--bee-top);
-    outline-offset: calc(-1 * var(--bee-outline-width));
-    background-color: color-mix(in srgb, var(--bee-top) 10%, transparent);
+  [${BLOCK_ID_ATTR}] { cursor: pointer; }
+  [${BLOCK_ID_ATTR}]:hover,
+  [${BLOCK_ID_ATTR}].${ACTIVE_CLASS} {
+    outline: var(${VAR_OUTLINE_WIDTH}) solid var(${VAR_TOP});
+    outline-offset: calc(-1 * var(${VAR_OUTLINE_WIDTH}));
+    background-color: color-mix(in srgb, var(${VAR_TOP}) 10%, transparent);
   }
-  [data-better-editor-id] [data-better-editor-id]:hover,
-  [data-better-editor-id] [data-better-editor-id].better-editor-active {
-    outline-color: var(--bee-nested);
-    background-color: color-mix(in srgb, var(--bee-nested) 10%, transparent);
+  [${BLOCK_ID_ATTR}] [${BLOCK_ID_ATTR}]:hover,
+  [${BLOCK_ID_ATTR}] [${BLOCK_ID_ATTR}].${ACTIVE_CLASS} {
+    outline-color: var(${VAR_NESTED});
+    background-color: color-mix(in srgb, var(${VAR_NESTED}) 10%, transparent);
   }
 
   #${TOOLBAR_ID} {
@@ -24,12 +30,12 @@ export const HOVER_CSS = `
     gap: 2px;
     padding: 3px;
     border-radius: 4px;
-    background: var(--bee-top);
+    background: var(${VAR_TOP});
     color: #fff;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
     font-family: system-ui, sans-serif;
   }
-  #${TOOLBAR_ID}[data-nested="1"] { background: var(--bee-nested); }
+  #${TOOLBAR_ID}[data-nested="1"] { background: var(${VAR_NESTED}); }
   #${TOOLBAR_ID}.is-visible { display: inline-flex; }
   #${TOOLBAR_ID} button {
     display: inline-flex;
@@ -56,7 +62,14 @@ export type HoverVars = {
 
 export const setHoverVars = (doc: Document, vars: HoverVars): void => {
   const root = doc.documentElement
-  root.style.setProperty('--bee-top', vars.topColor)
-  root.style.setProperty('--bee-nested', vars.nestedColor)
-  root.style.setProperty('--bee-outline-width', `${vars.outlineWidth}px`)
+  root.style.setProperty(VAR_TOP, vars.topColor)
+  root.style.setProperty(VAR_NESTED, vars.nestedColor)
+  root.style.setProperty(VAR_OUTLINE_WIDTH, `${vars.outlineWidth}px`)
+}
+
+export const clearHoverVars = (doc: Document): void => {
+  const root = doc.documentElement
+  root.style.removeProperty(VAR_TOP)
+  root.style.removeProperty(VAR_NESTED)
+  root.style.removeProperty(VAR_OUTLINE_WIDTH)
 }

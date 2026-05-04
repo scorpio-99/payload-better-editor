@@ -4,11 +4,12 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useDocumentEvents, useDocumentInfo } from '@payloadcms/ui'
 
 import type { HoverToolbarPosition } from '../useBetterEditorSettings'
-import { HoverToolbarController } from '../preview/HoverToolbarController'
+import { HoverToolbarController, type HoverToolbarOptions } from '../preview/HoverToolbarController'
 import { TOOLBAR_ID, setHoverVars } from '../preview/hover-css'
 import { installClickToFocus } from '../preview/installClickToFocus'
 import { installHoverStyles } from '../preview/installHoverStyles'
-import { ACTIVE_CLASS, clampViewport } from '../internal/constants'
+import type { BlockActionMessage } from '../preview/protocol'
+import { ACTIVE_CLASS, ACTIVE_SELECTOR, clampViewport } from '../internal/constants'
 import { postToParent } from '../internal/postmessage'
 
 export type PreviewFrameProps = {
@@ -27,7 +28,15 @@ export type PreviewFrameProps = {
   onIframeWidthChange?: (width: number) => void
 }
 
-type BlockAction = 'move-up' | 'move-down' | 'duplicate' | 'add' | 'delete'
+type BlockAction = BlockActionMessage['action']
+
+const getSameOriginDocument = (iframe: HTMLIFrameElement): Document | null => {
+  try {
+    return iframe.contentDocument
+  } catch {
+    return null
+  }
+}
 
 export const PreviewFrame: React.FC<PreviewFrameProps> = ({
   previewURL,
@@ -73,46 +82,42 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     postToParent({ type: 'block-action', id: blockId, action })
   }, [])
 
+  const onFocusBlock = useCallback((blockId: string) => {
+    postToParent({ type: 'focus-block', id: blockId })
+  }, [])
+
   // Idempotent: tears down previous bindings before installing new ones.
-  const bindToDocument = (doc: Document) => {
-    teardownRef.current?.()
-    controllerRef.current?.destroy()
-    controllerRef.current = null
-
-    const s = settingsRef.current
-
-    const removeStyles = installHoverStyles(doc, {
-      topColor: s.hoverColorTopLevel,
-      nestedColor: s.hoverColorNested,
-      outlineWidth: s.hoverOutlineWidth,
-    })
-
-    const removeClick = installClickToFocus(doc, (blockId) => {
-      postToParent({ type: 'focus-block', id: blockId })
-    })
-
-    if (s.showHoverToolbar) {
-      controllerRef.current = new HoverToolbarController(doc, {
-        position: s.hoverToolbarPosition,
-        onAction: dispatchBlockAction,
-      })
-    } else {
-      // Clean up any toolbar left over from a previous setup that had
-      // showHoverToolbar=true (e.g. user toggled it off mid-session).
-      const existingToolbar = doc.getElementById(TOOLBAR_ID)
-      if (existingToolbar) existingToolbar.remove()
-      doc
-        .querySelectorAll(`.${ACTIVE_CLASS}`)
-        .forEach((el) => el.classList.remove(ACTIVE_CLASS))
-    }
-
-    teardownRef.current = () => {
-      removeStyles()
-      removeClick()
+  const bindToDocument = useCallback(
+    (doc: Document) => {
+      teardownRef.current?.()
       controllerRef.current?.destroy()
       controllerRef.current = null
-    }
-  }
+
+      const s = settingsRef.current
+
+      const removeStyles = installHoverStyles(doc, {
+        topColor: s.hoverColorTopLevel,
+        nestedColor: s.hoverColorNested,
+        outlineWidth: s.hoverOutlineWidth,
+      })
+      const removeClick = installClickToFocus(doc, onFocusBlock)
+
+      if (s.showHoverToolbar) {
+        controllerRef.current = new HoverToolbarController(doc, {
+          position: s.hoverToolbarPosition,
+          onAction: dispatchBlockAction,
+        })
+      }
+
+      teardownRef.current = () => {
+        removeStyles()
+        removeClick()
+        controllerRef.current?.destroy()
+        controllerRef.current = null
+      }
+    },
+    [dispatchBlockAction, onFocusBlock],
+  )
 
   useEffect(() => {
     const iframe = iframeRef.current
@@ -120,13 +125,7 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
 
     const onLoad = () => {
       setIsLoading(false)
-      let doc: Document | null = null
-      try {
-        doc = iframe.contentDocument
-      } catch {
-        // Cross-origin: fall back to view-only.
-        return
-      }
+      const doc = getSameOriginDocument(iframe)
       if (!doc) return
       bindToDocument(doc)
     }
@@ -143,23 +142,14 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
       controllerRef.current?.destroy()
       controllerRef.current = null
     }
-    // Intentionally empty deps: bindings are reapplied via the settings
-    // effect below (controller.update + style re-injection), not by
-    // re-running this whole effect.
-  }, [])
+  }, [bindToDocument])
 
   // Apply setting changes without recreating the controller (preserves
   // its DOM node + current selection).
   useEffect(() => {
     const iframe = iframeRef.current
     if (!iframe) return
-    let doc: Document | null = null
-    try {
-      doc = iframe.contentDocument
-    } catch {
-      // Cross-origin: fall back to view-only.
-      return
-    }
+    const doc = getSameOriginDocument(iframe)
     if (!doc) return
 
     setHoverVars(doc, {
@@ -169,20 +159,22 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     })
 
     if (showHoverToolbar) {
+      const next: HoverToolbarOptions = {
+        position: hoverToolbarPosition,
+        onAction: dispatchBlockAction,
+      }
       if (controllerRef.current) {
-        controllerRef.current.update({
-          position: hoverToolbarPosition,
-          onAction: dispatchBlockAction,
-        })
+        controllerRef.current.update(next)
       } else {
-        controllerRef.current = new HoverToolbarController(doc, {
-          position: hoverToolbarPosition,
-          onAction: dispatchBlockAction,
-        })
+        controllerRef.current = new HoverToolbarController(doc, next)
       }
     } else if (controllerRef.current) {
       controllerRef.current.destroy()
       controllerRef.current = null
+      // Defensive: drop residue if a previous controller was already torn
+      // down by the load-effect path and styles outlived it.
+      doc.getElementById(TOOLBAR_ID)?.remove()
+      doc.querySelectorAll(ACTIVE_SELECTOR).forEach((el) => el.classList.remove(ACTIVE_CLASS))
     }
   }, [
     hoverColorTopLevel,
@@ -203,6 +195,7 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
       return null
     }
   }, [previewURL])
+
   useEffect(() => {
     if (!mostRecentUpdate || !previewOrigin) return
     if (id != null && mostRecentUpdate.id !== id) return
@@ -230,13 +223,12 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
       e.preventDefault()
       const startX = e.clientX
       const startWidth = viewportWidth
-      // Iframe is centered, so dragging either edge by N px symmetrically
-      // grows the width by 2N. Right handle: positive delta increases width.
+      // Iframe is centered; dragging either edge by N px symmetrically grows
+      // the width by 2N. Right handle: positive delta increases width.
       const dir = side === 'right' ? 2 : -2
       setIsResizing(true)
       const onMove = (ev: MouseEvent) => {
-        const delta = (ev.clientX - startX) * dir
-        onResize(clampViewport(startWidth + delta))
+        onResize(clampViewport(startWidth + (ev.clientX - startX) * dir))
       }
       const onUp = () => {
         window.removeEventListener('mousemove', onMove)
@@ -276,19 +268,20 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
   }
 
   const constrained = typeof viewportWidth === 'number' && viewportWidth > 0
+  const viewportClassName = [
+    'better-editor-frame__viewport',
+    constrained && 'better-editor-frame__viewport--constrained',
+    resizable && 'better-editor-frame__viewport--resizable',
+    isResizing && 'better-editor-frame__viewport--resizing',
+  ]
+    .filter(Boolean)
+    .join(' ')
 
-  // Always render iframe inside the same wrapper div so React doesn't
-  // remount it when toggling between constrained/full-width — that
-  // would reload the page AND drop our ResizeObserver registration.
+  // Iframe always lives in the same wrapper div across viewport modes so
+  // React doesn't remount it (which would reload the page and drop the
+  // ResizeObserver registration).
   return (
-    <div
-      className={
-        'better-editor-frame__viewport' +
-        (constrained ? ' better-editor-frame__viewport--constrained' : '') +
-        (resizable ? ' better-editor-frame__viewport--resizable' : '') +
-        (isResizing ? ' better-editor-frame__viewport--resizing' : '')
-      }
-    >
+    <div className={viewportClassName}>
       {resizable ? (
         <div
           className="better-editor-frame__handle better-editor-frame__handle--left"
@@ -304,9 +297,7 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
         src={previewURL}
         title="Better Editor preview"
         style={
-          constrained
-            ? { width: `${viewportWidth}px`, maxWidth: '100%' }
-            : undefined
+          constrained ? { width: `${viewportWidth}px`, maxWidth: '100%' } : undefined
         }
       />
       {isLoading ? (

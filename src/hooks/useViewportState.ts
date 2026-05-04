@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Viewport } from '../components/ViewportToggle'
 import type { BetterEditorSettings } from '../useBetterEditorSettings'
 import { STORAGE_RESPONSIVE_WIDTH, clampViewport } from '../internal/constants'
@@ -19,6 +19,24 @@ export type UseViewportStateReturn = {
   isFullscreen: boolean
 }
 
+const resolveWidth = (
+  viewport: Viewport,
+  settings: BetterEditorSettings,
+  responsiveWidth: number,
+): number | null => {
+  switch (viewport) {
+    case 'tablet':
+      return settings.tabletWidth
+    case 'mobile':
+      return settings.mobileWidth
+    case 'responsive':
+      return responsiveWidth
+    case 'desktop':
+    case 'fullscreen':
+      return null
+  }
+}
+
 export const useViewportState = (settings: BetterEditorSettings): UseViewportStateReturn => {
   const [viewport, setViewport] = useState<Viewport>('desktop')
   const [responsiveWidth, setResponsiveWidth] = useState<number>(() =>
@@ -26,18 +44,14 @@ export const useViewportState = (settings: BetterEditorSettings): UseViewportSta
   )
   const [iframeWidth, setIframeWidth] = useState<number | null>(null)
 
+  const skipFirstWrite = useRef(true)
   useEffect(() => {
+    if (skipFirstWrite.current) {
+      skipFirstWrite.current = false
+      return
+    }
     writeString(STORAGE_RESPONSIVE_WIDTH, String(responsiveWidth))
   }, [responsiveWidth])
-
-  const widthByViewport: Record<Viewport, number | null> = {
-    desktop: null,
-    fullscreen: null,
-    tablet: settings.tabletWidth,
-    mobile: settings.mobileWidth,
-    responsive: responsiveWidth,
-  }
-  const viewportWidth = widthByViewport[viewport]
 
   return {
     viewport,
@@ -46,7 +60,7 @@ export const useViewportState = (settings: BetterEditorSettings): UseViewportSta
     setResponsiveWidth,
     iframeWidth,
     setIframeWidth,
-    viewportWidth,
+    viewportWidth: resolveWidth(viewport, settings, responsiveWidth),
     isFullscreen: viewport === 'fullscreen',
   }
 }

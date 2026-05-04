@@ -4,18 +4,15 @@ import { useEffect, useRef, useState } from 'react'
 import { useAllFormFields, useForm } from '@payloadcms/ui'
 import { listenForParentInbound } from '../internal/postmessage'
 import { splitFieldPath } from '../internal/path'
+import type { FormFieldsState } from '../internal/types'
 import { useEditorHistory } from '../useEditorHistory'
 
-/** Resolve a block's auto-generated `id` to its form-state path. */
-function findPathById(
-  fields: Record<string, { value?: unknown }>,
-  targetId: string,
-): string | null {
-  for (const key in fields) {
-    if (!key.endsWith('.id')) continue
-    if (fields[key]?.value === targetId) {
-      return key.slice(0, -'.id'.length)
-    }
+const ID_SUFFIX = '.id'
+
+const findPathById = (fields: FormFieldsState, targetId: string): string | null => {
+  for (const key of Object.keys(fields)) {
+    if (!key.endsWith(ID_SUFFIX)) continue
+    if (fields[key]?.value === targetId) return key.slice(0, -ID_SUFFIX.length)
   }
   return null
 }
@@ -49,79 +46,74 @@ export const useBlockActionMessages = ({
   const { dispatchFields } = useForm()
   const history = useEditorHistory()
 
-  useEffect(() => {
-    return listenForParentInbound((data) => {
-      if (data.type === 'focus-block') {
-        const path = findPathById(
-          allFieldsRef.current as Record<string, { value?: unknown }>,
-          data.id,
-        )
-        if (path) setSelectedBlockPath(path)
-        return
-      }
+  useEffect(
+    () =>
+      listenForParentInbound((data) => {
+        const fields = allFieldsRef.current as FormFieldsState
+        const path = findPathById(fields, data.id)
+        if (!path) return
 
-      // block-action
-      const path = findPathById(
-        allFieldsRef.current as Record<string, { value?: unknown }>,
-        data.id,
-      )
-      if (!path) return
-      const split = splitFieldPath(path)
-      if (!split) return
-      const { parent: parentPath, index: rowIndex } = split
-      const rows = allFieldsRef.current[parentPath]?.rows
-      const rowCount = Array.isArray(rows) ? rows.length : 0
-
-      // "add" doesn't mutate here; the BlocksDrawer (opened via
-      // addBelowRequestId) handles the actual ADD_ROW.
-      if (data.action === 'add') {
-        setSelectedBlockPath(path)
-        setAddBelowRequestId(Date.now())
-        return
-      }
-
-      switch (data.action) {
-        case 'move-up':
-          if (rowIndex <= 0) return
-          history.commit(() =>
-            dispatchFields({
-              type: 'MOVE_ROW',
-              path: parentPath,
-              moveFromIndex: rowIndex,
-              moveToIndex: rowIndex - 1,
-            }),
-          )
-          setSelectedBlockPath(`${parentPath}.${rowIndex - 1}`)
-          break
-        case 'move-down':
-          if (rowIndex >= rowCount - 1) return
-          history.commit(() =>
-            dispatchFields({
-              type: 'MOVE_ROW',
-              path: parentPath,
-              moveFromIndex: rowIndex,
-              moveToIndex: rowIndex + 1,
-            }),
-          )
-          setSelectedBlockPath(`${parentPath}.${rowIndex + 1}`)
-          break
-        case 'duplicate':
-          history.commit(() =>
-            dispatchFields({ type: 'DUPLICATE_ROW', path: parentPath, rowIndex }),
-          )
-          setSelectedBlockPath(`${parentPath}.${rowIndex + 1}`)
-          break
-        case 'delete':
-          history.commit(() =>
-            dispatchFields({ type: 'REMOVE_ROW', path: parentPath, rowIndex }),
-          )
-          setSelectedBlockPath(null)
-          break
-        default:
+        if (data.type === 'focus-block') {
+          setSelectedBlockPath(path)
           return
-      }
-    })
-  }, [dispatchFields, history, setSelectedBlockPath])
+        }
+
+        if (data.action === 'add') {
+          // The actual ADD_ROW happens once the BlocksDrawer mounts (it
+          // reacts to addBelowRequestId).
+          setSelectedBlockPath(path)
+          setAddBelowRequestId(Date.now())
+          return
+        }
+
+        const split = splitFieldPath(path)
+        if (!split) return
+        const { parent: parentPath, index: rowIndex } = split
+        const rows = fields[parentPath]?.rows
+        const rowCount = Array.isArray(rows) ? rows.length : 0
+        if (rowIndex < 0 || rowIndex >= rowCount) return
+
+        switch (data.action) {
+          case 'move-up':
+            if (rowIndex === 0) return
+            history.commit(() =>
+              dispatchFields({
+                type: 'MOVE_ROW',
+                path: parentPath,
+                moveFromIndex: rowIndex,
+                moveToIndex: rowIndex - 1,
+              }),
+            )
+            setSelectedBlockPath(`${parentPath}.${rowIndex - 1}`)
+            break
+          case 'move-down':
+            if (rowIndex >= rowCount - 1) return
+            history.commit(() =>
+              dispatchFields({
+                type: 'MOVE_ROW',
+                path: parentPath,
+                moveFromIndex: rowIndex,
+                moveToIndex: rowIndex + 1,
+              }),
+            )
+            setSelectedBlockPath(`${parentPath}.${rowIndex + 1}`)
+            break
+          case 'duplicate':
+            history.commit(() =>
+              dispatchFields({ type: 'DUPLICATE_ROW', path: parentPath, rowIndex }),
+            )
+            setSelectedBlockPath(`${parentPath}.${rowIndex + 1}`)
+            break
+          case 'delete':
+            history.commit(() =>
+              dispatchFields({ type: 'REMOVE_ROW', path: parentPath, rowIndex }),
+            )
+            setSelectedBlockPath(null)
+            break
+        }
+      }),
+    [dispatchFields, history, setSelectedBlockPath],
+  )
 
   return { addBelowRequestId }
 }

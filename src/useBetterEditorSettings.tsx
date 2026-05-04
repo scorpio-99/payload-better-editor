@@ -2,15 +2,18 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { BETTER_EDITOR_SETTINGS_SLUG } from './global'
+import {
+  DEFAULT_BETTER_EDITOR_SETTINGS,
+  HOVER_TOOLBAR_POSITIONS,
+  SIDEBAR_POSITIONS,
+  type HoverToolbarPosition as InternalHoverToolbarPosition,
+  type SidebarPosition,
+} from './internal/constants'
 
-export type HoverToolbarPosition =
-  | 'top-right'
-  | 'top-left'
-  | 'bottom-right'
-  | 'bottom-left'
+export type HoverToolbarPosition = InternalHoverToolbarPosition
 
 export type BetterEditorSettings = {
-  sidebarPosition: 'left' | 'right'
+  sidebarPosition: SidebarPosition
   forceFullWidthFields: boolean
   tabletWidth: number
   mobileWidth: number
@@ -25,29 +28,46 @@ export const DEFAULT_SIDEBAR_WIDTH = 400
 export const MIN_SIDEBAR_WIDTH = 250
 export const MAX_SIDEBAR_WIDTH = 800
 
-export const DEFAULT_SETTINGS: BetterEditorSettings = {
-  sidebarPosition: 'right',
-  forceFullWidthFields: true,
-  tabletWidth: 800,
-  mobileWidth: 400,
-  hoverColorTopLevel: '#3b82f6',
-  hoverColorNested: '#f59e0b',
-  hoverOutlineWidth: 2,
-  showHoverToolbar: true,
-  hoverToolbarPosition: 'top-right',
-}
-
-const SIDEBAR_POSITIONS: readonly BetterEditorSettings['sidebarPosition'][] = ['left', 'right']
-const TOOLBAR_POSITIONS: readonly HoverToolbarPosition[] = [
-  'top-right',
-  'top-left',
-  'bottom-right',
-  'bottom-left',
-]
+export const DEFAULT_SETTINGS: BetterEditorSettings = { ...DEFAULT_BETTER_EDITOR_SETTINGS }
 
 const Ctx = createContext<BetterEditorSettings>(DEFAULT_SETTINGS)
 
-export const useBetterEditorSettings = () => useContext(Ctx)
+export const useBetterEditorSettings = (): BetterEditorSettings => useContext(Ctx)
+
+const pickEnum = <T extends string>(
+  value: unknown,
+  allowed: readonly T[],
+  fallback: T,
+): T => (typeof value === 'string' && (allowed as readonly string[]).includes(value) ? (value as T) : fallback)
+
+const pickBool = (value: unknown, fallback: boolean): boolean =>
+  typeof value === 'boolean' ? value : fallback
+
+const pickFiniteNumber = (value: unknown, fallback: number): number =>
+  typeof value === 'number' && Number.isFinite(value) ? value : fallback
+
+const pickNonEmptyString = (value: unknown, fallback: string): string =>
+  typeof value === 'string' && value.length > 0 ? value : fallback
+
+const normalizeSettings = (raw: unknown): BetterEditorSettings => {
+  if (!raw || typeof raw !== 'object') return DEFAULT_SETTINGS
+  const d = raw as Partial<BetterEditorSettings>
+  return {
+    sidebarPosition: pickEnum(d.sidebarPosition, SIDEBAR_POSITIONS, DEFAULT_SETTINGS.sidebarPosition),
+    forceFullWidthFields: pickBool(d.forceFullWidthFields, DEFAULT_SETTINGS.forceFullWidthFields),
+    tabletWidth: pickFiniteNumber(d.tabletWidth, DEFAULT_SETTINGS.tabletWidth),
+    mobileWidth: pickFiniteNumber(d.mobileWidth, DEFAULT_SETTINGS.mobileWidth),
+    hoverColorTopLevel: pickNonEmptyString(d.hoverColorTopLevel, DEFAULT_SETTINGS.hoverColorTopLevel),
+    hoverColorNested: pickNonEmptyString(d.hoverColorNested, DEFAULT_SETTINGS.hoverColorNested),
+    hoverOutlineWidth: pickFiniteNumber(d.hoverOutlineWidth, DEFAULT_SETTINGS.hoverOutlineWidth),
+    showHoverToolbar: pickBool(d.showHoverToolbar, DEFAULT_SETTINGS.showHoverToolbar),
+    hoverToolbarPosition: pickEnum(
+      d.hoverToolbarPosition,
+      HOVER_TOOLBAR_POSITIONS,
+      DEFAULT_SETTINGS.hoverToolbarPosition,
+    ),
+  }
+}
 
 export const BetterEditorSettingsProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -61,51 +81,10 @@ export const BetterEditorSettingsProvider: React.FC<{ children: React.ReactNode 
       credentials: 'include',
       signal: controller.signal,
     })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data: unknown) => {
-        if (!data || typeof data !== 'object') return
-        const d = data as Partial<BetterEditorSettings>
-
-        const sidebarPosition =
-          d.sidebarPosition && SIDEBAR_POSITIONS.includes(d.sidebarPosition)
-            ? d.sidebarPosition
-            : DEFAULT_SETTINGS.sidebarPosition
-
-        const hoverToolbarPosition =
-          d.hoverToolbarPosition && TOOLBAR_POSITIONS.includes(d.hoverToolbarPosition)
-            ? d.hoverToolbarPosition
-            : DEFAULT_SETTINGS.hoverToolbarPosition
-
-        setSettings({
-          sidebarPosition,
-          forceFullWidthFields:
-            typeof d.forceFullWidthFields === 'boolean'
-              ? d.forceFullWidthFields
-              : DEFAULT_SETTINGS.forceFullWidthFields,
-          tabletWidth:
-            typeof d.tabletWidth === 'number' && Number.isFinite(d.tabletWidth)
-              ? d.tabletWidth
-              : DEFAULT_SETTINGS.tabletWidth,
-          mobileWidth:
-            typeof d.mobileWidth === 'number' && Number.isFinite(d.mobileWidth)
-              ? d.mobileWidth
-              : DEFAULT_SETTINGS.mobileWidth,
-          hoverColorTopLevel:
-            (typeof d.hoverColorTopLevel === 'string' && d.hoverColorTopLevel) ||
-            DEFAULT_SETTINGS.hoverColorTopLevel,
-          hoverColorNested:
-            (typeof d.hoverColorNested === 'string' && d.hoverColorNested) ||
-            DEFAULT_SETTINGS.hoverColorNested,
-          hoverOutlineWidth:
-            typeof d.hoverOutlineWidth === 'number' && Number.isFinite(d.hoverOutlineWidth)
-              ? d.hoverOutlineWidth
-              : DEFAULT_SETTINGS.hoverOutlineWidth,
-          showHoverToolbar:
-            typeof d.showHoverToolbar === 'boolean'
-              ? d.showHoverToolbar
-              : DEFAULT_SETTINGS.showHoverToolbar,
-          hoverToolbarPosition,
-        })
+      .then((r) => (r.ok ? (r.json() as Promise<unknown>) : null))
+      .then((data) => {
+        if (data == null) return
+        setSettings(normalizeSettings(data))
       })
       .catch(() => {})
 

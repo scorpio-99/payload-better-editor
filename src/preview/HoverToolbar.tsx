@@ -27,15 +27,14 @@ export const HoverToolbar: React.FC<HoverToolbarProps> = ({ onAction }) => (
     {BUTTONS.map(({ action, Icon, label }) => (
       <button
         key={action}
+        type="button"
         aria-label={label}
+        title={label}
         data-action={action}
         onClick={(e) => {
-          e.preventDefault()
           e.stopPropagation()
           onAction(action)
         }}
-        title={label}
-        type="button"
       >
         <Icon size={14} />
       </button>

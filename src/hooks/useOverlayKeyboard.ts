@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useEditorHistory } from '../useEditorHistory'
 
 export type UseOverlayKeyboardArgs = {
@@ -9,26 +9,28 @@ export type UseOverlayKeyboardArgs = {
 }
 
 export const useOverlayKeyboard = ({ onClose, history }: UseOverlayKeyboardArgs): void => {
+  const handlersRef = useRef({ onClose, history })
+  handlersRef.current = { onClose, history }
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose()
+        handlersRef.current.onClose()
         return
       }
-      const mod = e.metaKey || e.ctrlKey
-      if (mod && (e.key === 'z' || e.key === 'Z')) {
+      if (!(e.metaKey || e.ctrlKey)) return
+      const k = e.key.toLowerCase()
+      if (k === 'z') {
         e.preventDefault()
-        if (e.shiftKey) {
-          history.redo()
-        } else {
-          history.undo()
-        }
-      } else if (mod && (e.key === 'y' || e.key === 'Y')) {
+        const h = handlersRef.current.history
+        if (e.shiftKey) h.redo()
+        else h.undo()
+      } else if (k === 'y') {
         e.preventDefault()
-        history.redo()
+        handlersRef.current.history.redo()
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onClose, history])
+  }, [])
 }

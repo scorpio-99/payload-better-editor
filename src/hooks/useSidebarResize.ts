@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import {
   DEFAULT_SIDEBAR_WIDTH,
   MAX_SIDEBAR_WIDTH,
@@ -26,7 +26,13 @@ export const useSidebarResize = (
   )
   const [isResizing, setIsResizing] = useState(false)
 
+  // Skip the no-op write on initial mount (value just came from storage).
+  const skipFirstWrite = useRef(true)
   useEffect(() => {
+    if (skipFirstWrite.current) {
+      skipFirstWrite.current = false
+      return
+    }
     writeString(STORAGE_SIDEBAR_WIDTH, String(sidebarWidth))
   }, [sidebarWidth])
 
@@ -38,10 +44,11 @@ export const useSidebarResize = (
       const direction = sidebarPosition === 'right' ? -1 : 1
 
       setIsResizing(true)
+      document.body.style.cursor = 'col-resize'
+      document.body.style.userSelect = 'none'
 
       const onMove = (ev: MouseEvent) => {
-        const delta = (ev.clientX - startX) * direction
-        setSidebarWidth(clampSidebar(startWidth + delta))
+        setSidebarWidth(clampSidebar(startWidth + (ev.clientX - startX) * direction))
       }
       const onUp = () => {
         window.removeEventListener('mousemove', onMove)
@@ -50,8 +57,6 @@ export const useSidebarResize = (
         document.body.style.userSelect = ''
         setIsResizing(false)
       }
-      document.body.style.cursor = 'col-resize'
-      document.body.style.userSelect = 'none'
       window.addEventListener('mousemove', onMove)
       window.addEventListener('mouseup', onUp)
     },

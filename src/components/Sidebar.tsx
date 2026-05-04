@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { DocumentSettingsTab } from './DocumentSettingsTab'
 import { DocumentMetaTab } from './DocumentMetaTab'
 import { BlockSettingsTab } from './BlockSettingsTab'
@@ -23,12 +23,13 @@ const TABS: ReadonlyArray<{ key: TabKey; label: string }> = [
 ]
 
 type SidebarTabProps = {
+  tabKey: TabKey
   label: string
   active: boolean
-  onClick: () => void
+  onSelect: (key: TabKey) => void
 }
 
-const SidebarTab: React.FC<SidebarTabProps> = ({ label, active, onClick }) => (
+const SidebarTab: React.FC<SidebarTabProps> = ({ tabKey, label, active, onSelect }) => (
   <button
     type="button"
     role="tab"
@@ -37,7 +38,7 @@ const SidebarTab: React.FC<SidebarTabProps> = ({ label, active, onClick }) => (
       'better-editor-sidebar__tab' +
       (active ? ' better-editor-sidebar__tab--active' : '')
     }
-    onClick={onClick}
+    onClick={() => onSelect(tabKey)}
   >
     {label}
   </button>
@@ -52,25 +53,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
   addBelowRequestId = 0,
 }) => {
   const [tab, setTab] = useState<TabKey>('page')
+  const selectTab = useCallback((key: TabKey) => setTab(key), [])
 
+  // Auto-jump to the block tab whenever a new block is selected from the iframe.
   useEffect(() => {
     if (selectedBlockPath) setTab('block')
   }, [selectedBlockPath])
 
+  const className =
+    'better-editor-sidebar' +
+    (forceFullWidthFields ? ' better-editor-sidebar--force-full-width' : '')
+
   return (
-    <div
-      className={
-        'better-editor-sidebar' +
-        (forceFullWidthFields ? ' better-editor-sidebar--force-full-width' : '')
-      }
-    >
+    <div className={className}>
       <div role="tablist" className="better-editor-sidebar__tabs">
         {TABS.map((t) => (
           <SidebarTab
             key={t.key}
+            tabKey={t.key}
             label={t.label}
             active={tab === t.key}
-            onClick={() => setTab(t.key)}
+            onSelect={selectTab}
           />
         ))}
       </div>

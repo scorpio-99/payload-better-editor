@@ -9,9 +9,10 @@ import React, {
   useReducer,
   useRef,
 } from 'react'
+import type { FormState } from 'payload'
 import { useAllFormFields, useForm } from '@payloadcms/ui'
 
-type Snapshot = ReturnType<typeof useAllFormFields>[0]
+type Snapshot = FormState
 
 type HistoryContextValue = {
   pushSnapshot: () => void
@@ -23,18 +24,20 @@ type HistoryContextValue = {
   canRedo: boolean
 }
 
+const noop = () => {}
+
 const DEFAULT_VALUE: HistoryContextValue = {
-  pushSnapshot: () => {},
+  pushSnapshot: noop,
   commit: (mutation) => mutation(),
-  undo: () => {},
-  redo: () => {},
+  undo: noop,
+  redo: noop,
   canUndo: false,
   canRedo: false,
 }
 
 const Ctx = createContext<HistoryContextValue>(DEFAULT_VALUE)
 
-export const useEditorHistory = () => useContext(Ctx)
+export const useEditorHistory = (): HistoryContextValue => useContext(Ctx)
 
 const MAX_HISTORY = 50
 
@@ -73,8 +76,6 @@ const reducer = (state: HistoryState, action: HistoryAction): HistoryState => {
         redo: state.redo.slice(0, -1),
       }
     }
-    default:
-      return state
   }
 }
 
@@ -82,17 +83,13 @@ export const EditorHistoryProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [fields] = useAllFormFields()
-  const fieldsRef = useRef(fields)
-  useEffect(() => {
-    fieldsRef.current = fields
-  }, [fields])
+  const fieldsRef = useRef<Snapshot>(fields)
+  fieldsRef.current = fields
 
   const { dispatchFields, setModified } = useForm()
   const [state, dispatch] = useReducer(reducer, initialState)
   const stateRef = useRef(state)
-  useEffect(() => {
-    stateRef.current = state
-  }, [state])
+  stateRef.current = state
   const restoringRef = useRef(false)
 
   const pushSnapshot = useCallback(() => {
@@ -118,6 +115,8 @@ export const EditorHistoryProvider: React.FC<{ children: React.ReactNode }> = ({
       restoringRef.current = true
       dispatchFields({ type: 'REPLACE_STATE', state: target })
       setModified(true)
+      // Cleared after the React commit so a transient pushSnapshot
+      // triggered by the REPLACE_STATE effect cannot poison redo.
       setTimeout(() => {
         restoringRef.current = false
       }, 0)

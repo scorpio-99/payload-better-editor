@@ -4,7 +4,7 @@
  * (e.g. `layout.6.columns.0.blocks.1`) and underlying field configs.
  */
 
-import type { ClientTab, SanitizedFieldPermissions } from 'payload'
+import type { ClientTab } from 'payload'
 import type { AnyClientBlock, AnyClientField, FormFieldsState } from '../../internal/types'
 
 export type Resolved = {
@@ -12,7 +12,6 @@ export type Resolved = {
   blockFields: AnyClientField[]
   schemaPath: string
   parentPath: string
-  permissions: SanitizedFieldPermissions
   blocksFieldSchemaPath: string
   blocksFieldBlocks: AnyClientBlock[]
 }
@@ -86,7 +85,7 @@ export function resolveBlockSchema(
       const row = Array.isArray(rows) ? (rows[index] as { blockType?: string } | undefined) : undefined
       if (!row?.blockType) return null
       blockType = row.blockType
-      const blocks = (field.blocks || []) as AnyClientBlock[]
+      const blocks: AnyClientBlock[] = field.blocks || []
       blockConfig = blocks.find((b) => b.slug === blockType) || null
       if (!blockConfig) return null
       // Capture parent before descending — used by "add sibling block".
@@ -110,7 +109,6 @@ export function resolveBlockSchema(
     blockFields: currentFields,
     schemaPath: currentSchemaPath,
     parentPath: currentPath,
-    permissions: {} as SanitizedFieldPermissions,
     blocksFieldSchemaPath,
     blocksFieldBlocks,
   }

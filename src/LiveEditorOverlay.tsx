@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { useLivePreviewContext } from '@payloadcms/ui'
 import { PreviewFrame } from './components/PreviewFrame'
 import { Sidebar } from './components/Sidebar'
@@ -21,15 +21,21 @@ export type LiveEditorOverlayProps = {
   blocksField: string
 }
 
+const RESIZE_HANDLE_PX = 6
+
+const cx = (...parts: Array<string | false | null | undefined>): string =>
+  parts.filter(Boolean).join(' ')
+
 export const LiveEditorOverlay: React.FC<LiveEditorOverlayProps> = (props) => {
   const [selectedBlockPath, setSelectedBlockPath] = useState<string | null>(null)
-  const handleReset = useCallback(() => setSelectedBlockPath(null), [])
+  const clearSelection = useCallback(() => setSelectedBlockPath(null), [])
   return (
-    <OverlayProviders onClose={props.onClose} onReset={handleReset}>
+    <OverlayProviders onClose={props.onClose} onReset={clearSelection}>
       <LiveEditorOverlayInner
         {...props}
         selectedBlockPath={selectedBlockPath}
         setSelectedBlockPath={setSelectedBlockPath}
+        clearSelection={clearSelection}
       />
     </OverlayProviders>
   )
@@ -38,6 +44,7 @@ export const LiveEditorOverlay: React.FC<LiveEditorOverlayProps> = (props) => {
 type InnerProps = LiveEditorOverlayProps & {
   selectedBlockPath: string | null
   setSelectedBlockPath: React.Dispatch<React.SetStateAction<string | null>>
+  clearSelection: () => void
 }
 
 const LiveEditorOverlayInner: React.FC<InnerProps> = ({
@@ -45,6 +52,7 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
   blocksField,
   selectedBlockPath,
   setSelectedBlockPath,
+  clearSelection,
 }) => {
   const settings = useBetterEditorSettings()
   const history = useEditorHistory()
@@ -74,51 +82,26 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
   useOverlayKeyboard({ onClose, history })
 
   const isLeft = settings.sidebarPosition === 'left'
-  const gridCols = isFullscreen
+  const sidebarTrack = `${sidebarWidth}px ${RESIZE_HANDLE_PX}px`
+  const gridTemplateColumns = isFullscreen
     ? '1fr'
     : isLeft
-      ? `${sidebarWidth}px 6px 1fr`
-      : `1fr 6px ${sidebarWidth}px`
-  const previewOrder = isLeft ? 2 : 0
-  const handleOrder = 1
-  const sidebarOrder = isLeft ? 0 : 2
-
-  const className =
-    'better-editor' +
-    (isResizing ? ' better-editor--resizing' : '') +
-    (isFullscreen ? ' better-editor--fullscreen' : '')
-
-  const bodyStyle = useMemo<React.CSSProperties>(
-    () => ({ gridTemplateColumns: gridCols }),
-    [gridCols],
-  )
-  const previewStyle = useMemo<React.CSSProperties>(
-    () => ({ order: previewOrder }),
-    [previewOrder],
-  )
-  const handleStyle = useMemo<React.CSSProperties>(
-    () => ({ order: handleOrder }),
-    [handleOrder],
-  )
-  const sidebarStyle = useMemo<React.CSSProperties>(
-    () => ({ order: sidebarOrder }),
-    [sidebarOrder],
-  )
-
-  const handleClearSelection = useCallback(
-    () => setSelectedBlockPath(null),
-    [setSelectedBlockPath],
-  )
+      ? `${sidebarTrack} 1fr`
+      : `1fr ${sidebarTrack}`
 
   return (
     <div
       ref={overlayRef}
-      className={className}
+      className={cx(
+        'better-editor',
+        isResizing && 'better-editor--resizing',
+        isFullscreen && 'better-editor--fullscreen',
+      )}
       role="dialog"
       aria-label="Better Editor"
     >
-      <div className="better-editor__body" style={bodyStyle}>
-        <div className="better-editor__preview" style={previewStyle}>
+      <div className="better-editor__body" style={{ gridTemplateColumns }}>
+        <div className="better-editor__preview" style={{ order: isLeft ? 2 : 0 }}>
           <div className="better-editor__preview-toolbar">
             <div className="better-editor__history">
               <button
@@ -172,16 +155,19 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
           <>
             <div
               className="better-editor__resize-handle"
-              style={handleStyle}
+              style={{ order: 1 }}
               role="separator"
               aria-orientation="vertical"
               aria-label="Resize sidebar"
               onMouseDown={onResizeStart}
             />
-            <aside className="better-editor__sidebar" style={sidebarStyle}>
+            <aside
+              className="better-editor__sidebar"
+              style={{ order: isLeft ? 0 : 2 }}
+            >
               <Sidebar
                 selectedBlockPath={selectedBlockPath}
-                onClearSelection={handleClearSelection}
+                onClearSelection={clearSelection}
                 onSelectPath={setSelectedBlockPath}
                 forceFullWidthFields={settings.forceFullWidthFields}
                 blocksField={blocksField}

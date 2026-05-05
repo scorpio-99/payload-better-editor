@@ -15,6 +15,8 @@ import {
   Undo as L_Undo,
   Redo as L_Redo,
   PanelLeft as L_PanelLeft,
+  PanelRightOpen as L_PanelRightOpen,
+  PanelRightClose as L_PanelRightClose,
   type LucideProps,
 } from 'lucide-react'
 
@@ -38,3 +40,5 @@ export const FullscreenIcon = sized(L_Expand)
 export const UndoIcon = sized(L_Undo)
 export const RedoIcon = sized(L_Redo)
 export const LayoutIcon = sized(L_PanelLeft)
+export const SidebarHideIcon = sized(L_PanelRightClose)
+export const SidebarShowIcon = sized(L_PanelRightOpen)

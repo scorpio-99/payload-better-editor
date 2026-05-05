@@ -13,7 +13,7 @@ import { useFullscreenOverlay } from './hooks/useFullscreenOverlay'
 import { useBlockActionMessages } from './hooks/useBlockActionMessages'
 import { useOverlayKeyboard } from './hooks/useOverlayKeyboard'
 import { OverlayProviders } from './providers/OverlayProviders'
-import { RedoIcon, UndoIcon } from './icons'
+import { RedoIcon, SidebarHideIcon, SidebarShowIcon, UndoIcon } from './icons'
 import './styles.css'
 
 export type LiveEditorOverlayProps = {
@@ -88,8 +88,12 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
 
   useOverlayKeyboard({ onClose, history })
 
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const toggleSidebar = useCallback(() => setSidebarCollapsed((v) => !v), [])
+
   const isLeft = settings.sidebarPosition === 'left'
-  const gridTemplateColumns = isFullscreen
+  const showSidebar = !sidebarCollapsed
+  const gridTemplateColumns = !showSidebar
     ? '1fr'
     : isLeft
       ? `${sidebarWidth}px ${RESIZE_HANDLE_PX}px 1fr`
@@ -118,6 +122,18 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
                 </span>
               ) : null}
               <ViewportToggle value={viewport} onChange={setViewport} />
+              <div className="better-editor-viewport">
+                <button
+                  type="button"
+                  className="better-editor-viewport__btn"
+                  onClick={toggleSidebar}
+                  aria-pressed={sidebarCollapsed}
+                  title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+                  aria-label={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+                >
+                  {sidebarCollapsed ? <SidebarShowIcon /> : <SidebarHideIcon />}
+                </button>
+              </div>
             </div>
           </div>
           <div className="better-editor__preview-stage">
@@ -136,7 +152,7 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
             />
           </div>
         </div>
-        {!isFullscreen ? (
+        {showSidebar ? (
           <>
             <div
               className="better-editor__resize-handle"

@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { ChevronDown, ChevronUp, Copy, Plus, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, CopyIcon, PlusIcon, TrashIcon } from '../icons'
 import type { BlockActionMessage } from './protocol'
 
 type Action = BlockActionMessage['action']
@@ -13,9 +13,9 @@ const BUTTONS: ReadonlyArray<{
 }> = [
   { action: 'move-up', Icon: ChevronUp, label: 'Move up' },
   { action: 'move-down', Icon: ChevronDown, label: 'Move down' },
-  { action: 'duplicate', Icon: Copy, label: 'Duplicate' },
-  { action: 'add', Icon: Plus, label: 'Add block below' },
-  { action: 'delete', Icon: Trash2, label: 'Delete' },
+  { action: 'duplicate', Icon: CopyIcon, label: 'Duplicate' },
+  { action: 'add', Icon: PlusIcon, label: 'Add block below' },
+  { action: 'delete', Icon: TrashIcon, label: 'Delete' },
 ]
 
 export type HoverToolbarProps = {

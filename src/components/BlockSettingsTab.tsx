@@ -13,8 +13,9 @@ import { AddBlockDrawer } from './blocks/AddBlockDrawer'
 import { BlockActionsToolbar } from './blocks/BlockActionsToolbar'
 import { useBlockActions } from './blocks/useBlockActions'
 import { findNamedField, resolveBlockSchema } from './blocks/schema'
-import type { AnyClientBlock } from '../internal/types'
-import { PlusIcon } from '../icons'
+import type { ClientBlock } from 'payload'
+import { BlockEmptyState } from './blocks/BlockEmptyState'
+import { BlockHeader } from './blocks/BlockHeader'
 
 export type BlockSettingsTabProps = {
   selectedBlockPath: string | null
@@ -61,7 +62,7 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
   }, [docFields, blocksField, docSlug])
 
   const blocksFieldField = blocksFieldInfo?.field
-  const availableBlocks: AnyClientBlock[] =
+  const availableBlocks: ClientBlock[] =
     blocksFieldField && blocksFieldField.type === 'blocks' ? blocksFieldField.blocks : []
   const blocksSchemaPath = blocksFieldInfo?.schemaPath || ''
   const topLevelRows = fields[blocksField]?.rows
@@ -69,31 +70,22 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
 
   if (!selectedBlockPath) {
     return (
-      <div className="better-editor-tab better-editor-tab--empty">
-        <p className="better-editor-tab__empty-text">
-          Select a block in the preview to edit its settings.
-        </p>
+      <>
+        <BlockEmptyState
+          canAdd={availableBlocks.length > 0}
+          onAddClick={() => toggleModal(addBlockDrawerSlug)}
+        />
         {availableBlocks.length > 0 ? (
-          <>
-            <button
-              type="button"
-              className="better-editor-tab__add-block"
-              onClick={() => toggleModal(addBlockDrawerSlug)}
-            >
-              <PlusIcon />
-              <span>Add Block</span>
-            </button>
-            <AddBlockDrawer
-              slug={addBlockDrawerSlug}
-              blocks={availableBlocks}
-              addRow={(index, blockType) =>
-                actions.addAfter(blockType, blocksSchemaPath, blocksField, index)
-              }
-              addRowIndex={addRowIndex}
-            />
-          </>
+          <AddBlockDrawer
+            slug={addBlockDrawerSlug}
+            blocks={availableBlocks}
+            addRow={(index, blockType) =>
+              actions.addAfter(blockType, blocksSchemaPath, blocksField, index)
+            }
+            addRowIndex={addRowIndex}
+          />
         ) : null}
-      </div>
+      </>
     )
   }
 
@@ -103,22 +95,11 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
 
   return (
     <div className="better-editor-tab better-editor-tab--native">
-      <div className="better-editor-tab__header">
-        <div>
-          <span className="better-editor-tab__kicker">Block</span>
-          <h3 className="better-editor-tab__heading">
-            {resolved?.blockType || 'unknown'}
-          </h3>
-          <code className="better-editor-tab__path">{selectedBlockPath}</code>
-        </div>
-        <button
-          type="button"
-          className="better-editor-tab__clear"
-          onClick={onClearSelection}
-        >
-          Deselect
-        </button>
-      </div>
+      <BlockHeader
+        blockType={resolved?.blockType || 'unknown'}
+        path={selectedBlockPath}
+        onClearSelection={onClearSelection}
+      />
 
       <hr className="better-editor-tab__divider" aria-hidden="true" />
 

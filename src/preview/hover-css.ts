@@ -1,4 +1,4 @@
-import { ACTIVE_CLASS, BLOCK_ID_ATTR } from '../internal/constants'
+import { ACTIVE_CLASS, BLOCK_ID_ATTR } from '../internal/dom'
 
 export const HOVER_STYLE_ID = 'better-editor-hover-style'
 export const TOOLBAR_ID = 'better-editor-block-toolbar'
@@ -63,11 +63,41 @@ export type HoverVars = {
   outlineWidth: number
 }
 
+// Restrictive on purpose: these values are written verbatim into a CSS
+// custom property on the preview iframe, so anything that survives the
+// regex still lands inside `outline:` / `background-color:` and can't
+// escape into a separate declaration.
+const COLOR_RE = /^#[0-9a-fA-F]{3,8}$|^rgba?\(/i
+
+const isValidColor = (v: unknown): v is string =>
+  typeof v === 'string' && COLOR_RE.test(v.trim())
+
+const isValidOutline = (v: unknown): v is number =>
+  typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 50
+
+const warnInvalid = (kind: string, value: unknown): void => {
+  if (process.env.NODE_ENV !== 'production') {
+    console.warn(`[better-editor] ignoring invalid ${kind}:`, value)
+  }
+}
+
 export const setHoverVars = (doc: Document, vars: HoverVars): void => {
   const root = doc.documentElement
-  root.style.setProperty(VAR_TOP, vars.topColor)
-  root.style.setProperty(VAR_NESTED, vars.nestedColor)
-  root.style.setProperty(VAR_OUTLINE_WIDTH, `${vars.outlineWidth}px`)
+  if (isValidColor(vars.topColor)) {
+    root.style.setProperty(VAR_TOP, vars.topColor)
+  } else {
+    warnInvalid('topColor', vars.topColor)
+  }
+  if (isValidColor(vars.nestedColor)) {
+    root.style.setProperty(VAR_NESTED, vars.nestedColor)
+  } else {
+    warnInvalid('nestedColor', vars.nestedColor)
+  }
+  if (isValidOutline(vars.outlineWidth)) {
+    root.style.setProperty(VAR_OUTLINE_WIDTH, `${vars.outlineWidth}px`)
+  } else {
+    warnInvalid('outlineWidth', vars.outlineWidth)
+  }
 }
 
 export const clearHoverVars = (doc: Document): void => {

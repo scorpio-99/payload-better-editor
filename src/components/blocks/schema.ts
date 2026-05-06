@@ -1,23 +1,23 @@
 import type { ClientTab } from 'payload'
-import type { AnyClientBlock, AnyClientField, FormFieldsState } from '../../internal/types'
+import type { ClientBlock, ClientField, FormState } from 'payload'
 
 export type Resolved = {
   blockType: string
-  blockFields: AnyClientField[]
+  blockFields: ClientField[]
   schemaPath: string
   parentPath: string
   blocksFieldSchemaPath: string
-  blocksFieldBlocks: AnyClientBlock[]
+  blocksFieldBlocks: ClientBlock[]
 }
 
 const tabHasName = (tab: ClientTab): tab is ClientTab & { name: string } =>
   typeof (tab as { name?: unknown }).name === 'string'
 
 export function findNamedField(
-  fields: AnyClientField[],
+  fields: ClientField[],
   name: string,
   schemaPath: string,
-): { field: AnyClientField; schemaPath: string } | null {
+): { field: ClientField; schemaPath: string } | null {
   for (const field of fields) {
     if (!field || typeof field !== 'object') continue
 
@@ -42,19 +42,19 @@ export function findNamedField(
 }
 
 export function resolveBlockSchema(
-  docFields: AnyClientField[],
+  docFields: ClientField[],
   docSlug: string,
   path: string,
-  formFields: FormFieldsState,
+  formFields: FormState,
 ): Resolved | null {
   const segments = path.split('.')
-  let currentFields: AnyClientField[] = docFields
+  let currentFields: ClientField[] = docFields
   let currentSchemaPath = docSlug
   let currentPath = ''
   let blockType: string | null = null
-  let blockConfig: AnyClientBlock | null = null
+  let blockConfig: ClientBlock | null = null
   let blocksFieldSchemaPath = ''
-  let blocksFieldBlocks: AnyClientBlock[] = []
+  let blocksFieldBlocks: ClientBlock[] = []
 
   for (let i = 0; i < segments.length; i += 2) {
     const fieldName = segments[i]

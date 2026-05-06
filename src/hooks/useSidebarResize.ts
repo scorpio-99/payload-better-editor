@@ -6,7 +6,7 @@ import {
   MAX_SIDEBAR_WIDTH,
   MIN_SIDEBAR_WIDTH,
 } from '../useBetterEditorSettings'
-import { STORAGE_SIDEBAR_WIDTH } from '../internal/constants'
+import { STORAGE_SIDEBAR_WIDTH } from '../internal/storage-keys'
 import { readNumber, writeString } from '../internal/storage'
 
 const clampSidebar = (n: number): number =>

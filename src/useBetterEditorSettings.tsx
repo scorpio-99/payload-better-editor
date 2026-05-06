@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { BETTER_EDITOR_SETTINGS_SLUG } from './global'
 import {
   DEFAULT_BETTER_EDITOR_SETTINGS,
@@ -97,5 +97,9 @@ export const BetterEditorSettingsProvider: React.FC<{ children: React.ReactNode 
     }
   }, [])
 
-  return <Ctx.Provider value={settings}>{children}</Ctx.Provider>
+  // Stable identity per `settings` object so consumers using useMemo /
+  // React.memo aren't invalidated by unrelated parent re-renders.
+  const value = useMemo(() => settings, [settings])
+
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

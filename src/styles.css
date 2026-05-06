@@ -1,8 +1,0 @@
-/* payload-better-editor — barrel imports for the overlay's CSS.
-   Imported once from LiveEditorOverlay.tsx; bundled into the consumer's
-   admin app. Cascade order: most-general → most-specific. */
-
-@import './styles/overlay.css';
-@import './styles/preview.css';
-@import './styles/sidebar.css';
-@import './styles/blocks-tab.css';

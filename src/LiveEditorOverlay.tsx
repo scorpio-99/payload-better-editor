@@ -89,12 +89,11 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
   useOverlayKeyboard({ onClose, history })
 
   const isLeft = settings.sidebarPosition === 'left'
-  const sidebarTrack = `${sidebarWidth}px ${RESIZE_HANDLE_PX}px`
   const gridTemplateColumns = isFullscreen
     ? '1fr'
     : isLeft
-      ? `${sidebarTrack} 1fr`
-      : `1fr ${sidebarTrack}`
+      ? `${sidebarWidth}px ${RESIZE_HANDLE_PX}px 1fr`
+      : `1fr ${RESIZE_HANDLE_PX}px ${sidebarWidth}px`
 
   return (
     <div

@@ -5,8 +5,11 @@ export const installClickToFocus = (
   onFocus: (id: string) => void,
 ): (() => void) => {
   const onClick = (e: MouseEvent) => {
-    const target = e.target
-    if (!(target instanceof Element)) return
+    // `instanceof Element` is realm-local; this listener is registered
+    // on the iframe doc but the closure runs in the parent realm, so a
+    // duck-type via `closest` is the cross-realm-safe gate.
+    const target = e.target as Element | null
+    if (!target || typeof target.closest !== 'function') return
     const idEl = target.closest<HTMLElement>(BLOCK_ID_SELECTOR)
     if (!idEl) return
     const id = idEl.getAttribute(BLOCK_ID_ATTR)

@@ -51,8 +51,10 @@ export class HoverToolbarController {
     )
 
     this.onMove = (e) => {
-      const target = e.target
-      if (!(target instanceof Element)) return
+      // `instanceof Element` is realm-local; Elements from the iframe
+      // document fail the parent-realm check. Duck-type via `closest` instead.
+      const target = e.target as Element | null
+      if (!target || typeof target.closest !== 'function') return
       if (this.toolbar.contains(target)) return
       const el = target.closest<HTMLElement>(BLOCK_ID_SELECTOR)
       if (!el) {

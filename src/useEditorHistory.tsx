@@ -8,6 +8,7 @@ import React, {
   useMemo,
   useReducer,
   useRef,
+  useState,
 } from 'react'
 import type { FormState } from 'payload'
 import { useAllFormFields, useForm } from '@payloadcms/ui'
@@ -20,6 +21,7 @@ type HistoryContextValue = {
   redo: () => void
   canUndo: boolean
   canRedo: boolean
+  mutationToken: number
 }
 
 const noop = (): void => {}
@@ -31,6 +33,7 @@ const DEFAULT_VALUE: HistoryContextValue = {
   redo: noop,
   canUndo: false,
   canRedo: false,
+  mutationToken: 0,
 }
 
 const Ctx = createContext<HistoryContextValue>(DEFAULT_VALUE)
@@ -86,6 +89,8 @@ export const EditorHistoryProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const { dispatchFields, setModified } = useForm()
   const [state, dispatch] = useReducer(reducer, initialState)
+  const [mutationToken, setMutationToken] = useState(0)
+  const bumpMutationToken = useCallback(() => setMutationToken((n) => n + 1), [])
   const restoringRef = useRef(false)
   const restoreTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -106,8 +111,9 @@ export const EditorHistoryProvider: React.FC<{ children: React.ReactNode }> = ({
       pushSnapshot()
       mutation()
       setModified(true)
+      bumpMutationToken()
     },
-    [pushSnapshot, setModified],
+    [pushSnapshot, setModified, bumpMutationToken],
   )
 
   const restore = useCallback(
@@ -123,8 +129,9 @@ export const EditorHistoryProvider: React.FC<{ children: React.ReactNode }> = ({
         restoringRef.current = false
         restoreTimerRef.current = null
       }, 0)
+      bumpMutationToken()
     },
-    [dispatchFields, setModified],
+    [dispatchFields, setModified, bumpMutationToken],
   )
 
   const undo = useCallback(() => {
@@ -143,8 +150,8 @@ export const EditorHistoryProvider: React.FC<{ children: React.ReactNode }> = ({
   const canRedo = state.redo.length > 0
 
   const value = useMemo<HistoryContextValue>(
-    () => ({ pushSnapshot, commit, undo, redo, canUndo, canRedo }),
-    [pushSnapshot, commit, undo, redo, canUndo, canRedo],
+    () => ({ pushSnapshot, commit, undo, redo, canUndo, canRedo, mutationToken }),
+    [pushSnapshot, commit, undo, redo, canUndo, canRedo, mutationToken],
   )
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>

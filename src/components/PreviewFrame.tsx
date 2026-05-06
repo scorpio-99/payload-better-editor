@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useDocumentEvents, useDocumentInfo } from '@payloadcms/ui'
+import { useAllFormFields, useDocumentEvents, useDocumentInfo } from '@payloadcms/ui'
 
 import type { HoverToolbarPosition } from '../useBetterEditorSettings'
 import { HoverToolbarController, type HoverToolbarOptions } from '../preview/HoverToolbarController'
@@ -11,6 +11,7 @@ import { installHoverStyles } from '../preview/installHoverStyles'
 import type { BlockActionMessage } from '../preview/protocol'
 import { ACTIVE_CLASS, ACTIVE_SELECTOR, clampViewport } from '../internal/constants'
 import { postToParent } from '../internal/postmessage'
+import { useEditorHistory } from '../useEditorHistory'
 
 export type PreviewFrameProps = {
   previewURL: string | undefined
@@ -20,6 +21,7 @@ export type PreviewFrameProps = {
   hoverOutlineWidth: number
   showHoverToolbar: boolean
   hoverToolbarPosition: HoverToolbarPosition
+  selectedBlockPath: string | null
   viewportWidth?: number | null
   resizable?: boolean
   onResize?: (next: number) => void
@@ -46,6 +48,7 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
   hoverOutlineWidth,
   showHoverToolbar,
   hoverToolbarPosition,
+  selectedBlockPath,
   viewportWidth,
   resizable = false,
   onResize,
@@ -106,6 +109,7 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
       if (s.showHoverToolbar) {
         controllerRef.current = new HoverToolbarController(doc, {
           position: s.hoverToolbarPosition,
+          outlineWidth: s.hoverOutlineWidth,
           onAction: dispatchBlockAction,
         })
       }
@@ -167,6 +171,7 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     if (showHoverToolbar) {
       const next: HoverToolbarOptions = {
         position: hoverToolbarPosition,
+        outlineWidth: hoverOutlineWidth,
         onAction: dispatchBlockAction,
       }
       if (controllerRef.current) {
@@ -210,6 +215,28 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
       previewOrigin,
     )
   }, [mostRecentUpdate, id, previewOrigin])
+
+  const [allFields] = useAllFormFields()
+  const selectedBlockId = useMemo<string | null>(() => {
+    if (!selectedBlockPath) return null
+    const v = allFields[`${selectedBlockPath}.id`]?.value
+    return typeof v === 'string' ? v : null
+  }, [allFields, selectedBlockPath])
+
+  const { mutationToken } = useEditorHistory()
+  useEffect(() => {
+    const controller = controllerRef.current
+    if (!controller) return
+    if (!selectedBlockId) {
+      controller.deselect()
+      return
+    }
+    const view = iframeRef.current?.contentWindow
+    const raf = view?.requestAnimationFrame(() => controller.select(selectedBlockId))
+    return () => {
+      if (raf !== undefined) view?.cancelAnimationFrame(raf)
+    }
+  }, [selectedBlockId, mutationToken])
 
   useEffect(() => {
     const iframe = iframeRef.current

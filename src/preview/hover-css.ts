@@ -2,24 +2,29 @@ import { ACTIVE_CLASS, BLOCK_ID_ATTR } from '../internal/constants'
 
 export const HOVER_STYLE_ID = 'better-editor-hover-style'
 export const TOOLBAR_ID = 'better-editor-block-toolbar'
+// Set on doc.body to disable hover affordances + click-to-focus while
+// the user wants to interact with the consumer page (forms, accordions,
+// links). All hover/active rules below are gated on its absence.
+export const INTERACT_BODY_ATTR = 'data-bee-interact'
 
 const VAR_TOP = '--bee-top'
 const VAR_NESTED = '--bee-nested'
 const VAR_OUTLINE_WIDTH = '--bee-outline-width'
 
 export const HOVER_CSS = `
-  [${BLOCK_ID_ATTR}] { cursor: pointer; }
-  [${BLOCK_ID_ATTR}]:hover,
-  [${BLOCK_ID_ATTR}].${ACTIVE_CLASS} {
+  body:not([${INTERACT_BODY_ATTR}]) [${BLOCK_ID_ATTR}] { cursor: pointer; }
+  body:not([${INTERACT_BODY_ATTR}]) [${BLOCK_ID_ATTR}]:hover,
+  body:not([${INTERACT_BODY_ATTR}]) [${BLOCK_ID_ATTR}].${ACTIVE_CLASS} {
     outline: var(${VAR_OUTLINE_WIDTH}) solid var(${VAR_TOP});
     outline-offset: calc(-1 * var(${VAR_OUTLINE_WIDTH}) - 1px);
     background-color: color-mix(in srgb, var(${VAR_TOP}) 10%, transparent);
   }
-  [${BLOCK_ID_ATTR}] [${BLOCK_ID_ATTR}]:hover,
-  [${BLOCK_ID_ATTR}] [${BLOCK_ID_ATTR}].${ACTIVE_CLASS} {
+  body:not([${INTERACT_BODY_ATTR}]) [${BLOCK_ID_ATTR}] [${BLOCK_ID_ATTR}]:hover,
+  body:not([${INTERACT_BODY_ATTR}]) [${BLOCK_ID_ATTR}] [${BLOCK_ID_ATTR}].${ACTIVE_CLASS} {
     outline-color: var(${VAR_NESTED});
     background-color: color-mix(in srgb, var(${VAR_NESTED}) 10%, transparent);
   }
+  body[${INTERACT_BODY_ATTR}] #${TOOLBAR_ID} { display: none; }
 
   #${TOOLBAR_ID} {
     position: absolute;

@@ -58,6 +58,16 @@ export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({ blocksField 
         onClick={handleToggle}
         title={label}
         type="button"
+        // While open, mirror Payload's preview-btn :hover styling so the
+        // toggle reads as "active". Theme vars come from the admin shell.
+        style={
+          open
+            ? {
+                borderColor: 'var(--theme-elevation-300)',
+                backgroundColor: 'var(--theme-elevation-100)',
+              }
+            : undefined
+        }
       >
         <LayoutIcon />
       </button>

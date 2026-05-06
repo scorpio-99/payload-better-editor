@@ -13,7 +13,14 @@ import { useFullscreenOverlay } from './hooks/useFullscreenOverlay'
 import { useBlockActionMessages } from './hooks/useBlockActionMessages'
 import { useOverlayKeyboard } from './hooks/useOverlayKeyboard'
 import { OverlayProviders } from './providers/OverlayProviders'
-import { RedoIcon, SidebarHideIcon, SidebarShowIcon, UndoIcon } from './icons'
+import {
+  InteractIcon,
+  InteractOffIcon,
+  RedoIcon,
+  SidebarHideIcon,
+  SidebarShowIcon,
+  UndoIcon,
+} from './icons'
 import './styles.css'
 
 export type LiveEditorOverlayProps = {
@@ -91,6 +98,9 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const toggleSidebar = useCallback(() => setSidebarCollapsed((v) => !v), [])
 
+  const [interactMode, setInteractMode] = useState(false)
+  const toggleInteractMode = useCallback(() => setInteractMode((v) => !v), [])
+
   const isLeft = settings.sidebarPosition === 'left'
   const showSidebar = !sidebarCollapsed
   const gridTemplateColumns = !showSidebar
@@ -125,6 +135,24 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
               <div className="better-editor-viewport">
                 <button
                   type="button"
+                  className={
+                    interactMode
+                      ? 'better-editor-viewport__btn better-editor-viewport__btn--active'
+                      : 'better-editor-viewport__btn'
+                  }
+                  onClick={toggleInteractMode}
+                  aria-pressed={interactMode}
+                  title={
+                    interactMode
+                      ? 'Switch to edit mode'
+                      : 'Switch to interact mode (use forms, accordions, links)'
+                  }
+                  aria-label={interactMode ? 'Switch to edit mode' : 'Switch to interact mode'}
+                >
+                  {interactMode ? <InteractIcon /> : <InteractOffIcon />}
+                </button>
+                <button
+                  type="button"
                   className="better-editor-viewport__btn"
                   onClick={toggleSidebar}
                   aria-pressed={sidebarCollapsed}
@@ -146,6 +174,7 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
               showHoverToolbar={settings.showHoverToolbar}
               hoverToolbarPosition={settings.hoverToolbarPosition}
               selectedBlockPath={selectedBlockPath}
+              interactMode={interactMode}
               viewportWidth={viewportWidth}
               resizable={viewport === 'responsive'}
               onResize={setResponsiveWidth}

@@ -5,7 +5,7 @@ import { useAllFormFields, useDocumentEvents, useDocumentInfo } from '@payloadcm
 
 import type { HoverToolbarPosition } from '../useBetterEditorSettings'
 import { HoverToolbarController, type HoverToolbarOptions } from '../preview/HoverToolbarController'
-import { TOOLBAR_ID, setHoverVars } from '../preview/hover-css'
+import { INTERACT_BODY_ATTR, TOOLBAR_ID, setHoverVars } from '../preview/hover-css'
 import { installClickToFocus } from '../preview/installClickToFocus'
 import { installHoverStyles } from '../preview/installHoverStyles'
 import type { BlockActionMessage } from '../preview/protocol'
@@ -22,6 +22,10 @@ export type PreviewFrameProps = {
   showHoverToolbar: boolean
   hoverToolbarPosition: HoverToolbarPosition
   selectedBlockPath: string | null
+  /** When true, clicks pass through to the consumer page and the
+   * hover/selection affordances are suppressed so users can interact
+   * with forms, accordions, links inside the preview. */
+  interactMode: boolean
   viewportWidth?: number | null
   resizable?: boolean
   onResize?: (next: number) => void
@@ -49,6 +53,7 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
   showHoverToolbar,
   hoverToolbarPosition,
   selectedBlockPath,
+  interactMode,
   viewportWidth,
   resizable = false,
   onResize,
@@ -58,6 +63,10 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
   const teardownRef = useRef<(() => void) | null>(null)
   const controllerRef = useRef<HoverToolbarController | null>(null)
   const isBoundRef = useRef(false)
+  // Refs let installClickToFocus and the iframe doc body attribute read
+  // the latest interact mode without re-binding the iframe instrumentation.
+  const interactModeRef = useRef(interactMode)
+  interactModeRef.current = interactMode
   const [isResizing, setIsResizing] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -104,7 +113,9 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
         nestedColor: s.hoverColorNested,
         outlineWidth: s.hoverOutlineWidth,
       })
-      const removeClick = installClickToFocus(doc, onFocusBlock)
+      const removeClick = installClickToFocus(doc, onFocusBlock, {
+        isEnabled: () => !interactModeRef.current,
+      })
 
       if (s.showHoverToolbar) {
         controllerRef.current = new HoverToolbarController(doc, {
@@ -223,11 +234,21 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     return typeof v === 'string' ? v : null
   }, [allFields, selectedBlockPath])
 
+  // Toggle the body attribute that gates hover/active CSS and click-to-focus.
+  useEffect(() => {
+    const iframe = iframeRef.current
+    if (!iframe) return
+    const doc = getSameOriginDocument(iframe)
+    if (!doc) return
+    if (interactMode) doc.body.setAttribute(INTERACT_BODY_ATTR, '')
+    else doc.body.removeAttribute(INTERACT_BODY_ATTR)
+  }, [interactMode])
+
   const { mutationToken } = useEditorHistory()
   useEffect(() => {
     const controller = controllerRef.current
     if (!controller) return
-    if (!selectedBlockId) {
+    if (!selectedBlockId || interactMode) {
       controller.deselect()
       return
     }
@@ -236,7 +257,7 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     return () => {
       if (raf !== undefined) view?.cancelAnimationFrame(raf)
     }
-  }, [selectedBlockId, mutationToken])
+  }, [selectedBlockId, mutationToken, interactMode])
 
   useEffect(() => {
     const iframe = iframeRef.current

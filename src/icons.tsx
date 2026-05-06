@@ -17,6 +17,8 @@ import {
   PanelLeft as L_PanelLeft,
   PanelRightOpen as L_PanelRightOpen,
   PanelRightClose as L_PanelRightClose,
+  MousePointer2 as L_MousePointer2,
+  MousePointer2Off as L_MousePointer2Off,
   type LucideProps,
 } from 'lucide-react'
 
@@ -42,3 +44,5 @@ export const RedoIcon = sized(L_Redo)
 export const LayoutIcon = sized(L_PanelLeft)
 export const SidebarHideIcon = sized(L_PanelRightClose)
 export const SidebarShowIcon = sized(L_PanelRightOpen)
+export const InteractIcon = sized(L_MousePointer2)
+export const InteractOffIcon = sized(L_MousePointer2Off)

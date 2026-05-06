@@ -47,7 +47,7 @@
     "lint:fix": "eslint ./src --fix"
   },
   "peerDependencies": {
-    "lucide-react": "^0.378.0",
+    "lucide-react": ">=0.577.0",
     "payload": "^3.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

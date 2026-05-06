@@ -2,11 +2,11 @@
 
 import React from 'react'
 import { BlocksDrawer } from '@payloadcms/ui'
-import type { AnyClientBlock } from '../../internal/types'
+import type { ClientBlock } from 'payload'
 
 export type AddBlockDrawerProps = {
   slug: string
-  blocks: AnyClientBlock[]
+  blocks: ClientBlock[]
   addRow: (index: number, blockType?: string) => void
   addRowIndex: number
 }

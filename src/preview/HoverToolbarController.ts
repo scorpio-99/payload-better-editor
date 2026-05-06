@@ -1,7 +1,7 @@
 import React from 'react'
 import { createRoot, type Root } from 'react-dom/client'
-import type { HoverToolbarPosition } from '../useBetterEditorSettings'
-import { ACTIVE_CLASS, BLOCK_ID_ATTR, BLOCK_ID_SELECTOR } from '../internal/constants'
+import type { HoverToolbarPosition } from '../internal/constants'
+import { ACTIVE_CLASS, BLOCK_ID_ATTR, BLOCK_ID_SELECTOR } from '../internal/dom'
 import type { BlockActionMessage } from './protocol'
 import { TOOLBAR_ID } from './hover-css'
 import { HoverToolbar } from './HoverToolbar'
@@ -128,6 +128,10 @@ export class HoverToolbarController {
       } catch {
         /* root already unmounted */
       }
+      // StrictMode double-invokes destroy(); by the second pass the parallel
+      // construct() may have already inserted a fresh toolbar with the same
+      // id — only remove the node if we still own it.
+      if (!toolbar.isConnected) return
       toolbar.remove()
     })
   }

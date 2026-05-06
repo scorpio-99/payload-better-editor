@@ -44,15 +44,17 @@
     "clean": "rimraf {dist,*.tsbuildinfo}",
     "copyfiles": "copyfiles -u 1 \"src/**/*.{html,css,scss,ttf,woff,woff2,eot,svg,jpg,png,json}\" dist/",
     "lint": "eslint ./src",
-    "lint:fix": "eslint ./src --fix"
+    "lint:fix": "eslint ./src --fix",
+    "prepublishOnly": "pnpm clean && pnpm build"
   },
   "peerDependencies": {
     "lucide-react": ">=0.577.0",
-    "payload": "^3.0.0",
+    "payload": ">=3.81.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.16.0",
     "@swc/cli": "0.6.0",
     "@swc/core": "1.10.7",
     "@types/node": "22.5.4",
@@ -60,8 +62,10 @@
     "@types/react-dom": "19.2.1",
     "copyfiles": "2.4.1",
     "eslint": "^9.16.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "rimraf": "6.0.1",
-    "typescript": "5.7.3"
+    "typescript": "5.7.3",
+    "typescript-eslint": "^8.18.0"
   },
   "engines": {
     "node": "^18.20.2 || >=20.9.0",

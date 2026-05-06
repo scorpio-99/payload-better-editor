@@ -8,6 +8,13 @@ export type UseOverlayKeyboardArgs = {
   history: ReturnType<typeof useEditorHistory>
 }
 
+const isEditableTarget = (el: Element | null): boolean => {
+  if (!el) return false
+  const tag = el.tagName
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true
+  return (el as HTMLElement).isContentEditable === true
+}
+
 export const useOverlayKeyboard = ({ onClose, history }: UseOverlayKeyboardArgs): void => {
   // Mutable ref keeps the global keydown listener bound once across re-renders
   // while still calling the latest handlers.
@@ -17,6 +24,9 @@ export const useOverlayKeyboard = ({ onClose, history }: UseOverlayKeyboardArgs)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        // Don't hijack Escape away from text inputs / native dropdowns / rich
+        // text editors — users expect it to clear/blur the field first.
+        if (isEditableTarget(document.activeElement)) return
         handlersRef.current.onClose()
         return
       }

@@ -12,6 +12,7 @@ import { useViewportState } from './hooks/useViewportState'
 import { useFullscreenOverlay } from './hooks/useFullscreenOverlay'
 import { useBlockActionMessages } from './hooks/useBlockActionMessages'
 import { useOverlayKeyboard } from './hooks/useOverlayKeyboard'
+import { useFocusTrap } from './hooks/useFocusTrap'
 import { OverlayProviders } from './providers/OverlayProviders'
 import {
   InteractIcon,
@@ -21,17 +22,19 @@ import {
   SidebarShowIcon,
   UndoIcon,
 } from './icons'
-import './styles.css'
+import './styles/overlay.css'
+import './styles/preview.css'
+import './styles/sidebar.css'
+import './styles/blocks-tab.css'
 
 export type LiveEditorOverlayProps = {
   onClose: () => void
   blocksField: string
 }
 
-const RESIZE_HANDLE_PX = 6
+import { cx } from './internal/cx'
 
-const cx = (...parts: Array<string | false | null | undefined>): string =>
-  parts.filter(Boolean).join(' ')
+const RESIZE_HANDLE_PX = 6
 
 export const LiveEditorOverlay: React.FC<LiveEditorOverlayProps> = ({
   onClose,
@@ -82,6 +85,7 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
 
   const exitFullscreen = useCallback(() => setViewport('desktop'), [setViewport])
   const overlayRef = useFullscreenOverlay(isFullscreen, exitFullscreen)
+  useFocusTrap(overlayRef)
 
   const clearSelection = useCallback(
     () => setSelectedBlockPath(null),
@@ -118,7 +122,9 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
         isFullscreen && 'better-editor--fullscreen',
       )}
       role="dialog"
+      aria-modal="true"
       aria-label="Better Editor"
+      tabIndex={-1}
     >
       <div className="better-editor__body" style={{ gridTemplateColumns }}>
         <div className="better-editor__preview" style={{ order: isLeft ? 2 : 0 }}>

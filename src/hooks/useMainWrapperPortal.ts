@@ -2,8 +2,26 @@
 
 import { useEffect, useState } from 'react'
 
-const MAIN_WRAPPER_SELECTOR =
+const ADMIN_WRAPPER_SELECTOR =
   'main[class*="collection-edit"] [class*="__main-wrapper"], main[class*="global-edit"] [class*="__main-wrapper"]'
+
+let warnedSelectorMiss = false
+
+const resolveMountNode = (): HTMLElement | null => {
+  if (typeof document === 'undefined') return null
+  const admin = document.querySelector<HTMLElement>(ADMIN_WRAPPER_SELECTOR)
+  if (admin) return admin
+
+  if (process.env.NODE_ENV !== 'production' && !warnedSelectorMiss) {
+    warnedSelectorMiss = true
+     
+    console.warn(
+      '[better-editor] Could not find Payload admin __main-wrapper element. The selector may need updating for the current Payload version. Falling back to <main> / <body>.',
+    )
+  }
+
+  return document.querySelector<HTMLElement>('main') ?? document.body ?? null
+}
 
 export const useMainWrapperPortal = (enabled: boolean): HTMLElement | null => {
   const [mountNode, setMountNode] = useState<HTMLElement | null>(null)
@@ -11,7 +29,7 @@ export const useMainWrapperPortal = (enabled: boolean): HTMLElement | null => {
   useEffect(() => {
     if (!enabled || typeof document === 'undefined') return
 
-    const main = document.querySelector<HTMLElement>(MAIN_WRAPPER_SELECTOR)
+    const main = resolveMountNode()
     if (!main) return
 
     const html = document.documentElement

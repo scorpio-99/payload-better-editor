@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Viewport } from '../components/ViewportToggle'
 import type { BetterEditorSettings } from '../useBetterEditorSettings'
-import { STORAGE_RESPONSIVE_WIDTH, clampViewport } from '../internal/constants'
+import { clampViewport } from '../internal/limits'
+import { STORAGE_RESPONSIVE_WIDTH } from '../internal/storage-keys'
 import { readNumber, writeString } from '../internal/storage'
 
 const DEFAULT_RESPONSIVE_WIDTH = 1024

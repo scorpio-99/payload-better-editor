@@ -1,15 +1,35 @@
 import type { GlobalConfig } from 'payload'
+import { DEFAULT_BETTER_EDITOR_SETTINGS as D } from './internal/constants'
 import {
-  DEFAULT_BETTER_EDITOR_SETTINGS as D,
   HOVER_OUTLINE_MAX,
   HOVER_OUTLINE_MIN,
   MOBILE_WIDTH_MAX,
   MOBILE_WIDTH_MIN,
   TABLET_WIDTH_MAX,
   TABLET_WIDTH_MIN,
-} from './internal/constants'
+} from './internal/limits'
 
 export const BETTER_EDITOR_SETTINGS_SLUG = 'better-editor-settings'
+
+// Mirrors the runtime regex in `preview/hover-css.ts` so the admin UI rejects
+// values that would silently be skipped at render time.
+const HOVER_COLOR_RE = /^#[0-9a-fA-F]{3,8}$|^rgba?\(/i
+
+const validateHoverColor = (value: unknown): string | true => {
+  if (typeof value !== 'string' || value.length === 0) return 'Color is required'
+  if (!HOVER_COLOR_RE.test(value.trim())) {
+    return 'Must be a hex color (e.g. #3b82f6) or rgb()/rgba()'
+  }
+  return true
+}
+
+const validateHoverOutline = (value: unknown): string | true => {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return 'Must be a number'
+  if (value < HOVER_OUTLINE_MIN || value > HOVER_OUTLINE_MAX) {
+    return `Must be between ${HOVER_OUTLINE_MIN} and ${HOVER_OUTLINE_MAX}`
+  }
+  return true
+}
 
 export const betterEditorSettingsGlobal: GlobalConfig = {
   slug: BETTER_EDITOR_SETTINGS_SLUG,
@@ -92,6 +112,7 @@ export const betterEditorSettingsGlobal: GlobalConfig = {
                   type: 'text',
                   label: 'Top-level color',
                   defaultValue: D.hoverColorTopLevel,
+                  validate: validateHoverColor,
                   admin: {
                     width: '50%',
                     placeholder: D.hoverColorTopLevel,
@@ -103,6 +124,7 @@ export const betterEditorSettingsGlobal: GlobalConfig = {
                   type: 'text',
                   label: 'Nested color',
                   defaultValue: D.hoverColorNested,
+                  validate: validateHoverColor,
                   admin: {
                     width: '50%',
                     placeholder: D.hoverColorNested,
@@ -118,6 +140,7 @@ export const betterEditorSettingsGlobal: GlobalConfig = {
               defaultValue: D.hoverOutlineWidth,
               min: HOVER_OUTLINE_MIN,
               max: HOVER_OUTLINE_MAX,
+              validate: validateHoverOutline,
               admin: {
                 placeholder: String(D.hoverOutlineWidth),
                 description: `Outline thickness in pixels (${HOVER_OUTLINE_MIN}–${HOVER_OUTLINE_MAX}).`,

@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { useDocumentInfo, usePreferences } from '@payloadcms/ui'
 import { LiveEditorOverlay } from './LiveEditorOverlay'
 import { useMainWrapperPortal } from './hooks/useMainWrapperPortal'
-import { togglePreferenceKey } from './internal/constants'
+import { togglePreferenceKey } from './internal/storage-keys'
 import { LayoutIcon } from './icons'
 
 type Pref = { open?: boolean }

@@ -1,20 +1,24 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAllFormFields, useForm } from '@payloadcms/ui'
 import { listenForParentInbound } from '../internal/postmessage'
 import { splitFieldPath } from '../internal/path'
-import type { FormFieldsState } from '../internal/types'
+import type { FormState } from 'payload'
 import { useEditorHistory } from '../useEditorHistory'
 
 const ID_SUFFIX = '.id'
 
-const findPathById = (fields: FormFieldsState, targetId: string): string | null => {
+const buildIdIndex = (fields: FormState): Map<string, string> => {
+  const map = new Map<string, string>()
   for (const key of Object.keys(fields)) {
     if (!key.endsWith(ID_SUFFIX)) continue
-    if (fields[key]?.value === targetId) return key.slice(0, -ID_SUFFIX.length)
+    const value = fields[key]?.value
+    if (typeof value === 'string' && value.length > 0) {
+      map.set(value, key.slice(0, -ID_SUFFIX.length))
+    }
   }
-  return null
+  return map
 }
 
 export type UseBlockActionMessagesArgs = {
@@ -36,6 +40,12 @@ export const useBlockActionMessages = ({
   const allFieldsRef = useRef(allFields)
   allFieldsRef.current = allFields
 
+  // O(1) id-value -> path lookup. Recomputed only when allFields identity
+  // changes (which Payload bumps on row add/move/delete, not on typing).
+  const idIndex = useMemo(() => buildIdIndex(allFields as FormState), [allFields])
+  const idIndexRef = useRef(idIndex)
+  idIndexRef.current = idIndex
+
   // History context value changes whenever undo/redo depth flips; refs
   // prevent re-binding the postMessage listener on every commit.
   const { dispatchFields } = useForm()
@@ -51,8 +61,8 @@ export const useBlockActionMessages = ({
   useEffect(
     () =>
       listenForParentInbound((data) => {
-        const fields = allFieldsRef.current as FormFieldsState
-        const path = findPathById(fields, data.id)
+        const fields = allFieldsRef.current as FormState
+        const path = idIndexRef.current.get(data.id) ?? null
         if (!path) return
 
         const select = setSelectedBlockPathRef.current

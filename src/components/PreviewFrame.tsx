@@ -3,15 +3,21 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAllFormFields, useDocumentEvents, useDocumentInfo } from '@payloadcms/ui'
 
-import type { HoverToolbarPosition } from '../useBetterEditorSettings'
+import type { HoverToolbarPosition } from '../internal/constants'
 import { HoverToolbarController, type HoverToolbarOptions } from '../preview/HoverToolbarController'
 import { INTERACT_BODY_ATTR, TOOLBAR_ID, setHoverVars } from '../preview/hover-css'
 import { installClickToFocus } from '../preview/installClickToFocus'
 import { installHoverStyles } from '../preview/installHoverStyles'
 import type { BlockActionMessage } from '../preview/protocol'
-import { ACTIVE_CLASS, ACTIVE_SELECTOR, clampViewport } from '../internal/constants'
+import {
+  ACTIVE_CLASS,
+  ACTIVE_SELECTOR,
+  BLOCK_ID_SELECTOR,
+} from '../internal/dom'
 import { postToParent } from '../internal/postmessage'
 import { useEditorHistory } from '../useEditorHistory'
+import { useIframeResizeObserver } from '../hooks/useIframeResizeObserver'
+import { usePreviewHandleDrag } from '../hooks/usePreviewHandleDrag'
 
 export type PreviewFrameProps = {
   previewURL: string | undefined
@@ -67,8 +73,13 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
   // the latest interact mode without re-binding the iframe instrumentation.
   const interactModeRef = useRef(interactMode)
   interactModeRef.current = interactMode
-  const [isResizing, setIsResizing] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const { isResizing, onHandleMouseDown } = usePreviewHandleDrag({
+    resizable,
+    viewportWidth,
+    onResize,
+  })
+  useIframeResizeObserver(iframeRef, onIframeWidthChange)
 
   useEffect(() => {
     setIsLoading(true)
@@ -123,6 +134,18 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
           outlineWidth: s.hoverOutlineWidth,
           onAction: dispatchBlockAction,
         })
+      }
+
+      // Dev sanity check: if the consumer's frontend never spreads
+      // getBlockProps() the editor silently degrades to "preview only".
+      // Surface that in the console so the cause is obvious.
+      if (process.env.NODE_ENV !== 'production') {
+        const count = doc.querySelectorAll(BLOCK_ID_SELECTOR).length
+        if (count === 0) {
+          console.warn(
+            "[better-editor] no [data-better-editor-id] elements found in the preview iframe — wrap your blocks with `getBlockProps(block)` from 'payload-better-editor/client' so click-to-edit works.",
+          )
+        }
       }
 
       isBoundRef.current = true
@@ -259,58 +282,23 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     }
   }, [selectedBlockId, mutationToken, interactMode])
 
-  useEffect(() => {
-    const iframe = iframeRef.current
-    if (!iframe || !onIframeWidthChange || typeof ResizeObserver === 'undefined') return
-    onIframeWidthChange(iframe.clientWidth)
-    const ro = new ResizeObserver((entries) => {
-      const w = entries[0]?.contentRect?.width
-      if (typeof w === 'number') onIframeWidthChange(Math.round(w))
-    })
-    ro.observe(iframe)
-    return () => ro.disconnect()
-  }, [onIframeWidthChange])
+  const constrained = typeof viewportWidth === 'number' && viewportWidth > 0
+  const viewportClassName = useMemo(
+    () =>
+      [
+        'better-editor-frame__viewport',
+        constrained && 'better-editor-frame__viewport--constrained',
+        resizable && 'better-editor-frame__viewport--resizable',
+        isResizing && 'better-editor-frame__viewport--resizing',
+      ]
+        .filter(Boolean)
+        .join(' '),
+    [constrained, resizable, isResizing],
+  )
 
-  // Track in-flight drag so unmount mid-drag can release body styles + listeners.
-  const dragCleanupRef = useRef<(() => void) | null>(null)
-  const isMountedRef = useRef(true)
-  useEffect(() => {
-    isMountedRef.current = true
-    return () => {
-      isMountedRef.current = false
-      dragCleanupRef.current?.()
-    }
-  }, [])
-
-  const onHandleMouseDown = useCallback(
-    (side: 'left' | 'right') => (e: React.MouseEvent) => {
-      if (!resizable || !onResize || !viewportWidth) return
-      e.preventDefault()
-      const startX = e.clientX
-      const startWidth = viewportWidth
-      // Iframe is centered; dragging either edge by N px symmetrically grows
-      // the width by 2N. Right handle: positive delta increases width.
-      const dir = side === 'right' ? 2 : -2
-      setIsResizing(true)
-      const onMove = (ev: MouseEvent) => {
-        onResize(clampViewport(startWidth + (ev.clientX - startX) * dir))
-      }
-      const cleanup = () => {
-        window.removeEventListener('mousemove', onMove)
-        window.removeEventListener('mouseup', onUp)
-        document.body.style.cursor = ''
-        document.body.style.userSelect = ''
-        if (isMountedRef.current) setIsResizing(false)
-        dragCleanupRef.current = null
-      }
-      const onUp = () => cleanup()
-      dragCleanupRef.current = cleanup
-      document.body.style.cursor = 'ew-resize'
-      document.body.style.userSelect = 'none'
-      window.addEventListener('mousemove', onMove)
-      window.addEventListener('mouseup', onUp)
-    },
-    [resizable, onResize, viewportWidth],
+  const iframeStyle = useMemo(
+    () => (constrained ? { width: `${viewportWidth}px`, maxWidth: '100%' as const } : undefined),
+    [constrained, viewportWidth],
   )
 
   if (!isPreviewEnabled) {
@@ -334,25 +322,6 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
       </div>
     )
   }
-
-  const constrained = typeof viewportWidth === 'number' && viewportWidth > 0
-  const viewportClassName = useMemo(
-    () =>
-      [
-        'better-editor-frame__viewport',
-        constrained && 'better-editor-frame__viewport--constrained',
-        resizable && 'better-editor-frame__viewport--resizable',
-        isResizing && 'better-editor-frame__viewport--resizing',
-      ]
-        .filter(Boolean)
-        .join(' '),
-    [constrained, resizable, isResizing],
-  )
-
-  const iframeStyle = useMemo(
-    () => (constrained ? { width: `${viewportWidth}px`, maxWidth: '100%' as const } : undefined),
-    [constrained, viewportWidth],
-  )
 
   // Iframe always lives in the same wrapper across viewport modes so React
   // doesn't remount it (which would reload the page and drop the

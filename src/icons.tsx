@@ -22,6 +22,8 @@ import {
   type LucideProps,
 } from 'lucide-react'
 
+export type { LucideProps }
+
 // Pin default size to 16px (lucide's own default is 24); caller props win.
 const sized = (Icon: React.ComponentType<LucideProps>): React.FC<LucideProps> => {
   const Wrapped: React.FC<LucideProps> = (props) => <Icon size={16} {...props} />

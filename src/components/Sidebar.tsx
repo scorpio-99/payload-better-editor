@@ -25,6 +25,9 @@ const TABS: ReadonlyArray<{ key: TabKey; label: string }> = [
 const ROOT_CLASS = 'better-editor-sidebar'
 const TAB_CLASS = `${ROOT_CLASS}__tab`
 
+const tabId = (key: TabKey) => `better-editor-tab-${key}`
+const panelId = (key: TabKey) => `better-editor-panel-${key}`
+
 type SidebarTabProps = {
   tabKey: TabKey
   label: string
@@ -36,7 +39,10 @@ const SidebarTab: React.FC<SidebarTabProps> = ({ tabKey, label, active, onSelect
   <button
     type="button"
     role="tab"
+    id={tabId(tabKey)}
     aria-selected={active}
+    aria-controls={panelId(tabKey)}
+    tabIndex={active ? 0 : -1}
     className={active ? `${TAB_CLASS} ${TAB_CLASS}--active` : TAB_CLASS}
     onClick={() => onSelect(tabKey)}
   >
@@ -77,7 +83,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
         ))}
       </div>
 
-      <div className={`${ROOT_CLASS}__content`}>
+      <div
+        className={`${ROOT_CLASS}__content`}
+        role="tabpanel"
+        id={panelId(tab)}
+        aria-labelledby={tabId(tab)}
+        tabIndex={0}
+      >
         {tab === 'page' && <DocumentSettingsTab />}
         {tab === 'block' && (
           <BlockSettingsTab

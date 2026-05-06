@@ -37,51 +37,54 @@ export const useBlockActions = ({
 
   // Re-check bounds at call time: form state may have shifted between
   // render and click (e.g. another action just removed the row).
-  const moveUp = () => {
-    if (!canMoveUp) return
-    if (rowIndex >= rowCountAt(fields, parentPath)) return
+  const runRowAction = (
+    kind: 'move-up' | 'move-down' | 'duplicate' | 'remove',
+  ): void => {
+    if (kind === 'move-up' && !canMoveUp) return
+    if (kind === 'move-down' && !canMoveDown) return
+    if ((kind === 'duplicate' || kind === 'remove') && !canMutate) return
+    const liveCount = rowCountAt(fields, parentPath)
+    if (rowIndex >= liveCount) return
+    if (kind === 'move-down' && rowIndex >= liveCount - 1) return
     commit(() => {
-      dispatchFields({
-        type: 'MOVE_ROW',
-        path: parentPath,
-        moveFromIndex: rowIndex,
-        moveToIndex: rowIndex - 1,
-      })
+      switch (kind) {
+        case 'move-up':
+          dispatchFields({
+            type: 'MOVE_ROW',
+            path: parentPath,
+            moveFromIndex: rowIndex,
+            moveToIndex: rowIndex - 1,
+          })
+          break
+        case 'move-down':
+          dispatchFields({
+            type: 'MOVE_ROW',
+            path: parentPath,
+            moveFromIndex: rowIndex,
+            moveToIndex: rowIndex + 1,
+          })
+          break
+        case 'duplicate':
+          dispatchFields({ type: 'DUPLICATE_ROW', path: parentPath, rowIndex })
+          break
+        case 'remove':
+          dispatchFields({ type: 'REMOVE_ROW', path: parentPath, rowIndex })
+          break
+      }
     })
-    onSelectPath(`${parentPath}.${rowIndex - 1}`)
+    if (kind === 'remove') {
+      onClearSelection()
+      return
+    }
+    const nextIndex =
+      kind === 'move-up' ? rowIndex - 1 : kind === 'move-down' ? rowIndex + 1 : rowIndex + 1
+    onSelectPath(`${parentPath}.${nextIndex}`)
   }
 
-  const moveDown = () => {
-    if (!canMoveDown) return
-    if (rowIndex >= rowCountAt(fields, parentPath) - 1) return
-    commit(() => {
-      dispatchFields({
-        type: 'MOVE_ROW',
-        path: parentPath,
-        moveFromIndex: rowIndex,
-        moveToIndex: rowIndex + 1,
-      })
-    })
-    onSelectPath(`${parentPath}.${rowIndex + 1}`)
-  }
-
-  const duplicate = () => {
-    if (!canMutate) return
-    if (rowIndex >= rowCountAt(fields, parentPath)) return
-    commit(() => {
-      dispatchFields({ type: 'DUPLICATE_ROW', path: parentPath, rowIndex })
-    })
-    onSelectPath(`${parentPath}.${rowIndex + 1}`)
-  }
-
-  const remove = () => {
-    if (!canMutate) return
-    if (rowIndex >= rowCountAt(fields, parentPath)) return
-    commit(() => {
-      dispatchFields({ type: 'REMOVE_ROW', path: parentPath, rowIndex })
-    })
-    onClearSelection()
-  }
+  const moveUp = () => runRowAction('move-up')
+  const moveDown = () => runRowAction('move-down')
+  const duplicate = () => runRowAction('duplicate')
+  const remove = () => runRowAction('remove')
 
   const addAfter = (
     blockType: string | undefined,

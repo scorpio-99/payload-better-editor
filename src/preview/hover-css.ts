@@ -7,14 +7,12 @@ const VAR_TOP = '--bee-top'
 const VAR_NESTED = '--bee-nested'
 const VAR_OUTLINE_WIDTH = '--bee-outline-width'
 
-// `.${ACTIVE_CLASS}` keeps the outline visible while the cursor is over the
-// floating toolbar (toolbar lives in <body>, so :hover doesn't propagate).
 export const HOVER_CSS = `
   [${BLOCK_ID_ATTR}] { cursor: pointer; }
   [${BLOCK_ID_ATTR}]:hover,
   [${BLOCK_ID_ATTR}].${ACTIVE_CLASS} {
     outline: var(${VAR_OUTLINE_WIDTH}) solid var(${VAR_TOP});
-    outline-offset: calc(-1 * var(${VAR_OUTLINE_WIDTH}));
+    outline-offset: calc(-1 * var(${VAR_OUTLINE_WIDTH}) - 1px);
     background-color: color-mix(in srgb, var(${VAR_TOP}) 10%, transparent);
   }
   [${BLOCK_ID_ATTR}] [${BLOCK_ID_ATTR}]:hover,

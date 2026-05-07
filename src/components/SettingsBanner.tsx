@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { BugIcon, CoffeeIcon, GithubIcon, HeartIcon, StarIcon } from '../icons'
+import { BugIcon, GithubIcon, StarIcon } from '../icons'
 import { VERSION } from '../version'
 
 const REPO = 'scorpio-99/payload-better-editor'
@@ -9,9 +9,6 @@ const REPO_URL = `https://github.com/${REPO}`
 const ISSUES_URL = `${REPO_URL}/issues/new`
 const AUTHOR = 'scorpio-99'
 const AUTHOR_URL = `https://github.com/${AUTHOR}`
-const SPONSOR_URL = `https://github.com/sponsors/${AUTHOR}` // placeholder until activated
-const BMC_URL = `https://buymeacoffee.com/${AUTHOR}` // placeholder until set up
-
 const STAR_BADGE_URL = `https://img.shields.io/github/stars/${REPO}?style=flat&label=&color=27272a&labelColor=27272a&logo=github&logoColor=white`
 
 const cardStyle: React.CSSProperties = {
@@ -28,13 +25,6 @@ const headerStyle: React.CSSProperties = {
   gap: 12,
   padding: '14px 18px',
   borderBottom: '1px solid var(--theme-elevation-150)',
-}
-
-const avatarStyle: React.CSSProperties = {
-  width: 32,
-  height: 32,
-  borderRadius: '50%',
-  display: 'block',
 }
 
 const titleStyle: React.CSSProperties = {
@@ -87,11 +77,6 @@ const linkStyle: React.CSSProperties = {
 export const SettingsBanner: React.FC = () => (
   <div style={cardStyle}>
     <div style={headerStyle}>
-      <img
-        src={`${AUTHOR_URL}.png?size=64`}
-        alt={`${AUTHOR}'s GitHub avatar`}
-        style={avatarStyle}
-      />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <div style={titleStyle}>
           <span>payload-better-editor</span>
@@ -119,14 +104,6 @@ export const SettingsBanner: React.FC = () => (
       <a href={ISSUES_URL} target="_blank" rel="noreferrer noopener" style={linkStyle}>
         <BugIcon />
         <span>Report a bug</span>
-      </a>
-      <a href={SPONSOR_URL} target="_blank" rel="noreferrer noopener" style={linkStyle}>
-        <HeartIcon />
-        <span>Sponsor</span>
-      </a>
-      <a href={BMC_URL} target="_blank" rel="noreferrer noopener" style={linkStyle}>
-        <CoffeeIcon />
-        <span>Buy me a coffee</span>
       </a>
     </div>
   </div>

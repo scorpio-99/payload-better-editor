@@ -1,6 +1,7 @@
 export { LiveEditorToggle } from './LiveEditorToggle'
 export { LiveEditorOverlay } from './LiveEditorOverlay'
 export type { LiveEditorOverlayProps } from './LiveEditorOverlay'
+export { SettingsBanner } from './components/SettingsBanner'
 
 /**
  * Spread these props on every block wrapper in your frontend so the

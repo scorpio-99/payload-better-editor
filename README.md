@@ -1,5 +1,10 @@
 # payload-better-editor
 
+[![npm](https://img.shields.io/npm/v/payload-better-editor?logo=npm&color=ce421b)](https://www.npmjs.com/package/payload-better-editor)
+[![downloads](https://img.shields.io/npm/dt/payload-better-editor?logo=npm&color=ce421b)](https://www.npmjs.com/package/payload-better-editor)
+[![issues](https://img.shields.io/github/issues/scorpio-99/payload-better-editor?logo=github&color=blue)](https://github.com/scorpio-99/payload-better-editor/issues)
+[![stars](https://img.shields.io/github/stars/scorpio-99/payload-better-editor?logo=github)](https://github.com/scorpio-99/payload-better-editor)
+
 Block editor plugin for [Payload CMS](https://payloadcms.com) that adds a side-by-side live-preview iframe and sidebar to the edit view. Hover any block in the preview to see it highlighted with a floating action toolbar (move, duplicate, add, delete); click it to open its fields in the sidebar. The sidebar mirrors your document's real tabs (page-level fields, the selected block's fields, and document settings) and renders everything with Payload's own field components, validations, and access control.
 
 ![Better Editor overview](./assets/overview.gif)

@@ -19,6 +19,11 @@ import {
   PanelRightClose as L_PanelRightClose,
   MousePointer2 as L_MousePointer2,
   MousePointer2Off as L_MousePointer2Off,
+  Star as L_Star,
+  Heart as L_Heart,
+  Coffee as L_Coffee,
+  Bug as L_Bug,
+  Github as L_Github,
   type LucideProps,
 } from 'lucide-react'
 
@@ -48,3 +53,8 @@ export const SidebarHideIcon = sized(L_PanelRightClose)
 export const SidebarShowIcon = sized(L_PanelRightOpen)
 export const InteractIcon = sized(L_MousePointer2)
 export const InteractOffIcon = sized(L_MousePointer2Off)
+export const StarIcon = sized(L_Star)
+export const HeartIcon = sized(L_Heart)
+export const CoffeeIcon = sized(L_Coffee)
+export const BugIcon = sized(L_Bug)
+export const GithubIcon = sized(L_Github)

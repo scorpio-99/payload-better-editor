@@ -10,7 +10,7 @@ export { BETTER_EDITOR_SETTINGS_SLUG } from './global'
 export type BetterEditorPlugin = (config: Config) => Config
 
 /** Plugin version (matches package.json). Useful for telemetry. */
-export const VERSION = '1.0.0'
+export { VERSION } from './version'
 
 const DEFAULT_BLOCKS_FIELD = 'layout'
 const TOGGLE_COMPONENT_PATH = 'payload-better-editor/client#LiveEditorToggle'

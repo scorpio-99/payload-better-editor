@@ -33,15 +33,27 @@ const validateHoverOutline = (value: unknown): string | true => {
 
 export const betterEditorSettingsGlobal: GlobalConfig = {
   slug: BETTER_EDITOR_SETTINGS_SLUG,
-  label: 'Better Editor',
+  label: 'Settings',
   access: {
     read: () => true,
   },
   admin: {
-    group: 'Site',
+    group: 'Better Editor',
     description: 'Editor-wide preferences for the Better Editor overlay.',
   },
+
   fields: [
+    {
+      name: 'betterEditorSettingsBanner',
+      type: 'ui',
+      admin: {
+        components: {
+          Field: 'payload-better-editor/client#SettingsBanner',
+        },
+        // Hidden when the user opts out via `hideSettingsBanner`.
+        condition: (_, siblingData) => !siblingData?.hideSettingsBanner,
+      },
+    },
     {
       type: 'tabs',
       tabs: [
@@ -170,6 +182,22 @@ export const betterEditorSettingsGlobal: GlobalConfig = {
                 { label: 'Bottom right', value: 'bottom-right' },
                 { label: 'Bottom left', value: 'bottom-left' },
               ],
+            },
+          ],
+        },
+        {
+          label: 'Admin UI',
+          description: 'Display preferences for this admin settings page.',
+          fields: [
+            {
+              name: 'hideSettingsBanner',
+              type: 'checkbox',
+              label: 'Hide info banner',
+              defaultValue: false,
+              admin: {
+                description:
+                  "Don't show the project info / support card above the settings tabs.",
+              },
             },
           ],
         },

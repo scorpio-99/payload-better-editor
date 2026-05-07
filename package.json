@@ -1,7 +1,7 @@
 {
   "name": "payload-better-editor",
   "version": "1.0.0",
-  "description": "A Volto-inspired live editor for Payload CMS — edit pages inline with a block-aware sidebar",
+  "description": "Block editor plugin for Payload CMS that adds a side-by-side live-preview iframe and sidebar to the edit view.",
   "license": "MIT",
   "author": "scorpio-99",
   "repository": {
@@ -12,9 +12,22 @@
     "payload",
     "payloadcms",
     "payload-plugin",
+    "payload-cms-plugin",
     "editor",
     "live-editor",
-    "cms"
+    "live-preview",
+    "visual-editor",
+    "inline-editor",
+    "block-editor",
+    "blocks",
+    "page-builder",
+    "content-editor",
+    "click-to-edit",
+    "iframe",
+    "cms",
+    "headless-cms",
+    "react",
+    "nextjs"
   ],
   "type": "module",
   "sideEffects": [
@@ -55,6 +68,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.16.0",
+    "@payloadcms/ui": "3.81.0",
     "@swc/cli": "0.6.0",
     "@swc/core": "1.10.7",
     "@types/node": "22.5.4",
@@ -63,6 +77,10 @@
     "copyfiles": "2.4.1",
     "eslint": "^9.16.0",
     "eslint-plugin-react-hooks": "^5.2.0",
+    "lucide-react": "^0.577.0",
+    "payload": "3.81.0",
+    "react": "19.2.1",
+    "react-dom": "19.2.1",
     "rimraf": "6.0.1",
     "typescript": "5.7.3",
     "typescript-eslint": "^8.18.0"

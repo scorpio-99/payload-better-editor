@@ -1,7 +1,7 @@
 'use client'
 
 import { useAllFormFields, useForm } from '@payloadcms/ui'
-import { useEditorHistory } from '../../useEditorHistory'
+import { useEditorHistory } from '../../state/useEditorHistory'
 import { splitFieldPath } from '../../internal/path'
 
 type Args = {
@@ -86,21 +86,26 @@ export const useBlockActions = ({
   const duplicate = () => runRowAction('duplicate')
   const remove = () => runRowAction('remove')
 
-  const addAfter = (
-    blockType: string | undefined,
-    schemaPath: string,
-    blocksFieldPath: string,
-    insertIndex: number,
-  ) => {
+  const addAfter = ({
+    blockType,
+    schemaPath,
+    containerPath,
+    index,
+  }: {
+    blockType?: string
+    schemaPath: string
+    containerPath: string
+    index: number
+  }) => {
     commit(() => {
       addFieldRow({
         blockType,
-        path: blocksFieldPath,
-        rowIndex: insertIndex,
+        path: containerPath,
+        rowIndex: index,
         schemaPath,
       })
     })
-    onSelectPath(`${blocksFieldPath}.${insertIndex}`)
+    onSelectPath(`${containerPath}.${index}`)
   }
 
   return {

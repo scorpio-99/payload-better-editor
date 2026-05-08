@@ -10,14 +10,20 @@ export type Resolved = {
   blocksFieldBlocks: ClientBlock[]
 }
 
+export type BlockSchemaContext = {
+  docFields: ClientField[]
+  docSlug: string
+  formFields: FormState
+}
+
 const tabHasName = (tab: ClientTab): tab is ClientTab & { name: string } =>
   typeof (tab as { name?: unknown }).name === 'string'
 
-export function findNamedField(
+export const findNamedField = (
   fields: ClientField[],
   name: string,
   schemaPath: string,
-): { field: ClientField; schemaPath: string } | null {
+): { field: ClientField; schemaPath: string } | null => {
   for (const field of fields) {
     if (!field || typeof field !== 'object') continue
 
@@ -41,13 +47,12 @@ export function findNamedField(
   return null
 }
 
-export function resolveBlockSchema(
-  docFields: ClientField[],
-  docSlug: string,
-  path: string,
-  formFields: FormState,
-): Resolved | null {
-  const segments = path.split('.')
+export const resolveBlockSchema = (
+  context: BlockSchemaContext,
+  blockPath: string,
+): Resolved | null => {
+  const { docFields, docSlug, formFields } = context
+  const segments = blockPath.split('.')
   let currentFields: ClientField[] = docFields
   let currentSchemaPath = docSlug
   let currentPath = ''

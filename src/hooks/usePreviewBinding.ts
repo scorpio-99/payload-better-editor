@@ -24,10 +24,6 @@ export type UsePreviewBindingArgs = {
   onFocusBlock: (id: string) => void
   onBlockAction: (id: string, action: BlockActionMessage['action']) => void
   onLoadingChange: (loading: boolean) => void
-  /** Reports the number of `[data-better-editor-id]` elements found in
-   * the iframe right after binding. PreviewFrame uses 0 to surface a
-   * setup-error banner. */
-  onBlockProbeCount?: (count: number) => void
 }
 
 export type UsePreviewBindingReturn = {
@@ -47,7 +43,6 @@ export const usePreviewBinding = ({
   onFocusBlock,
   onBlockAction,
   onLoadingChange,
-  onBlockProbeCount,
 }: UsePreviewBindingArgs): UsePreviewBindingReturn => {
   const teardownRef = useRef<(() => void) | null>(null)
   const controllerRef = useRef<HoverToolbarController | null>(null)
@@ -56,7 +51,6 @@ export const usePreviewBinding = ({
   const onFocusBlockRef = useLatestRef(onFocusBlock)
   const onBlockActionRef = useLatestRef(onBlockAction)
   const onLoadingChangeRef = useLatestRef(onLoadingChange)
-  const onBlockProbeCountRef = useLatestRef(onBlockProbeCount)
 
   const bindToDocument = useCallback(
     (doc: Document) => {
@@ -83,17 +77,17 @@ export const usePreviewBinding = ({
         })
       }
 
-      // Probe for [data-better-editor-id] elements. Zero means the
-      // consumer forgot to spread getBlockProps() on their block wrappers
-      // — the editor silently degrades to "preview only", so PreviewFrame
-      // shows a setup-error banner. Safe to probe synchronously now that
-      // about:blank documents are skipped above.
-      const blockCount = doc.querySelectorAll(BLOCK_ID_SELECTOR).length
-      onBlockProbeCountRef.current?.(blockCount)
-      if (blockCount === 0 && process.env.NODE_ENV !== 'production') {
-        console.warn(
-          "[better-editor] no [data-better-editor-id] elements found in the preview iframe — wrap your blocks with `getBlockProps(block)` from 'payload-better-editor/client' so click-to-edit works.",
-        )
+      // Dev-only sanity check: zero [data-better-editor-id] elements means
+      // the consumer forgot to spread getBlockProps() on their block wrappers
+      // (or the page just has no blocks yet — both look identical from here).
+      // No UI surfaces this; just a console hint while developing.
+      if (process.env.NODE_ENV !== 'production') {
+        const blockCount = doc.querySelectorAll(BLOCK_ID_SELECTOR).length
+        if (blockCount === 0) {
+          console.warn(
+            "[better-editor] no [data-better-editor-id] elements found in the preview iframe — if your page has blocks, wrap them with `getBlockProps(block)` from 'payload-better-editor/client' so click-to-edit works.",
+          )
+        }
       }
 
       isBoundRef.current = true

@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useDocumentInfo, usePreferences } from '@payloadcms/ui'
+import { useDocumentInfo, useLivePreviewContext, usePreferences } from '@payloadcms/ui'
 import { LiveEditorOverlay } from './LiveEditorOverlay'
 import { useMainWrapperPortal } from '../hooks/useMainWrapperPortal'
 import { buildStorageKeys } from '../internal/storage-keys'
@@ -23,6 +23,7 @@ export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({
 }) => {
   const [open, setOpen] = useState(false)
   const { collectionSlug, globalSlug } = useDocumentInfo()
+  const { previewURL } = useLivePreviewContext()
   const { getPreference, setPreference } = usePreferences()
   const storageKeys = useMemo(() => buildStorageKeys(storageNamespace), [storageNamespace])
   const prefKey = storageKeys.togglePreference(collectionSlug, globalSlug)
@@ -55,6 +56,14 @@ export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({
 
   const mountNode = useMainWrapperPortal(open, adminPortalSelector)
   const label = open ? 'Close Better Editor' : 'Open Better Editor'
+
+  // Mirror Payload's official live-preview behaviour: only surface the
+  // toggle once a previewURL is actually resolvable (collection has
+  // `admin.livePreview.url` configured AND the document has the data
+  // the URL function depends on, e.g. slug). Hiding the button avoids
+  // the misleading "Loading preview URL…" / "not configured" empty
+  // states inside the overlay entirely.
+  if (!previewURL) return null
 
   return (
     <>

@@ -2,18 +2,18 @@
 
 import React, { useCallback, useState } from 'react'
 import { useLivePreviewContext } from '@payloadcms/ui'
-import { PreviewFrame } from './components/PreviewFrame'
-import { Sidebar } from './components/Sidebar'
-import { ViewportToggle } from './components/ViewportToggle'
-import { useBetterEditorSettings } from './useBetterEditorSettings'
-import { useEditorHistory } from './useEditorHistory'
-import { useSidebarResize } from './hooks/useSidebarResize'
-import { useViewportState } from './hooks/useViewportState'
-import { useFullscreenOverlay } from './hooks/useFullscreenOverlay'
-import { useBlockActionMessages } from './hooks/useBlockActionMessages'
-import { useOverlayKeyboard } from './hooks/useOverlayKeyboard'
-import { useFocusTrap } from './hooks/useFocusTrap'
-import { OverlayProviders } from './providers/OverlayProviders'
+import { PreviewFrame } from './PreviewFrame'
+import { Sidebar } from './sidebar/Sidebar'
+import { ViewportToggle } from './ViewportToggle'
+import { useBetterEditorSettings } from '../state/useBetterEditorSettings'
+import { useEditorHistory } from '../state/useEditorHistory'
+import { useSidebarResize } from '../hooks/useSidebarResize'
+import { useViewportState } from '../hooks/useViewportState'
+import { useFullscreenOverlay } from '../hooks/useFullscreenOverlay'
+import { useBlockActionMessages } from '../hooks/useBlockActionMessages'
+import { useOverlayKeyboard } from '../hooks/useOverlayKeyboard'
+import { useFocusTrap } from '../hooks/useFocusTrap'
+import { OverlayProviders } from '../providers/OverlayProviders'
 import {
   InteractIcon,
   InteractOffIcon,
@@ -22,23 +22,28 @@ import {
   SidebarShowIcon,
   UndoIcon,
 } from './icons'
-import './styles/overlay.css'
-import './styles/preview.css'
-import './styles/sidebar.css'
-import './styles/blocks-tab.css'
+import '../styles/overlay.css'
+import '../styles/preview.css'
+import '../styles/sidebar.css'
+import '../styles/blocks-tab.css'
 
 export type LiveEditorOverlayProps = {
   onClose: () => void
   blocksField: string
+  storageNamespace?: string
+  adminPortalSelector?: string
 }
 
-import { cx } from './internal/cx'
-
 const RESIZE_HANDLE_PX = 6
+
+const classes = (...parts: Array<string | false | null | undefined>): string =>
+  parts.filter(Boolean).join(' ')
 
 export const LiveEditorOverlay: React.FC<LiveEditorOverlayProps> = ({
   onClose,
   blocksField,
+  storageNamespace,
+  adminPortalSelector,
 }) => {
   // Selection state lives outside OverlayProviders so the error boundary's
   // onReset can clear it without remounting providers.
@@ -46,7 +51,12 @@ export const LiveEditorOverlay: React.FC<LiveEditorOverlayProps> = ({
   const clearSelection = useCallback(() => setSelectedBlockPath(null), [])
 
   return (
-    <OverlayProviders onClose={onClose} onReset={clearSelection}>
+    <OverlayProviders
+      onClose={onClose}
+      onReset={clearSelection}
+      storageNamespace={storageNamespace}
+      adminPortalSelector={adminPortalSelector}
+    >
       <LiveEditorOverlayInner
         onClose={onClose}
         blocksField={blocksField}
@@ -116,7 +126,7 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
   return (
     <div
       ref={overlayRef}
-      className={cx(
+      className={classes(
         'better-editor',
         isResizing && 'better-editor--resizing',
         isFullscreen && 'better-editor--fullscreen',

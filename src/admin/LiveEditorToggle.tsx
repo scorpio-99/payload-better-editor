@@ -1,24 +1,31 @@
 'use client'
 
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useDocumentInfo, usePreferences } from '@payloadcms/ui'
 import { LiveEditorOverlay } from './LiveEditorOverlay'
-import { useMainWrapperPortal } from './hooks/useMainWrapperPortal'
-import { togglePreferenceKey } from './internal/storage-keys'
+import { useMainWrapperPortal } from '../hooks/useMainWrapperPortal'
+import { buildStorageKeys } from '../internal/storage-keys'
 import { LayoutIcon } from './icons'
 
 type Pref = { open?: boolean }
 
 export type LiveEditorToggleProps = {
   blocksField: string
+  adminPortalSelector?: string
+  storageNamespace?: string
 }
 
-export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({ blocksField }) => {
+export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({
+  blocksField,
+  adminPortalSelector,
+  storageNamespace,
+}) => {
   const [open, setOpen] = useState(false)
   const { collectionSlug, globalSlug } = useDocumentInfo()
   const { getPreference, setPreference } = usePreferences()
-  const prefKey = togglePreferenceKey(collectionSlug, globalSlug)
+  const storageKeys = useMemo(() => buildStorageKeys(storageNamespace), [storageNamespace])
+  const prefKey = storageKeys.togglePreference(collectionSlug, globalSlug)
 
   // Tracks the prefKey we've successfully hydrated against so persistence
   // can't fire with the initial `false` before the read resolves, and so
@@ -46,7 +53,7 @@ export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({ blocksField 
   const handleToggle = useCallback(() => setOpen((v) => !v), [])
   const handleClose = useCallback(() => setOpen(false), [])
 
-  const mountNode = useMainWrapperPortal(open)
+  const mountNode = useMainWrapperPortal(open, adminPortalSelector)
   const label = open ? 'Close Better Editor' : 'Open Better Editor'
 
   return (
@@ -58,8 +65,6 @@ export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({ blocksField 
         onClick={handleToggle}
         title={label}
         type="button"
-        // While open, mirror Payload's preview-btn :hover styling so the
-        // toggle reads as "active". Theme vars come from the admin shell.
         style={
           open
             ? {
@@ -74,7 +79,12 @@ export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({ blocksField 
 
       {open && mountNode
         ? createPortal(
-            <LiveEditorOverlay onClose={handleClose} blocksField={blocksField} />,
+            <LiveEditorOverlay
+              onClose={handleClose}
+              blocksField={blocksField}
+              storageNamespace={storageNamespace}
+              adminPortalSelector={adminPortalSelector}
+            />,
             mountNode,
           )
         : null}

@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react'
 import type { ClientField } from 'payload'
 import { RenderFields } from '@payloadcms/ui'
-import { useDocConfig } from '../hooks/useDocConfig'
+import { useDocConfig } from '../../hooks/useDocConfig'
 
 // Bypass RenderFields' client-side read gate; the server still enforces
 // access on save.

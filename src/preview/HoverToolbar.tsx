@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { ChevronDown, ChevronUp, CopyIcon, PlusIcon, TrashIcon } from '../icons'
+import { ChevronDown, ChevronUp, CopyIcon, PlusIcon, TrashIcon } from '../admin/icons'
 import type { BlockActionMessage } from './protocol'
 
 type Action = BlockActionMessage['action']

@@ -1,14 +1,14 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import { BETTER_EDITOR_SETTINGS_SLUG } from './global'
+import { BETTER_EDITOR_SETTINGS_SLUG } from '../global'
 import {
   DEFAULT_BETTER_EDITOR_SETTINGS,
   HOVER_TOOLBAR_POSITIONS,
   SIDEBAR_POSITIONS,
   type HoverToolbarPosition,
   type SidebarPosition,
-} from './internal/constants'
+} from '../internal/constants'
 
 export type { HoverToolbarPosition }
 
@@ -34,33 +34,31 @@ const Ctx = createContext<BetterEditorSettings>(DEFAULTS)
 
 export const useBetterEditorSettings = (): BetterEditorSettings => useContext(Ctx)
 
-const pickEnum = <T extends string>(value: unknown, allowed: readonly T[], fallback: T): T =>
-  allowed.includes(value as T) ? (value as T) : fallback
+const pick = <T,>(value: unknown, isValid: (v: unknown) => v is T, fallback: T): T =>
+  isValid(value) ? value : fallback
 
-const pickBool = (value: unknown, fallback: boolean): boolean =>
-  typeof value === 'boolean' ? value : fallback
+const isOneOf = <T extends string>(allowed: readonly T[]) =>
+  (v: unknown): v is T => typeof v === 'string' && (allowed as readonly string[]).includes(v)
 
-const pickFiniteNumber = (value: unknown, fallback: number): number =>
-  typeof value === 'number' && Number.isFinite(value) ? value : fallback
-
-const pickNonEmptyString = (value: unknown, fallback: string): string =>
-  typeof value === 'string' && value.length > 0 ? value : fallback
+const isBool = (v: unknown): v is boolean => typeof v === 'boolean'
+const isFiniteNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
+const isNonEmptyString = (v: unknown): v is string => typeof v === 'string' && v.length > 0
 
 const normalizeSettings = (raw: unknown): BetterEditorSettings => {
   if (!raw || typeof raw !== 'object') return DEFAULTS
   const d = raw as Partial<BetterEditorSettings>
   return {
-    sidebarPosition: pickEnum(d.sidebarPosition, SIDEBAR_POSITIONS, DEFAULTS.sidebarPosition),
-    forceFullWidthFields: pickBool(d.forceFullWidthFields, DEFAULTS.forceFullWidthFields),
-    tabletWidth: pickFiniteNumber(d.tabletWidth, DEFAULTS.tabletWidth),
-    mobileWidth: pickFiniteNumber(d.mobileWidth, DEFAULTS.mobileWidth),
-    hoverColorTopLevel: pickNonEmptyString(d.hoverColorTopLevel, DEFAULTS.hoverColorTopLevel),
-    hoverColorNested: pickNonEmptyString(d.hoverColorNested, DEFAULTS.hoverColorNested),
-    hoverOutlineWidth: pickFiniteNumber(d.hoverOutlineWidth, DEFAULTS.hoverOutlineWidth),
-    showHoverToolbar: pickBool(d.showHoverToolbar, DEFAULTS.showHoverToolbar),
-    hoverToolbarPosition: pickEnum(
+    sidebarPosition: pick(d.sidebarPosition, isOneOf(SIDEBAR_POSITIONS), DEFAULTS.sidebarPosition),
+    forceFullWidthFields: pick(d.forceFullWidthFields, isBool, DEFAULTS.forceFullWidthFields),
+    tabletWidth: pick(d.tabletWidth, isFiniteNumber, DEFAULTS.tabletWidth),
+    mobileWidth: pick(d.mobileWidth, isFiniteNumber, DEFAULTS.mobileWidth),
+    hoverColorTopLevel: pick(d.hoverColorTopLevel, isNonEmptyString, DEFAULTS.hoverColorTopLevel),
+    hoverColorNested: pick(d.hoverColorNested, isNonEmptyString, DEFAULTS.hoverColorNested),
+    hoverOutlineWidth: pick(d.hoverOutlineWidth, isFiniteNumber, DEFAULTS.hoverOutlineWidth),
+    showHoverToolbar: pick(d.showHoverToolbar, isBool, DEFAULTS.showHoverToolbar),
+    hoverToolbarPosition: pick(
       d.hoverToolbarPosition,
-      HOVER_TOOLBAR_POSITIONS,
+      isOneOf(HOVER_TOOLBAR_POSITIONS),
       DEFAULTS.hoverToolbarPosition,
     ),
   }
@@ -78,27 +76,20 @@ export const BetterEditorSettingsProvider: React.FC<{ children: React.ReactNode 
       credentials: 'include',
       signal: controller.signal,
     })
-      .then((r) => (r.ok ? (r.json() as Promise<unknown>) : null))
-      .then((data) => {
-        if (data == null) return
-        setSettings(normalizeSettings(data))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: unknown) => {
+        if (data != null) setSettings(normalizeSettings(data))
       })
       .catch((err: unknown) => {
-        // Aborts on unmount are expected; surface anything else in dev so a
-        // broken settings endpoint doesn't fail silently.
         if (err instanceof DOMException && err.name === 'AbortError') return
         if (process.env.NODE_ENV !== 'production') {
           console.warn('[better-editor] failed to load settings global', err)
         }
       })
 
-    return () => {
-      controller.abort()
-    }
+    return () => controller.abort()
   }, [])
 
-  // Stable identity per `settings` object so consumers using useMemo /
-  // React.memo aren't invalidated by unrelated parent re-renders.
   const value = useMemo(() => settings, [settings])
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>

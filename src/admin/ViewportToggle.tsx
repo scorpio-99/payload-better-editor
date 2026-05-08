@@ -8,7 +8,7 @@ import {
   ResponsiveIcon,
   TabletIcon,
   type LucideProps,
-} from '../icons'
+} from './icons'
 
 export type Viewport = 'desktop' | 'tablet' | 'mobile' | 'responsive' | 'fullscreen'
 

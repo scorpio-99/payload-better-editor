@@ -5,16 +5,15 @@ import {
   DEFAULT_SIDEBAR_WIDTH,
   MAX_SIDEBAR_WIDTH,
   MIN_SIDEBAR_WIDTH,
-} from '../state/useBetterEditorSettings'
+  SIDEBAR_KEYBOARD_STEP_PX,
+  SIDEBAR_KEYBOARD_STEP_LARGE_PX,
+  STORAGE_DEBOUNCE_MS,
+} from '../internal/constants'
 import { useBetterEditorConfig } from '../providers/BetterEditorConfigProvider'
 import { readNumber, writeString } from '../internal/storage'
 
 const clampSidebar = (n: number): number =>
   Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, n))
-
-const STORAGE_DEBOUNCE_MS = 250
-const KEYBOARD_STEP_PX = 16
-const KEYBOARD_STEP_LARGE_PX = 64
 
 export type UseSidebarResizeReturn = {
   sidebarWidth: number
@@ -103,10 +102,10 @@ export const useSidebarResize = (
   const onResizeKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
     const direction = positionRef.current === 'right' ? -1 : 1
     let delta = 0
-    if (e.key === 'ArrowLeft') delta = -KEYBOARD_STEP_PX * direction
-    else if (e.key === 'ArrowRight') delta = KEYBOARD_STEP_PX * direction
-    else if (e.key === 'PageUp') delta = -KEYBOARD_STEP_LARGE_PX * direction
-    else if (e.key === 'PageDown') delta = KEYBOARD_STEP_LARGE_PX * direction
+    if (e.key === 'ArrowLeft') delta = -SIDEBAR_KEYBOARD_STEP_PX * direction
+    else if (e.key === 'ArrowRight') delta = SIDEBAR_KEYBOARD_STEP_PX * direction
+    else if (e.key === 'PageUp') delta = -SIDEBAR_KEYBOARD_STEP_LARGE_PX * direction
+    else if (e.key === 'PageDown') delta = SIDEBAR_KEYBOARD_STEP_LARGE_PX * direction
     else if (e.key === 'Home') {
       e.preventDefault()
       setSidebarWidth(MIN_SIDEBAR_WIDTH)

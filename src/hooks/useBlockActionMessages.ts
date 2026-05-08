@@ -49,6 +49,8 @@ export const useBlockActionMessages = ({
   const historyRef = useLatestRef(history)
   const setSelectedBlockPathRef = useLatestRef(setSelectedBlockPath)
 
+  // Bind the postMessage listener exactly once. All four state inputs flow
+  // through stable refs (above), so a re-bind is never needed.
   useEffect(
     () =>
       listenForParentInbound((data) => {
@@ -116,7 +118,8 @@ export const useBlockActionMessages = ({
             break
         }
       }),
-    [allFieldsRef, idIndexRef, dispatchFieldsRef, historyRef, setSelectedBlockPathRef],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refs are stable
+    [],
   )
 
   return { addBelowRequestId }

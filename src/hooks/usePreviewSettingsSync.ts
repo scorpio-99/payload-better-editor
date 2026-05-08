@@ -5,6 +5,7 @@ import { HoverToolbarController, type HoverToolbarOptions } from '../preview/Hov
 import { ACTIVE_CLASS, ACTIVE_SELECTOR } from '../internal/dom'
 import { TOOLBAR_ID, setHoverVars } from '../preview/hover-css'
 import type { BlockActionMessage } from '../preview/protocol'
+import { getSameOriginDocument } from '../internal/iframe'
 import type { PreviewBindingSettings } from './usePreviewBinding'
 
 export type UsePreviewSettingsSyncArgs = {
@@ -13,14 +14,6 @@ export type UsePreviewSettingsSyncArgs = {
   isBoundRef: RefObject<boolean>
   settings: PreviewBindingSettings
   onBlockAction: (id: string, action: BlockActionMessage['action']) => void
-}
-
-const getSameOriginDocument = (iframe: HTMLIFrameElement): Document | null => {
-  try {
-    return iframe.contentDocument
-  } catch {
-    return null
-  }
 }
 
 /**

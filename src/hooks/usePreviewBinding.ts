@@ -6,6 +6,7 @@ import { installClickToFocus } from '../preview/installClickToFocus'
 import { installHoverStyles } from '../preview/installHoverStyles'
 import type { BlockActionMessage } from '../preview/protocol'
 import { BLOCK_ID_SELECTOR } from '../internal/dom'
+import { getSameOriginDocument } from '../internal/iframe'
 import { useLatestRef } from './useLatestRef'
 
 export type PreviewBindingSettings = {
@@ -32,14 +33,6 @@ export type UsePreviewBindingArgs = {
 export type UsePreviewBindingReturn = {
   controllerRef: RefObject<HoverToolbarController | null>
   isBoundRef: RefObject<boolean>
-}
-
-const getSameOriginDocument = (iframe: HTMLIFrameElement): Document | null => {
-  try {
-    return iframe.contentDocument
-  } catch {
-    return null
-  }
 }
 
 /**
@@ -93,7 +86,8 @@ export const usePreviewBinding = ({
       // Probe for [data-better-editor-id] elements. Zero means the
       // consumer forgot to spread getBlockProps() on their block wrappers
       // — the editor silently degrades to "preview only", so PreviewFrame
-      // shows a setup-error banner.
+      // shows a setup-error banner. Safe to probe synchronously now that
+      // about:blank documents are skipped above.
       const blockCount = doc.querySelectorAll(BLOCK_ID_SELECTOR).length
       onBlockProbeCountRef.current?.(blockCount)
       if (blockCount === 0 && process.env.NODE_ENV !== 'production') {
@@ -111,23 +105,35 @@ export const usePreviewBinding = ({
         isBoundRef.current = false
       }
     },
-    [interactModeRef, settingsRef, onFocusBlockRef, onBlockActionRef, onBlockProbeCountRef],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refs are stable
+    [],
   )
 
+  // Bind once on mount; teardown on unmount. All inputs flow through
+  // stable refs, so the load listener doesn't need to re-attach.
   useEffect(() => {
     const iframe = iframeRef.current
     if (!iframe) return
 
     const onLoad = () => {
-      onLoadingChangeRef.current(false)
       const doc = getSameOriginDocument(iframe)
-      if (doc) {
-        bindToDocument(doc)
-      } else if (process.env.NODE_ENV !== 'production') {
-        console.warn(
-          '[better-editor] preview iframe is cross-origin — click-to-edit, hover styles, and the in-iframe toolbar are disabled. Serve your preview URL from the same origin as the Payload admin.',
-        )
+      if (!doc) {
+        onLoadingChangeRef.current(false)
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn(
+            '[better-editor] preview iframe is cross-origin — click-to-edit, hover styles, and the in-iframe toolbar are disabled. Serve your preview URL from the same origin as the Payload admin.',
+          )
+        }
+        return
       }
+      // Fresh iframes report readyState='complete' on their `about:blank`
+      // document before `src` has navigated. Binding there would probe an
+      // empty body and falsely flash the setup-error banner. Wait for the
+      // real `load` event with a real URL instead.
+      const href = doc.location.href
+      if (!href || href === 'about:blank') return
+      onLoadingChangeRef.current(false)
+      bindToDocument(doc)
     }
 
     if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
@@ -142,7 +148,8 @@ export const usePreviewBinding = ({
       controllerRef.current?.destroy()
       controllerRef.current = null
     }
-  }, [iframeRef, bindToDocument, onLoadingChangeRef])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refs are stable
+  }, [])
 
   return { controllerRef, isBoundRef }
 }

@@ -4,10 +4,9 @@ import { useEffect, useRef, useState } from 'react'
 import type { Viewport } from '../admin/ViewportToggle'
 import type { BetterEditorSettings } from '../state/useBetterEditorSettings'
 import { clampViewport } from '../internal/limits'
+import { DEFAULT_RESPONSIVE_WIDTH } from '../internal/constants'
 import { useBetterEditorConfig } from '../providers/BetterEditorConfigProvider'
 import { readNumber, writeString } from '../internal/storage'
-
-const DEFAULT_RESPONSIVE_WIDTH = 1024
 
 export type UseViewportStateReturn = {
   viewport: Viewport

@@ -24,10 +24,6 @@ export type BetterEditorSettings = {
   hoverToolbarPosition: HoverToolbarPosition
 }
 
-export const DEFAULT_SIDEBAR_WIDTH = 400
-export const MIN_SIDEBAR_WIDTH = 250
-export const MAX_SIDEBAR_WIDTH = 800
-
 const DEFAULTS: BetterEditorSettings = { ...DEFAULT_BETTER_EDITOR_SETTINGS }
 
 const Ctx = createContext<BetterEditorSettings>(DEFAULTS)

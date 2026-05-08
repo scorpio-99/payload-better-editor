@@ -4,6 +4,7 @@ import { useEffect, useMemo, type RefObject } from 'react'
 import { useAllFormFields, useDocumentEvents, useDocumentInfo } from '@payloadcms/ui'
 import { HoverToolbarController } from '../preview/HoverToolbarController'
 import { INTERACT_BODY_ATTR } from '../preview/hover-css'
+import { getSameOriginDocument } from '../internal/iframe'
 import { useEditorHistory } from '../state/useEditorHistory'
 
 export type UsePreviewSelectionSyncArgs = {
@@ -12,14 +13,6 @@ export type UsePreviewSelectionSyncArgs = {
   selectedBlockPath: string | null
   interactMode: boolean
   previewURL: string | undefined
-}
-
-const getSameOriginDocument = (iframe: HTMLIFrameElement): Document | null => {
-  try {
-    return iframe.contentDocument
-  } catch {
-    return null
-  }
 }
 
 /**

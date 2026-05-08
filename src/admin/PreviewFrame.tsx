@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { HoverToolbarPosition } from '../internal/constants'
 import { postToParent } from '../internal/postmessage'
 import type { BlockActionMessage } from '../preview/protocol'
+import type { Viewport } from './ViewportToggle'
 import { useIframeResizeObserver } from '../hooks/useIframeResizeObserver'
 import { usePreviewHandleDrag } from '../hooks/usePreviewHandleDrag'
 import { useLatestRef } from '../hooks/useLatestRef'
@@ -24,6 +25,7 @@ export type PreviewFrameProps = {
    * hover/selection affordances are suppressed so users can interact
    * with forms, accordions, links inside the preview. */
   interactMode: boolean
+  viewport?: Viewport
   viewportWidth?: number | null
   resizable?: boolean
   onResize?: (next: number) => void
@@ -42,6 +44,7 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
   hoverToolbarPosition,
   selectedBlockPath,
   interactMode,
+  viewport,
   viewportWidth,
   resizable = false,
   onResize,
@@ -125,12 +128,14 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
       [
         'better-editor-frame__viewport',
         constrained && 'better-editor-frame__viewport--constrained',
+        constrained && viewport === 'tablet' && 'better-editor-frame__viewport--tablet',
+        constrained && viewport === 'mobile' && 'better-editor-frame__viewport--mobile',
         resizable && 'better-editor-frame__viewport--resizable',
         isResizing && 'better-editor-frame__viewport--resizing',
       ]
         .filter(Boolean)
         .join(' '),
-    [constrained, resizable, isResizing],
+    [constrained, viewport, resizable, isResizing],
   )
 
   const iframeStyle = useMemo(

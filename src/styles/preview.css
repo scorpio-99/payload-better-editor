@@ -79,14 +79,28 @@
 }
 
 .better-editor-frame__viewport--constrained {
-  padding: 0 16px;
+  padding: 16px;
   background: var(--theme-elevation-100);
   overflow: auto;
+  align-items: center;
 }
 
 .better-editor-frame__viewport--constrained > .better-editor-frame {
   height: 100%;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* Cap the iframe height in device modes only while the overlay is
+   fullscreen, where the available height is otherwise so tall that a
+   400px-wide mobile view stretches into a thin tower. In the normal
+   docked overlay the wrapper height is already constrained by the
+   admin shell, so the cap would just shrink the iframe unnecessarily. */
+.better-editor--fullscreen .better-editor-frame__viewport--tablet > .better-editor-frame {
+  max-height: 90%;
+}
+
+.better-editor--fullscreen .better-editor-frame__viewport--mobile > .better-editor-frame {
+  max-height: 80%;
 }
 
 /* Responsive mode: drag handles on each side. */

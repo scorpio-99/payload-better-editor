@@ -156,6 +156,7 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
               hoverToolbarPosition={settings.hoverToolbarPosition}
               selectedBlockPath={selectedBlockPath}
               interactMode={interactMode}
+              viewport={viewport}
               viewportWidth={viewportWidth}
               resizable={viewport === 'responsive'}
               onResize={setResponsiveWidth}

@@ -13,9 +13,7 @@ export const installClickToFocus = (
 ): (() => void) => {
   const onClick = (e: MouseEvent) => {
     if (options.isEnabled && !options.isEnabled()) return
-    // `instanceof Element` is realm-local; this listener is registered
-    // on the iframe doc but the closure runs in the parent realm, so a
-    // duck-type via `closest` is the cross-realm-safe gate.
+    // Cross-realm-safe element check — `instanceof` is realm-local.
     const target = e.target as Element | null
     if (!target || typeof target.closest !== 'function') return
     const idEl = target.closest<HTMLElement>(BLOCK_ID_SELECTOR)

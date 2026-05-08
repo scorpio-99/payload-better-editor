@@ -1,31 +1,27 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-import { useEditorHistory } from '../useEditorHistory'
+import { useEffect } from 'react'
+import { useEditorHistory } from '../state/useEditorHistory'
+import { useLatestRef } from './useLatestRef'
 
 export type UseOverlayKeyboardArgs = {
   onClose: () => void
   history: ReturnType<typeof useEditorHistory>
 }
 
-const isEditableTarget = (el: Element | null): boolean => {
-  if (!el) return false
-  const tag = el.tagName
-  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true
-  return (el as HTMLElement).isContentEditable === true
-}
+const EDITABLE_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT'])
+
+// Don't hijack Escape away from text inputs / native dropdowns / rich text
+// editors — users expect it to clear/blur the field first.
+const isEditableTarget = (el: Element | null): boolean =>
+  !!el && (EDITABLE_TAGS.has(el.tagName) || (el as HTMLElement).isContentEditable === true)
 
 export const useOverlayKeyboard = ({ onClose, history }: UseOverlayKeyboardArgs): void => {
-  // Mutable ref keeps the global keydown listener bound once across re-renders
-  // while still calling the latest handlers.
-  const handlersRef = useRef<UseOverlayKeyboardArgs>({ onClose, history })
-  handlersRef.current = { onClose, history }
+  const handlersRef = useLatestRef({ onClose, history })
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        // Don't hijack Escape away from text inputs / native dropdowns / rich
-        // text editors — users expect it to clear/blur the field first.
         if (isEditableTarget(document.activeElement)) return
         handlersRef.current.onClose()
         return
@@ -44,5 +40,5 @@ export const useOverlayKeyboard = ({ onClose, history }: UseOverlayKeyboardArgs)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [])
+  }, [handlersRef])
 }

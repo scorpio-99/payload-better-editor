@@ -5,6 +5,7 @@ import { ACTIVE_CLASS, BLOCK_ID_ATTR, BLOCK_ID_SELECTOR } from '../internal/dom'
 import type { BlockActionMessage } from './protocol'
 import { TOOLBAR_ID } from './hover-css'
 import { HoverToolbar } from './HoverToolbar'
+import { calculateToolbarPosition } from './toolbar-position'
 
 export type HoverToolbarOptions = {
   position: HoverToolbarPosition
@@ -12,11 +13,6 @@ export type HoverToolbarOptions = {
   onAction: (id: string, action: BlockActionMessage['action']) => void
 }
 
-// Mirrors the 1px outline-edge gap in HOVER_CSS so the toolbar stays a
-// consistent visual distance from the outline regardless of outline width.
-const OUTLINE_EDGE_GAP = 1
-// Visual breathing room between the outline's inner edge and the toolbar.
-const TOOLBAR_BREATHING_ROOM = 3
 const FALLBACK_TB_WIDTH = 120
 const FALLBACK_TB_HEIGHT = 32
 
@@ -75,7 +71,8 @@ export class HoverToolbarController {
 
   select(id: string): void {
     if (this.destroyed) return
-    const el = this.doc.querySelector<HTMLElement>(`[${BLOCK_ID_ATTR}="${cssEscape(id)}"]`)
+    const escaped = typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(id) : id.replace(/["\\]/g, '\\$&')
+    const el = this.doc.querySelector<HTMLElement>(`[${BLOCK_ID_ATTR}="${escaped}"]`)
     if (!el) {
       // Block not in DOM (yet) — keep id but hide the toolbar; a later
       // select(id) call after the iframe re-render will resolve it.
@@ -107,32 +104,22 @@ export class HoverToolbarController {
     if (this.destroyed) return
     this.destroyed = true
     this.observer.disconnect()
-    this.doc.defaultView?.removeEventListener('scroll', this.onScroll, true)
-    if (this.positionRaf) {
-      this.doc.defaultView?.cancelAnimationFrame(this.positionRaf)
-      this.positionRaf = 0
-    }
-    if (this.observerRaf) {
-      this.doc.defaultView?.cancelAnimationFrame(this.observerRaf)
-      this.observerRaf = 0
-    }
+    const view = this.doc.defaultView
+    view?.removeEventListener('scroll', this.onScroll, true)
+    if (this.positionRaf) view?.cancelAnimationFrame(this.positionRaf)
+    if (this.observerRaf) view?.cancelAnimationFrame(this.observerRaf)
+    this.positionRaf = 0
+    this.observerRaf = 0
     this.clearActive()
     this.currentBlockId = null
     this.currentBlockEl = null
-    // React 19 throws if root.unmount() runs synchronously while another
-    // tree is mid-render; defer so it lands after the parent commit.
+    // Defer unmount — React 19 throws if it lands synchronously mid-render of
+    // another tree; StrictMode also double-invokes us, so only remove the
+    // toolbar node if we still own it.
     const { root, toolbar } = this
     queueMicrotask(() => {
-      try {
-        root.unmount()
-      } catch {
-        /* root already unmounted */
-      }
-      // StrictMode double-invokes destroy(); by the second pass the parallel
-      // construct() may have already inserted a fresh toolbar with the same
-      // id — only remove the node if we still own it.
-      if (!toolbar.isConnected) return
-      toolbar.remove()
+      try { root.unmount() } catch { /* already unmounted */ }
+      if (toolbar.isConnected) toolbar.remove()
     })
   }
 
@@ -154,19 +141,16 @@ export class HoverToolbarController {
     if (!el || !el.isConnected) return
     const view = this.doc.defaultView
     if (!view) return
-    const rect = el.getBoundingClientRect()
-    const tbWidth = this.toolbar.offsetWidth || FALLBACK_TB_WIDTH
-    const tbHeight = this.toolbar.offsetHeight || FALLBACK_TB_HEIGHT
-    // Block edge → 1px gap → outline (outlineWidth thick) → toolbar inset.
-    const inset = OUTLINE_EDGE_GAP + this.opts.outlineWidth + TOOLBAR_BREATHING_ROOM
-    const isTop = this.opts.position.startsWith('top')
-    const isRight = this.opts.position.endsWith('right')
-    const top = isTop
-      ? view.scrollY + rect.top + inset
-      : view.scrollY + rect.bottom - tbHeight - inset
-    const left = isRight
-      ? view.scrollX + rect.right - tbWidth - inset
-      : view.scrollX + rect.left + inset
+    const { top, left } = calculateToolbarPosition(
+      el.getBoundingClientRect(),
+      {
+        width: this.toolbar.offsetWidth || FALLBACK_TB_WIDTH,
+        height: this.toolbar.offsetHeight || FALLBACK_TB_HEIGHT,
+      },
+      { scrollX: view.scrollX, scrollY: view.scrollY },
+      this.opts.position,
+      this.opts.outlineWidth,
+    )
     const { style } = this.toolbar
     style.top = `${top}px`
     style.left = `${left}px`
@@ -192,9 +176,4 @@ export class HoverToolbarController {
     }
     this.activeChain = chain
   }
-}
-
-const cssEscape = (s: string): string => {
-  if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') return CSS.escape(s)
-  return s.replace(/["\\]/g, '\\$&')
 }

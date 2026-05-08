@@ -24,4 +24,9 @@ Initial release.
 - `BetterEditorSettings` global for sidebar position, hover colors, breakpoint widths, hover-toolbar position and visibility
 - Loading skeleton in the iframe and an error boundary so a single bad block can't take the admin down
 - CSS custom properties `--better-editor-z-overlay` and `--better-editor-z-toolbar` for z-index overrides
-- Dev-mode warning when no `[data-better-editor-id]` elements are present in the preview iframe
+- Dev-mode warning + visible setup-error banner in the preview when no `[data-better-editor-id]` elements are present
+- Dev-mode warning when the preview iframe is cross-origin
+- Keyboard support on the sidebar resize handle (←/→, PgUp/PgDn, Home/End)
+- Off-screen `aria-live` announcer for block-selection changes
+- `SidebarPosition` and `LiveEditorToggleProps` are now part of the public type surface
+- Vitest test suite for the pure helpers (`splitFieldPath`, `buildStorageKeys`, `calculateToolbarPosition`, `findNamedField`, `resolveBlockSchema`)

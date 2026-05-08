@@ -54,14 +54,21 @@ export class HoverToolbarController {
 
     this.observer = new MutationObserver(() => {
       if (this.destroyed || !this.currentBlockId) return
-      const view = this.doc.defaultView
-      if (!view || this.observerRaf) return
-      this.observerRaf = view.requestAnimationFrame(() => {
-        this.observerRaf = 0
-        if (this.currentBlockId) this.select(this.currentBlockId)
-      })
+      // Coalesce mutation bursts into a single re-select on the next paint.
+      // Re-using positionRaf avoids the previous two-tier RAF pyramid.
+      this.scheduleReselect()
     })
     this.observer.observe(doc.body, { childList: true, subtree: true })
+  }
+
+  private scheduleReselect(): void {
+    const view = this.doc.defaultView
+    if (!view || this.observerRaf) return
+    this.observerRaf = view.requestAnimationFrame(() => {
+      this.observerRaf = 0
+      if (this.destroyed || !this.currentBlockId) return
+      this.select(this.currentBlockId)
+    })
   }
 
   update(opts: HoverToolbarOptions): void {

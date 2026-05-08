@@ -49,6 +49,7 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
 }) => {
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [missingBlockIds, setMissingBlockIds] = useState(false)
   const interactModeRef = useLatestRef(interactMode)
 
   const { isResizing, onHandleMouseDown } = usePreviewHandleDrag({
@@ -60,6 +61,7 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
 
   useEffect(() => {
     setIsLoading(true)
+    setMissingBlockIds(false)
   }, [previewURL])
 
   const onFocusBlock = useCallback((id: string) => {
@@ -87,6 +89,10 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     ],
   )
 
+  const onBlockProbeCount = useCallback((count: number) => {
+    setMissingBlockIds(count === 0)
+  }, [])
+
   const { controllerRef, isBoundRef } = usePreviewBinding({
     iframeRef,
     settings,
@@ -94,6 +100,7 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     onFocusBlock,
     onBlockAction,
     onLoadingChange: setIsLoading,
+    onBlockProbeCount,
   })
 
   usePreviewSettingsSync({
@@ -184,6 +191,17 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
           <div className="better-editor-frame__skeleton-bar" />
           <div className="better-editor-frame__skeleton-bar better-editor-frame__skeleton-bar--sm" />
           <div className="better-editor-frame__skeleton-block" />
+        </div>
+      ) : null}
+      {!isLoading && missingBlockIds ? (
+        <div className="better-editor-frame__setup-error" role="alert">
+          <strong>Click-to-edit is disabled</strong>
+          <p>
+            No <code>[data-better-editor-id]</code> elements were found in the
+            preview. Spread <code>getBlockProps(block)</code> from{' '}
+            <code>payload-better-editor/client</code> on every block wrapper in
+            your frontend, or wrap each Lexical block converter the same way.
+          </p>
         </div>
       ) : null}
       {resizable ? (

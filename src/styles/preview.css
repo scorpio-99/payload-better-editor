@@ -222,3 +222,38 @@
   color: var(--theme-text);
   background: var(--theme-elevation-150);
 }
+
+.better-editor-frame__setup-error {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(640px, calc(100% - 24px));
+  padding: 12px 16px;
+  border: 1px solid var(--theme-warning-500, #f59e0b);
+  border-radius: 6px;
+  background: var(--theme-warning-50, #fffbeb);
+  color: var(--theme-text, #111);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  font-size: 13px;
+  line-height: 1.5;
+  z-index: 2;
+}
+
+.better-editor-frame__setup-error strong {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.better-editor-frame__setup-error p {
+  margin: 0;
+}
+
+.better-editor-frame__setup-error code {
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: var(--theme-elevation-100, rgba(0, 0, 0, 0.06));
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 12px;
+}

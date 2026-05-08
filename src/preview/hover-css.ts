@@ -65,9 +65,10 @@ export type HoverVars = {
 
 // Restrictive on purpose: these values are written verbatim into a CSS
 // custom property on the preview iframe, so anything that survives the
-// regex still lands inside `outline:` / `background-color:` and can't
-// escape into a separate declaration.
-const COLOR_RE = /^#[0-9a-fA-F]{3,8}$|^rgba?\(/i
+// regex still lands inside `outline:` / `background-color:`. The regex
+// rejects newlines and unmatched parens so an injected value can't escape
+// into a separate declaration.
+const COLOR_RE = /^(?:#[0-9a-fA-F]{3,8}|rgba?\([^()\n\r]*\))$/i
 
 const isValidColor = (v: unknown): v is string =>
   typeof v === 'string' && COLOR_RE.test(v.trim())

@@ -15,7 +15,7 @@ export const BETTER_EDITOR_SETTINGS_BANNER_FIELD = 'betterEditorSettingsBanner'
 
 // Mirrors the runtime regex in `preview/hover-css.ts` so the admin UI rejects
 // values that would silently be skipped at render time.
-const HOVER_COLOR_RE = /^#[0-9a-fA-F]{3,8}$|^rgba?\(/i
+const HOVER_COLOR_RE = /^(?:#[0-9a-fA-F]{3,8}|rgba?\([^()\n\r]*\))$/i
 
 const validateHoverColor = (value: unknown): string | true => {
   if (typeof value !== 'string' || value.length === 0) return 'Color is required'

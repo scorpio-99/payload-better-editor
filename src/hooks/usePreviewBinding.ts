@@ -23,6 +23,10 @@ export type UsePreviewBindingArgs = {
   onFocusBlock: (id: string) => void
   onBlockAction: (id: string, action: BlockActionMessage['action']) => void
   onLoadingChange: (loading: boolean) => void
+  /** Reports the number of `[data-better-editor-id]` elements found in
+   * the iframe right after binding. PreviewFrame uses 0 to surface a
+   * setup-error banner. */
+  onBlockProbeCount?: (count: number) => void
 }
 
 export type UsePreviewBindingReturn = {
@@ -50,6 +54,7 @@ export const usePreviewBinding = ({
   onFocusBlock,
   onBlockAction,
   onLoadingChange,
+  onBlockProbeCount,
 }: UsePreviewBindingArgs): UsePreviewBindingReturn => {
   const teardownRef = useRef<(() => void) | null>(null)
   const controllerRef = useRef<HoverToolbarController | null>(null)
@@ -58,6 +63,7 @@ export const usePreviewBinding = ({
   const onFocusBlockRef = useLatestRef(onFocusBlock)
   const onBlockActionRef = useLatestRef(onBlockAction)
   const onLoadingChangeRef = useLatestRef(onLoadingChange)
+  const onBlockProbeCountRef = useLatestRef(onBlockProbeCount)
 
   const bindToDocument = useCallback(
     (doc: Document) => {
@@ -84,16 +90,16 @@ export const usePreviewBinding = ({
         })
       }
 
-      // Dev sanity: missing data-better-editor-id elements means the consumer
-      // forgot to spread getBlockProps() on their block wrappers — without
-      // that the editor silently degrades to "preview only".
-      if (process.env.NODE_ENV !== 'production') {
-        const count = doc.querySelectorAll(BLOCK_ID_SELECTOR).length
-        if (count === 0) {
-          console.warn(
-            "[better-editor] no [data-better-editor-id] elements found in the preview iframe — wrap your blocks with `getBlockProps(block)` from 'payload-better-editor/client' so click-to-edit works.",
-          )
-        }
+      // Probe for [data-better-editor-id] elements. Zero means the
+      // consumer forgot to spread getBlockProps() on their block wrappers
+      // — the editor silently degrades to "preview only", so PreviewFrame
+      // shows a setup-error banner.
+      const blockCount = doc.querySelectorAll(BLOCK_ID_SELECTOR).length
+      onBlockProbeCountRef.current?.(blockCount)
+      if (blockCount === 0 && process.env.NODE_ENV !== 'production') {
+        console.warn(
+          "[better-editor] no [data-better-editor-id] elements found in the preview iframe — wrap your blocks with `getBlockProps(block)` from 'payload-better-editor/client' so click-to-edit works.",
+        )
       }
 
       isBoundRef.current = true
@@ -105,7 +111,7 @@ export const usePreviewBinding = ({
         isBoundRef.current = false
       }
     },
-    [interactModeRef, settingsRef, onFocusBlockRef, onBlockActionRef],
+    [interactModeRef, settingsRef, onFocusBlockRef, onBlockActionRef, onBlockProbeCountRef],
   )
 
   useEffect(() => {
@@ -115,7 +121,13 @@ export const usePreviewBinding = ({
     const onLoad = () => {
       onLoadingChangeRef.current(false)
       const doc = getSameOriginDocument(iframe)
-      if (doc) bindToDocument(doc)
+      if (doc) {
+        bindToDocument(doc)
+      } else if (process.env.NODE_ENV !== 'production') {
+        console.warn(
+          '[better-editor] preview iframe is cross-origin — click-to-edit, hover styles, and the in-iframe toolbar are disabled. Serve your preview URL from the same origin as the Payload admin.',
+        )
+      }
     }
 
     if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {

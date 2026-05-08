@@ -4,6 +4,7 @@ import { BETTER_EDITOR_SETTINGS_BANNER_FIELD, betterEditorSettingsGlobal } from 
 
 export type { BetterEditorConfig }
 export type { BetterEditorSettings, HoverToolbarPosition } from './state/useBetterEditorSettings'
+export type { SidebarPosition } from './internal/constants'
 export { BETTER_EDITOR_SETTINGS_SLUG } from './global'
 
 /** Plugin signature — handy for typing plugin lists in consumer code. */
@@ -60,6 +61,21 @@ const warnMissingBlocksField = (kind: 'collection' | 'global', slug: string, blo
   )
 }
 
+/**
+ * Payload CMS plugin factory for the Better Editor overlay. Adds an
+ * "Open Better Editor" toggle to the configured collections / globals
+ * and registers a `BetterEditorSettings` global with editor-wide options.
+ *
+ * @example
+ *   import { betterEditor } from 'payload-better-editor'
+ *
+ *   export default buildConfig({
+ *     plugins: [betterEditor({ collections: ['pages'] })],
+ *     // ...
+ *   })
+ *
+ * @see {@link BetterEditorConfig} for all options.
+ */
 export const betterEditor =
   (pluginOptions?: BetterEditorConfig): BetterEditorPlugin =>
   (config: Config): Config => {

@@ -1,6 +1,24 @@
+/**
+ * The button rendered in `beforeDocumentControls` that toggles the
+ * Better Editor overlay. Auto-injected by the plugin factory; consumers
+ * usually don't render it directly.
+ */
 export { LiveEditorToggle } from './admin/LiveEditorToggle'
+export type { LiveEditorToggleProps } from './admin/LiveEditorToggle'
+
+/**
+ * The full editor overlay (preview iframe + 3-tab sidebar). Mounted into
+ * the Payload admin shell when the toggle opens it. Exported so consumers
+ * can build a custom toggle / wrapper if they need to bypass the
+ * auto-injected button.
+ */
 export { LiveEditorOverlay } from './admin/LiveEditorOverlay'
 export type { LiveEditorOverlayProps } from './admin/LiveEditorOverlay'
+
+/**
+ * Banner shown at the top of the `BetterEditorSettings` global. Wired up
+ * automatically; hide it via `betterEditor({ showSettingsBanner: false })`.
+ */
 export { SettingsBanner } from './admin/SettingsBanner'
 
 /**

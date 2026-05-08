@@ -82,7 +82,9 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
   const history = useEditorHistory()
   const { previewURL, isPreviewEnabled } = useLivePreviewContext()
 
-  const { sidebarWidth, isResizing, onResizeStart } = useSidebarResize(settings.sidebarPosition)
+  const { sidebarWidth, isResizing, onResizeStart, onResizeKeyDown } = useSidebarResize(
+    settings.sidebarPosition,
+  )
   const {
     viewport,
     setViewport,
@@ -205,8 +207,11 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
               style={{ order: 1 }}
               role="separator"
               aria-orientation="vertical"
-              aria-label="Resize sidebar"
+              aria-label="Resize sidebar (use ← / → arrow keys)"
+              aria-valuenow={sidebarWidth}
+              tabIndex={0}
               onMouseDown={onResizeStart}
+              onKeyDown={onResizeKeyDown}
             />
             <aside
               className="better-editor__sidebar"

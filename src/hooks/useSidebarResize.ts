@@ -12,10 +12,15 @@ import { readNumber, writeString } from '../internal/storage'
 const clampSidebar = (n: number): number =>
   Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, n))
 
+const STORAGE_DEBOUNCE_MS = 250
+const KEYBOARD_STEP_PX = 16
+const KEYBOARD_STEP_LARGE_PX = 64
+
 export type UseSidebarResizeReturn = {
   sidebarWidth: number
   isResizing: boolean
   onResizeStart: (e: React.MouseEvent<HTMLDivElement>) => void
+  onResizeKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => void
 }
 
 export const useSidebarResize = (
@@ -34,19 +39,37 @@ export const useSidebarResize = (
   positionRef.current = sidebarPosition
 
   const dragCleanupRef = useRef<(() => void) | null>(null)
+  const writeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Skip persisting the value we just hydrated from storage.
+  // Debounce storage writes — drag fires 60×/s while keyboard nudges fire
+  // per keystroke. Either way we only want the final value persisted.
   const hydratedRef = useRef(false)
   useEffect(() => {
     if (!hydratedRef.current) {
       hydratedRef.current = true
       return
     }
-    writeString(storageKeys.sidebarWidth, String(sidebarWidth))
+    if (writeTimerRef.current) clearTimeout(writeTimerRef.current)
+    writeTimerRef.current = setTimeout(() => {
+      writeString(storageKeys.sidebarWidth, String(sidebarWidth))
+      writeTimerRef.current = null
+    }, STORAGE_DEBOUNCE_MS)
+    return () => {
+      if (writeTimerRef.current) clearTimeout(writeTimerRef.current)
+    }
   }, [sidebarWidth, storageKeys.sidebarWidth])
 
-  // Release listeners + body styles if the consumer unmounts mid-drag.
-  useEffect(() => () => dragCleanupRef.current?.(), [])
+  // Release listeners + body styles + flush pending storage write on unmount.
+  useEffect(
+    () => () => {
+      dragCleanupRef.current?.()
+      if (writeTimerRef.current) {
+        clearTimeout(writeTimerRef.current)
+        writeString(storageKeys.sidebarWidth, String(widthRef.current))
+      }
+    },
+    [storageKeys.sidebarWidth],
+  )
 
   const onResizeStart = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault()
@@ -74,5 +97,29 @@ export const useSidebarResize = (
     window.addEventListener('mouseup', cleanup)
   }, [])
 
-  return { sidebarWidth, isResizing, onResizeStart }
+  // Arrow keys nudge the handle for keyboard users (WCAG 2.1 separator
+  // semantics). Direction matches the mouse drag — Right when the sidebar
+  // sits on the right grows the sidebar inward.
+  const onResizeKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    const direction = positionRef.current === 'right' ? -1 : 1
+    let delta = 0
+    if (e.key === 'ArrowLeft') delta = -KEYBOARD_STEP_PX * direction
+    else if (e.key === 'ArrowRight') delta = KEYBOARD_STEP_PX * direction
+    else if (e.key === 'PageUp') delta = -KEYBOARD_STEP_LARGE_PX * direction
+    else if (e.key === 'PageDown') delta = KEYBOARD_STEP_LARGE_PX * direction
+    else if (e.key === 'Home') {
+      e.preventDefault()
+      setSidebarWidth(MIN_SIDEBAR_WIDTH)
+      return
+    } else if (e.key === 'End') {
+      e.preventDefault()
+      setSidebarWidth(MAX_SIDEBAR_WIDTH)
+      return
+    }
+    if (delta === 0) return
+    e.preventDefault()
+    setSidebarWidth((w) => clampSidebar(w + delta))
+  }, [])
+
+  return { sidebarWidth, isResizing, onResizeStart, onResizeKeyDown }
 }

@@ -102,6 +102,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
         {tab === 'settings' && <DocumentMetaTab />}
       </div>
+
+      <SelectionAnnouncer selectedBlockPath={selectedBlockPath} />
     </div>
   )
 }
+
+// Off-screen live region announces block-selection changes to screen
+// readers; visible UI updates handle sighted users via the tab switch.
+const SR_ONLY_STYLE: React.CSSProperties = {
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  padding: 0,
+  margin: -1,
+  overflow: 'hidden',
+  clip: 'rect(0, 0, 0, 0)',
+  whiteSpace: 'nowrap',
+  border: 0,
+}
+
+const SelectionAnnouncer: React.FC<{ selectedBlockPath: string | null }> = ({
+  selectedBlockPath,
+}) => (
+  <div role="status" aria-live="polite" aria-atomic="true" style={SR_ONLY_STYLE}>
+    {selectedBlockPath ? `Block selected: ${selectedBlockPath}` : 'No block selected'}
+  </div>
+)

@@ -8,6 +8,10 @@
     "type": "git",
     "url": "https://github.com/scorpio-99/payload-better-editor"
   },
+  "homepage": "https://github.com/scorpio-99/payload-better-editor#readme",
+  "bugs": {
+    "url": "https://github.com/scorpio-99/payload-better-editor/issues"
+  },
   "keywords": [
     "payload",
     "payloadcms",
@@ -58,6 +62,8 @@
     "copyfiles": "copyfiles -u 1 \"src/**/*.{html,css,scss,ttf,woff,woff2,eot,svg,jpg,png,json}\" dist/",
     "lint": "eslint ./src",
     "lint:fix": "eslint ./src --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "prepublishOnly": "pnpm clean && pnpm build"
   },
   "peerDependencies": {
@@ -83,7 +89,8 @@
     "react-dom": "19.2.1",
     "rimraf": "6.0.1",
     "typescript": "5.7.3",
-    "typescript-eslint": "^8.18.0"
+    "typescript-eslint": "^8.18.0",
+    "vitest": "^3.2.4"
   },
   "engines": {
     "node": "^18.20.2 || >=20.9.0",

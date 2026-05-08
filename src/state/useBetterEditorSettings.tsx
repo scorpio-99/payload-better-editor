@@ -71,19 +71,32 @@ export const BetterEditorSettingsProvider: React.FC<{ children: React.ReactNode 
 
   useEffect(() => {
     const controller = new AbortController()
+    const isDev = process.env.NODE_ENV !== 'production'
 
     fetch(`/api/globals/${BETTER_EDITOR_SETTINGS_SLUG}?depth=0`, {
       credentials: 'include',
       signal: controller.signal,
     })
-      .then((r) => (r.ok ? r.json() : null))
+      .then((r) => {
+        if (r.ok) return r.json()
+        if (isDev) {
+          console.warn(
+            `[better-editor] settings fetch returned HTTP ${r.status} — falling back to defaults`,
+          )
+        }
+        return null
+      })
       .then((data: unknown) => {
         if (data != null) setSettings(normalizeSettings(data))
       })
       .catch((err: unknown) => {
+        // AbortError on unmount is expected and silent.
         if (err instanceof DOMException && err.name === 'AbortError') return
-        if (process.env.NODE_ENV !== 'production') {
-          console.warn('[better-editor] failed to load settings global', err)
+        if (isDev) {
+          console.warn(
+            '[better-editor] settings fetch failed — falling back to defaults:',
+            err,
+          )
         }
       })
 

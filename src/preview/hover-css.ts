@@ -28,7 +28,7 @@ export const HOVER_CSS = `
 
   #${TOOLBAR_ID} {
     position: absolute;
-    z-index: 2147483647;
+    z-index: var(--better-editor-z-toolbar, 2147483647);
     display: none;
     gap: 2px;
     padding: 3px;

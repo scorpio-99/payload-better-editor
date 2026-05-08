@@ -5,8 +5,8 @@ import {
   DEFAULT_SIDEBAR_WIDTH,
   MAX_SIDEBAR_WIDTH,
   MIN_SIDEBAR_WIDTH,
-} from '../useBetterEditorSettings'
-import { STORAGE_SIDEBAR_WIDTH } from '../internal/storage-keys'
+} from '../state/useBetterEditorSettings'
+import { useBetterEditorConfig } from '../providers/BetterEditorConfigProvider'
 import { readNumber, writeString } from '../internal/storage'
 
 const clampSidebar = (n: number): number =>
@@ -21,8 +21,9 @@ export type UseSidebarResizeReturn = {
 export const useSidebarResize = (
   sidebarPosition: 'left' | 'right',
 ): UseSidebarResizeReturn => {
+  const { storageKeys } = useBetterEditorConfig()
   const [sidebarWidth, setSidebarWidth] = useState<number>(() =>
-    readNumber(STORAGE_SIDEBAR_WIDTH, DEFAULT_SIDEBAR_WIDTH, clampSidebar),
+    readNumber(storageKeys.sidebarWidth, DEFAULT_SIDEBAR_WIDTH, clampSidebar),
   )
   const [isResizing, setIsResizing] = useState(false)
 
@@ -41,8 +42,8 @@ export const useSidebarResize = (
       hydratedRef.current = true
       return
     }
-    writeString(STORAGE_SIDEBAR_WIDTH, String(sidebarWidth))
-  }, [sidebarWidth])
+    writeString(storageKeys.sidebarWidth, String(sidebarWidth))
+  }, [sidebarWidth, storageKeys.sidebarWidth])
 
   // Release listeners + body styles if the consumer unmounts mid-drag.
   useEffect(() => () => dragCleanupRef.current?.(), [])

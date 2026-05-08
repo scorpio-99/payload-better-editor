@@ -1,10 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import type { Viewport } from '../components/ViewportToggle'
-import type { BetterEditorSettings } from '../useBetterEditorSettings'
+import type { Viewport } from '../admin/ViewportToggle'
+import type { BetterEditorSettings } from '../state/useBetterEditorSettings'
 import { clampViewport } from '../internal/limits'
-import { STORAGE_RESPONSIVE_WIDTH } from '../internal/storage-keys'
+import { useBetterEditorConfig } from '../providers/BetterEditorConfigProvider'
 import { readNumber, writeString } from '../internal/storage'
 
 const DEFAULT_RESPONSIVE_WIDTH = 1024
@@ -39,9 +39,10 @@ const resolveWidth = (
 }
 
 export const useViewportState = (settings: BetterEditorSettings): UseViewportStateReturn => {
+  const { storageKeys } = useBetterEditorConfig()
   const [viewport, setViewport] = useState<Viewport>('desktop')
   const [responsiveWidth, setResponsiveWidth] = useState<number>(() =>
-    readNumber(STORAGE_RESPONSIVE_WIDTH, DEFAULT_RESPONSIVE_WIDTH, clampViewport),
+    readNumber(storageKeys.responsiveWidth, DEFAULT_RESPONSIVE_WIDTH, clampViewport),
   )
   const [iframeWidth, setIframeWidth] = useState<number | null>(null)
 
@@ -52,8 +53,8 @@ export const useViewportState = (settings: BetterEditorSettings): UseViewportSta
       hydratedRef.current = true
       return
     }
-    writeString(STORAGE_RESPONSIVE_WIDTH, String(responsiveWidth))
-  }, [responsiveWidth])
+    writeString(storageKeys.responsiveWidth, String(responsiveWidth))
+  }, [responsiveWidth, storageKeys.responsiveWidth])
 
   return {
     viewport,

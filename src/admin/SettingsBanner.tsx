@@ -6,11 +6,15 @@ import { VERSION } from '../version'
 import '../styles/settings-banner.css'
 
 const REPO = 'scorpio-99/payload-better-editor'
-const REPO_URL = `https://github.com/${REPO}`
-const ISSUES_URL = `${REPO_URL}/issues/new`
 const AUTHOR = 'scorpio-99'
-const AUTHOR_URL = `https://github.com/${AUTHOR}`
-const STAR_BADGE_URL = `https://img.shields.io/github/stars/${REPO}?style=flat&label=&color=27272a&labelColor=27272a&logo=github&logoColor=white`
+
+const BANNER = {
+  author: AUTHOR,
+  repoUrl: `https://github.com/${REPO}`,
+  issuesUrl: `https://github.com/${REPO}/issues/new`,
+  authorUrl: `https://github.com/${AUTHOR}`,
+  starBadgeUrl: `https://img.shields.io/github/stars/${REPO}?style=flat&label=&color=27272a&labelColor=27272a&logo=github&logoColor=white`,
+}
 
 export const SettingsBanner: React.FC = () => (
   <div className="better-editor-banner">
@@ -22,8 +26,8 @@ export const SettingsBanner: React.FC = () => (
         </div>
         <div className="better-editor-banner__subtitle">
           Built by{' '}
-          <a href={AUTHOR_URL} target="_blank" rel="noreferrer noopener">
-            {AUTHOR}
+          <a href={BANNER.authorUrl} target="_blank" rel="noreferrer noopener">
+            {BANNER.author}
           </a>
           . If you find this plugin useful, please leave a star ⭐
         </div>
@@ -31,17 +35,21 @@ export const SettingsBanner: React.FC = () => (
     </div>
     <div className="better-editor-banner__actions">
       <a
-        href={REPO_URL}
+        href={BANNER.repoUrl}
         target="_blank"
         rel="noreferrer noopener"
         className="better-editor-banner__link"
       >
         <StarIcon />
         <span>Star</span>
-        <img src={STAR_BADGE_URL} alt="" className="better-editor-banner__star-badge" />
+        <img
+          src={BANNER.starBadgeUrl}
+          alt=""
+          className="better-editor-banner__star-badge"
+        />
       </a>
       <a
-        href={REPO_URL}
+        href={BANNER.repoUrl}
         target="_blank"
         rel="noreferrer noopener"
         className="better-editor-banner__link"
@@ -50,7 +58,7 @@ export const SettingsBanner: React.FC = () => (
         <span>GitHub</span>
       </a>
       <a
-        href={ISSUES_URL}
+        href={BANNER.issuesUrl}
         target="_blank"
         rel="noreferrer noopener"
         className="better-editor-banner__link"

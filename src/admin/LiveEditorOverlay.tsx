@@ -3,8 +3,8 @@
 import React, { useCallback, useState } from 'react'
 import { useLivePreviewContext } from '@payloadcms/ui'
 import { PreviewFrame } from './PreviewFrame'
+import { PreviewToolbar } from './PreviewToolbar'
 import { Sidebar } from './sidebar/Sidebar'
-import { ViewportToggle } from './ViewportToggle'
 import { useBetterEditorSettings } from '../state/useBetterEditorSettings'
 import { useEditorHistory } from '../state/useEditorHistory'
 import { useSidebarResize } from '../hooks/useSidebarResize'
@@ -14,14 +14,6 @@ import { useBlockActionMessages } from '../hooks/useBlockActionMessages'
 import { useOverlayKeyboard } from '../hooks/useOverlayKeyboard'
 import { useFocusTrap } from '../hooks/useFocusTrap'
 import { OverlayProviders } from '../providers/OverlayProviders'
-import {
-  InteractIcon,
-  InteractOffIcon,
-  RedoIcon,
-  SidebarHideIcon,
-  SidebarShowIcon,
-  UndoIcon,
-} from './icons'
 import '../styles/overlay.css'
 import '../styles/preview.css'
 import '../styles/sidebar.css'
@@ -140,48 +132,16 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
     >
       <div className="better-editor__body" style={{ gridTemplateColumns }}>
         <div className="better-editor__preview" style={{ order: isLeft ? 2 : 0 }}>
-          <div className="better-editor__preview-toolbar">
-            <HistoryToolbar history={history} />
-            <div className="better-editor__preview-toolbar-right">
-              {iframeWidth ? (
-                <span className="better-editor__width-chip" aria-live="polite">
-                  {iframeWidth}
-                  <span className="better-editor__width-chip-unit">px</span>
-                </span>
-              ) : null}
-              <ViewportToggle value={viewport} onChange={setViewport} />
-              <div className="better-editor-viewport">
-                <button
-                  type="button"
-                  className={
-                    interactMode
-                      ? 'better-editor-viewport__btn better-editor-viewport__btn--active'
-                      : 'better-editor-viewport__btn'
-                  }
-                  onClick={toggleInteractMode}
-                  aria-pressed={interactMode}
-                  title={
-                    interactMode
-                      ? 'Switch to edit mode'
-                      : 'Switch to interact mode (use forms, accordions, links)'
-                  }
-                  aria-label={interactMode ? 'Switch to edit mode' : 'Switch to interact mode'}
-                >
-                  {interactMode ? <InteractIcon /> : <InteractOffIcon />}
-                </button>
-                <button
-                  type="button"
-                  className="better-editor-viewport__btn"
-                  onClick={toggleSidebar}
-                  aria-pressed={sidebarCollapsed}
-                  title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
-                  aria-label={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
-                >
-                  {sidebarCollapsed ? <SidebarShowIcon /> : <SidebarHideIcon />}
-                </button>
-              </div>
-            </div>
-          </div>
+          <PreviewToolbar
+            history={history}
+            viewport={viewport}
+            onViewportChange={setViewport}
+            iframeWidth={iframeWidth}
+            interactMode={interactMode}
+            onInteractToggle={toggleInteractMode}
+            sidebarCollapsed={sidebarCollapsed}
+            onSidebarToggle={toggleSidebar}
+          />
           <div className="better-editor__preview-stage">
             <PreviewFrame
               previewURL={previewURL}
@@ -233,31 +193,3 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
   )
 }
 
-type HistoryToolbarProps = {
-  history: ReturnType<typeof useEditorHistory>
-}
-
-const HistoryToolbar: React.FC<HistoryToolbarProps> = ({ history }) => (
-  <div className="better-editor__history">
-    <button
-      type="button"
-      className="better-editor__history-btn"
-      onClick={history.undo}
-      disabled={!history.canUndo}
-      title="Undo (Cmd/Ctrl+Z)"
-      aria-label="Undo"
-    >
-      <UndoIcon />
-    </button>
-    <button
-      type="button"
-      className="better-editor__history-btn"
-      onClick={history.redo}
-      disabled={!history.canRedo}
-      title="Redo (Cmd/Ctrl+Shift+Z)"
-      aria-label="Redo"
-    >
-      <RedoIcon />
-    </button>
-  </div>
-)

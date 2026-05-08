@@ -72,3 +72,17 @@
   color: var(--theme-text);
   border-bottom-color: var(--theme-text);
 }
+
+/* Visually hidden but available to assistive technology — used by the
+   selection live region. Standard SR-only recipe. */
+.better-editor-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

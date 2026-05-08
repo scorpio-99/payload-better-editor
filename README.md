@@ -8,7 +8,7 @@ Block editor plugin for [Payload CMS](https://payloadcms.com) that adds a side-b
 
 > **Found a bug?** Early-stage plugin, feedback is appreciated. [Open an issue](https://github.com/scorpio-99/payload-better-editor/issues/new) with steps to reproduce, your Payload version, and a minimal example. PRs welcome.
 
-## Overview
+## Click any block to edit it
 
 Open the editor from any document's edit view. The preview iframe loads your live frontend; clicking a block selects it and opens its real Payload fields in the sidebar - no schema duplication, no custom components.
 

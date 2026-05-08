@@ -79,7 +79,7 @@
 }
 
 .better-editor-frame__viewport--constrained {
-  padding: 16px;
+  padding: 0 16px;
   background: var(--theme-elevation-100);
   overflow: auto;
 }
@@ -87,7 +87,6 @@
 .better-editor-frame__viewport--constrained > .better-editor-frame {
   height: 100%;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-  border-radius: 4px;
 }
 
 /* Responsive mode: drag handles on each side. */
@@ -230,14 +229,19 @@
   transform: translateX(-50%);
   max-width: min(640px, calc(100% - 24px));
   padding: 12px 16px;
-  border: 1px solid var(--theme-warning-500, #f59e0b);
+  border: 1px solid #2a2a2a;
   border-radius: 6px;
-  background: var(--theme-warning-50, #fffbeb);
-  color: var(--theme-text, #111);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  background: #141414;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
   font-size: 13px;
   line-height: 1.5;
   z-index: 2;
+}
+
+.better-editor-frame__setup-error code {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .better-editor-frame__setup-error strong {
@@ -253,7 +257,6 @@
 .better-editor-frame__setup-error code {
   padding: 1px 4px;
   border-radius: 3px;
-  background: var(--theme-elevation-100, rgba(0, 0, 0, 0.06));
   font-family: var(--font-mono, ui-monospace, monospace);
   font-size: 12px;
 }

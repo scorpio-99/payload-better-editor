@@ -16,7 +16,6 @@ export type UseViewportStateReturn = {
   iframeWidth: number | null
   setIframeWidth: React.Dispatch<React.SetStateAction<number | null>>
   viewportWidth: number | null
-  isFullscreen: boolean
 }
 
 const resolveWidth = (
@@ -32,7 +31,6 @@ const resolveWidth = (
     case 'responsive':
       return responsiveWidth
     case 'desktop':
-    case 'fullscreen':
       return null
   }
 }
@@ -63,6 +61,5 @@ export const useViewportState = (settings: BetterEditorSettings): UseViewportSta
     iframeWidth,
     setIframeWidth,
     viewportWidth: resolveWidth(viewport, settings, responsiveWidth),
-    isFullscreen: viewport === 'fullscreen',
   }
 }

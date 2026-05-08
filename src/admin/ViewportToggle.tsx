@@ -3,14 +3,13 @@
 import React, { useCallback, useRef } from 'react'
 import {
   DesktopIcon,
-  FullscreenIcon,
   MobileIcon,
   ResponsiveIcon,
   TabletIcon,
   type LucideProps,
 } from './icons'
 
-export type Viewport = 'desktop' | 'tablet' | 'mobile' | 'responsive' | 'fullscreen'
+export type Viewport = 'desktop' | 'tablet' | 'mobile' | 'responsive'
 
 type Item = { id: Viewport; label: string; Icon: React.FC<LucideProps> }
 
@@ -19,7 +18,6 @@ const ITEMS: ReadonlyArray<Item> = [
   { id: 'tablet', label: 'Tablet', Icon: TabletIcon },
   { id: 'mobile', label: 'Mobile', Icon: MobileIcon },
   { id: 'responsive', label: 'Responsive (drag to resize)', Icon: ResponsiveIcon },
-  { id: 'fullscreen', label: 'Fullscreen (hide sidebar)', Icon: FullscreenIcon },
 ]
 
 const ROOT_CLASS = 'better-editor-viewport'

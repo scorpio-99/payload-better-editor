@@ -12,6 +12,7 @@ import {
   Smartphone as L_Smartphone,
   MoveHorizontal as L_MoveHorizontal,
   Expand as L_Expand,
+  Shrink as L_Shrink,
   Undo as L_Undo,
   Redo as L_Redo,
   PanelLeft as L_PanelLeft,
@@ -44,6 +45,7 @@ export const TabletIcon = sized(L_Tablet)
 export const MobileIcon = sized(L_Smartphone)
 export const ResponsiveIcon = sized(L_MoveHorizontal)
 export const FullscreenIcon = sized(L_Expand)
+export const FullscreenExitIcon = sized(L_Shrink)
 export const UndoIcon = sized(L_Undo)
 export const RedoIcon = sized(L_Redo)
 export const LayoutIcon = sized(L_PanelLeft)

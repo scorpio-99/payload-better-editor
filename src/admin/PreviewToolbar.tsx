@@ -3,6 +3,8 @@
 import React from 'react'
 import { ViewportToggle, type Viewport } from './ViewportToggle'
 import {
+  FullscreenExitIcon,
+  FullscreenIcon,
   InteractIcon,
   InteractOffIcon,
   RedoIcon,
@@ -17,6 +19,8 @@ export type PreviewToolbarProps = {
   viewport: Viewport
   onViewportChange: (viewport: Viewport) => void
   iframeWidth: number | null
+  isFullscreen: boolean
+  onFullscreenToggle: () => void
   interactMode: boolean
   onInteractToggle: () => void
   sidebarCollapsed: boolean
@@ -28,6 +32,8 @@ export const PreviewToolbar: React.FC<PreviewToolbarProps> = ({
   viewport,
   onViewportChange,
   iframeWidth,
+  isFullscreen,
+  onFullscreenToggle,
   interactMode,
   onInteractToggle,
   sidebarCollapsed,
@@ -44,6 +50,20 @@ export const PreviewToolbar: React.FC<PreviewToolbarProps> = ({
       ) : null}
       <ViewportToggle value={viewport} onChange={onViewportChange} />
       <div className="better-editor-viewport">
+        <button
+          type="button"
+          className={
+            isFullscreen
+              ? 'better-editor-viewport__btn better-editor-viewport__btn--active'
+              : 'better-editor-viewport__btn'
+          }
+          onClick={onFullscreenToggle}
+          aria-pressed={isFullscreen}
+          title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+          aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+        >
+          {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+        </button>
         <button
           type="button"
           className={

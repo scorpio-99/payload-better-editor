@@ -84,10 +84,11 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
     iframeWidth,
     setIframeWidth,
     viewportWidth,
-    isFullscreen,
   } = useViewportState(settings)
 
-  const exitFullscreen = useCallback(() => setViewport('desktop'), [setViewport])
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const toggleFullscreen = useCallback(() => setIsFullscreen((v) => !v), [])
+  const exitFullscreen = useCallback(() => setIsFullscreen(false), [])
   const overlayRef = useFullscreenOverlay(isFullscreen, exitFullscreen)
   useFocusTrap(overlayRef)
 
@@ -137,6 +138,8 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
             viewport={viewport}
             onViewportChange={setViewport}
             iframeWidth={iframeWidth}
+            isFullscreen={isFullscreen}
+            onFullscreenToggle={toggleFullscreen}
             interactMode={interactMode}
             onInteractToggle={toggleInteractMode}
             sidebarCollapsed={sidebarCollapsed}

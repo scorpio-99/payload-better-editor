@@ -14,7 +14,6 @@ import { usePreviewSelectionSync } from '../hooks/usePreviewSelectionSync'
 
 export type PreviewFrameProps = {
   previewURL: string | undefined
-  isPreviewEnabled: boolean | undefined
   hoverColorTopLevel: string
   hoverColorNested: string
   hoverOutlineWidth: number
@@ -36,7 +35,6 @@ type BlockAction = BlockActionMessage['action']
 
 export const PreviewFrame: React.FC<PreviewFrameProps> = ({
   previewURL,
-  isPreviewEnabled,
   hoverColorTopLevel,
   hoverColorNested,
   hoverOutlineWidth,
@@ -116,47 +114,24 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
   })
 
   const constrained = typeof viewportWidth === 'number' && viewportWidth > 0
-  const viewportClassName = useMemo(
-    () =>
-      [
-        'better-editor-frame__viewport',
-        constrained && 'better-editor-frame__viewport--constrained',
-        constrained && viewport === 'tablet' && 'better-editor-frame__viewport--tablet',
-        constrained && viewport === 'mobile' && 'better-editor-frame__viewport--mobile',
-        resizable && 'better-editor-frame__viewport--resizable',
-        isResizing && 'better-editor-frame__viewport--resizing',
-      ]
-        .filter(Boolean)
-        .join(' '),
-    [constrained, viewport, resizable, isResizing],
-  )
+  const viewportClassName = [
+    'better-editor-frame__viewport',
+    constrained && 'better-editor-frame__viewport--constrained',
+    constrained && viewport === 'tablet' && 'better-editor-frame__viewport--tablet',
+    constrained && viewport === 'mobile' && 'better-editor-frame__viewport--mobile',
+    resizable && 'better-editor-frame__viewport--resizable',
+    isResizing && 'better-editor-frame__viewport--resizing',
+  ]
+    .filter(Boolean)
+    .join(' ')
+  const iframeStyle = constrained
+    ? { width: `${viewportWidth}px`, maxWidth: '100%' as const }
+    : undefined
 
-  const iframeStyle = useMemo(
-    () => (constrained ? { width: `${viewportWidth}px`, maxWidth: '100%' as const } : undefined),
-    [constrained, viewportWidth],
-  )
-
-  if (!isPreviewEnabled) {
-    return (
-      <div className="better-editor-frame__empty">
-        <div>
-          <strong>Live preview is not configured for this collection.</strong>
-          <p>
-            Add an <code>admin.livePreview.url</code> to the collection config so
-            the Better Editor can render the draft page here.
-          </p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!previewURL) {
-    return (
-      <div className="better-editor-frame__empty">
-        <div>Loading preview URL…</div>
-      </div>
-    )
-  }
+  // LiveEditorToggle gates by previewURL so this component only mounts
+  // when isPreviewEnabled and previewURL are both truthy. The early-
+  // returns that used to live here for the unconfigured / loading
+  // states are no longer reachable in practice.
 
   // Iframe always lives in the same wrapper across viewport modes so React
   // doesn't remount it (which would reload the page and drop the

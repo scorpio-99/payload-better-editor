@@ -72,7 +72,7 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
 }) => {
   const settings = useBetterEditorSettings()
   const history = useEditorHistory()
-  const { previewURL, isPreviewEnabled } = useLivePreviewContext()
+  const { previewURL } = useLivePreviewContext()
 
   const { sidebarWidth, isResizing, onResizeStart, onResizeKeyDown } = useSidebarResize(
     settings.sidebarPosition,
@@ -81,10 +81,11 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
     viewport,
     setViewport,
     setResponsiveWidth,
-    iframeWidth,
-    setIframeWidth,
     viewportWidth,
   } = useViewportState(settings)
+  // Live-observed iframe width; PreviewFrame reports it via the
+  // ResizeObserver, the toolbar's width-chip reads it.
+  const [iframeWidth, setIframeWidth] = useState<number | null>(null)
 
   const [isFullscreen, setIsFullscreen] = useState(false)
   const toggleFullscreen = useCallback(() => setIsFullscreen((v) => !v), [])
@@ -148,7 +149,6 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
           <div className="better-editor__preview-stage">
             <PreviewFrame
               previewURL={previewURL}
-              isPreviewEnabled={isPreviewEnabled}
               hoverColorTopLevel={settings.hoverColorTopLevel}
               hoverColorNested={settings.hoverColorNested}
               hoverOutlineWidth={settings.hoverOutlineWidth}

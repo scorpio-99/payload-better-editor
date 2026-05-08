@@ -47,6 +47,10 @@ export const usePreviewBinding = ({
   const teardownRef = useRef<(() => void) | null>(null)
   const controllerRef = useRef<HoverToolbarController | null>(null)
   const isBoundRef = useRef(false)
+  // One-shot flags so dev-only console warnings don't repeat on every
+  // iframe re-load during a single editor session.
+  const warnedMissingBlocksRef = useRef(false)
+  const warnedCrossOriginRef = useRef(false)
   const settingsRef = useLatestRef(settings)
   const onFocusBlockRef = useLatestRef(onFocusBlock)
   const onBlockActionRef = useLatestRef(onBlockAction)
@@ -80,10 +84,11 @@ export const usePreviewBinding = ({
       // Dev-only sanity check: zero [data-better-editor-id] elements means
       // the consumer forgot to spread getBlockProps() on their block wrappers
       // (or the page just has no blocks yet — both look identical from here).
-      // No UI surfaces this; just a console hint while developing.
-      if (process.env.NODE_ENV !== 'production') {
+      // Warn at most once per editor session to avoid console spam.
+      if (process.env.NODE_ENV !== 'production' && !warnedMissingBlocksRef.current) {
         const blockCount = doc.querySelectorAll(BLOCK_ID_SELECTOR).length
         if (blockCount === 0) {
+          warnedMissingBlocksRef.current = true
           console.warn(
             "[better-editor] no [data-better-editor-id] elements found in the preview iframe — if your page has blocks, wrap them with `getBlockProps(block)` from 'payload-better-editor/client' so click-to-edit works.",
           )
@@ -113,7 +118,8 @@ export const usePreviewBinding = ({
       const doc = getSameOriginDocument(iframe)
       if (!doc) {
         onLoadingChangeRef.current(false)
-        if (process.env.NODE_ENV !== 'production') {
+        if (process.env.NODE_ENV !== 'production' && !warnedCrossOriginRef.current) {
+          warnedCrossOriginRef.current = true
           console.warn(
             '[better-editor] preview iframe is cross-origin — click-to-edit, hover styles, and the in-iframe toolbar are disabled. Serve your preview URL from the same origin as the Payload admin.',
           )

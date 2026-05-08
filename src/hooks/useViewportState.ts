@@ -13,8 +13,6 @@ export type UseViewportStateReturn = {
   setViewport: React.Dispatch<React.SetStateAction<Viewport>>
   responsiveWidth: number
   setResponsiveWidth: React.Dispatch<React.SetStateAction<number>>
-  iframeWidth: number | null
-  setIframeWidth: React.Dispatch<React.SetStateAction<number | null>>
   viewportWidth: number | null
 }
 
@@ -41,7 +39,6 @@ export const useViewportState = (settings: BetterEditorSettings): UseViewportSta
   const [responsiveWidth, setResponsiveWidth] = useState<number>(() =>
     readNumber(storageKeys.responsiveWidth, DEFAULT_RESPONSIVE_WIDTH, clampViewport),
   )
-  const [iframeWidth, setIframeWidth] = useState<number | null>(null)
 
   // Skip persisting the value we just hydrated from storage.
   const hydratedRef = useRef(false)
@@ -58,8 +55,6 @@ export const useViewportState = (settings: BetterEditorSettings): UseViewportSta
     setViewport,
     responsiveWidth,
     setResponsiveWidth,
-    iframeWidth,
-    setIframeWidth,
     viewportWidth: resolveWidth(viewport, settings, responsiveWidth),
   }
 }

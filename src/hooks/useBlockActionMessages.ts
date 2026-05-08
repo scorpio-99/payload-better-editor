@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAllFormFields, useForm } from '@payloadcms/ui'
 import { listenForParentInbound } from '../internal/postmessage'
 import { splitFieldPath } from '../internal/path'
 import type { FormState } from 'payload'
-import { useEditorHistory } from '../useEditorHistory'
+import { useEditorHistory } from '../state/useEditorHistory'
+import { useLatestRef } from './useLatestRef'
 
 const ID_SUFFIX = '.id'
 
@@ -35,28 +36,18 @@ export const useBlockActionMessages = ({
 }: UseBlockActionMessagesArgs): UseBlockActionMessagesReturn => {
   const [addBelowRequestId, setAddBelowRequestId] = useState<number>(0)
 
-  // Form state in a ref so the listener doesn't re-bind on every keystroke.
   const [allFields] = useAllFormFields()
-  const allFieldsRef = useRef(allFields)
-  allFieldsRef.current = allFields
-
-  // O(1) id-value -> path lookup. Recomputed only when allFields identity
-  // changes (which Payload bumps on row add/move/delete, not on typing).
   const idIndex = useMemo(() => buildIdIndex(allFields as FormState), [allFields])
-  const idIndexRef = useRef(idIndex)
-  idIndexRef.current = idIndex
-
-  // History context value changes whenever undo/redo depth flips; refs
-  // prevent re-binding the postMessage listener on every commit.
   const { dispatchFields } = useForm()
-  const dispatchFieldsRef = useRef(dispatchFields)
-  dispatchFieldsRef.current = dispatchFields
   const history = useEditorHistory()
-  const historyRef = useRef(history)
-  historyRef.current = history
 
-  const setSelectedBlockPathRef = useRef(setSelectedBlockPath)
-  setSelectedBlockPathRef.current = setSelectedBlockPath
+  // Refs let the postMessage listener stay bound across renders without
+  // missing the latest form state, dispatcher, or history commit.
+  const allFieldsRef = useLatestRef(allFields)
+  const idIndexRef = useLatestRef(idIndex)
+  const dispatchFieldsRef = useLatestRef(dispatchFields)
+  const historyRef = useLatestRef(history)
+  const setSelectedBlockPathRef = useLatestRef(setSelectedBlockPath)
 
   useEffect(
     () =>
@@ -75,9 +66,9 @@ export const useBlockActionMessages = ({
         }
 
         if (data.action === 'add') {
-          // Monotonic counter: BlockSettingsTab compares the latest id
-          // against its lastHandledRequestRef. Date.now() risked
-          // collisions when two clicks landed in the same millisecond.
+          // Monotonic counter — BlockSettingsTab compares the latest id against
+          // its lastHandledRequestRef. Date.now() risked collisions on
+          // double-clicks landing in the same millisecond.
           select(path)
           setAddBelowRequestId((id) => id + 1)
           return
@@ -125,7 +116,7 @@ export const useBlockActionMessages = ({
             break
         }
       }),
-    [],
+    [allFieldsRef, idIndexRef, dispatchFieldsRef, historyRef, setSelectedBlockPathRef],
   )
 
   return { addBelowRequestId }

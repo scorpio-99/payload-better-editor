@@ -4,7 +4,7 @@
 .better-editor {
   position: absolute;
   inset: 0;
-  z-index: 50;
+  z-index: var(--better-editor-z-overlay, 50);
   background: var(--theme-bg, #fff);
 }
 

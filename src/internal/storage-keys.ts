@@ -1,5 +1,16 @@
-export const STORAGE_SIDEBAR_WIDTH = 'better-editor:sidebar-width'
-export const STORAGE_RESPONSIVE_WIDTH = 'better-editor:responsive-width'
+export const DEFAULT_STORAGE_NAMESPACE = 'better-editor'
 
-export const togglePreferenceKey = (collectionSlug?: string, globalSlug?: string): string =>
-  `better-editor:${collectionSlug ? `collection-${collectionSlug}` : `global-${globalSlug ?? 'unknown'}`}`
+export type StorageKeys = {
+  sidebarWidth: string
+  responsiveWidth: string
+  togglePreference: (collectionSlug?: string, globalSlug?: string) => string
+}
+
+export const buildStorageKeys = (namespace: string = DEFAULT_STORAGE_NAMESPACE): StorageKeys => ({
+  sidebarWidth: `${namespace}:sidebar-width`,
+  responsiveWidth: `${namespace}:responsive-width`,
+  togglePreference: (collectionSlug, globalSlug) =>
+    `${namespace}:${collectionSlug ? `collection-${collectionSlug}` : `global-${globalSlug ?? 'unknown'}`}`,
+})
+
+export const DEFAULT_STORAGE_KEYS = buildStorageKeys()

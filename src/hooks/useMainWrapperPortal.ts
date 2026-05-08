@@ -2,34 +2,39 @@
 
 import { useEffect, useState } from 'react'
 
-const ADMIN_WRAPPER_SELECTOR =
+const DEFAULT_ADMIN_WRAPPER_SELECTOR =
   'main[class*="collection-edit"] [class*="__main-wrapper"], main[class*="global-edit"] [class*="__main-wrapper"]'
 
-let warnedSelectorMiss = false
+// WeakSet so multiple plugin instances on the same origin each get their
+// own warning instead of falling silent after the first one fires.
+const warnedDocs = new WeakSet<Document>()
 
-const resolveMountNode = (): HTMLElement | null => {
+const resolveMountNode = (selector: string): HTMLElement | null => {
   if (typeof document === 'undefined') return null
-  const admin = document.querySelector<HTMLElement>(ADMIN_WRAPPER_SELECTOR)
-  if (admin) return admin
+  const target = document.querySelector<HTMLElement>(selector)
+  if (target) return target
 
-  if (process.env.NODE_ENV !== 'production' && !warnedSelectorMiss) {
-    warnedSelectorMiss = true
-     
+  if (process.env.NODE_ENV !== 'production' && !warnedDocs.has(document)) {
+    warnedDocs.add(document)
+
     console.warn(
-      '[better-editor] Could not find Payload admin __main-wrapper element. The selector may need updating for the current Payload version. Falling back to <main> / <body>.',
+      `[better-editor] No element matched "${selector}" — the Payload admin DOM may have changed. Falling back to <main> / <body>. You can override the selector via BetterEditorConfig.adminPortalSelector.`,
     )
   }
 
   return document.querySelector<HTMLElement>('main') ?? document.body ?? null
 }
 
-export const useMainWrapperPortal = (enabled: boolean): HTMLElement | null => {
+export const useMainWrapperPortal = (
+  enabled: boolean,
+  adminPortalSelector?: string,
+): HTMLElement | null => {
   const [mountNode, setMountNode] = useState<HTMLElement | null>(null)
 
   useEffect(() => {
     if (!enabled || typeof document === 'undefined') return
 
-    const main = resolveMountNode()
+    const main = resolveMountNode(adminPortalSelector ?? DEFAULT_ADMIN_WRAPPER_SELECTOR)
     if (!main) return
 
     const html = document.documentElement
@@ -72,7 +77,7 @@ export const useMainWrapperPortal = (enabled: boolean): HTMLElement | null => {
       body.style.overflow = prev.bodyOverflow
       setMountNode(null)
     }
-  }, [enabled])
+  }, [enabled, adminPortalSelector])
 
   return mountNode
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useMemo, useRef } from 'react'
+import React, { useMemo } from 'react'
 import {
   RenderFields,
   useAllFormFields,
@@ -8,14 +8,15 @@ import {
   useField,
   useModal,
 } from '@payloadcms/ui'
-import { useDocConfig } from '../hooks/useDocConfig'
-import { AddBlockDrawer } from './blocks/AddBlockDrawer'
-import { BlockActionsToolbar } from './blocks/BlockActionsToolbar'
-import { useBlockActions } from './blocks/useBlockActions'
-import { findNamedField, resolveBlockSchema } from './blocks/schema'
+import { useDocConfig } from '../../hooks/useDocConfig'
+import { useAddBlockDrawer } from '../../hooks/useAddBlockDrawer'
+import { AddBlockDrawer } from '../blocks/AddBlockDrawer'
+import { BlockActionsToolbar } from '../blocks/BlockActionsToolbar'
+import { useBlockActions } from '../blocks/useBlockActions'
+import { findNamedField, resolveBlockSchema } from '../blocks/schema'
 import type { ClientBlock } from 'payload'
-import { BlockEmptyState } from './blocks/BlockEmptyState'
-import { BlockHeader } from './blocks/BlockHeader'
+import { BlockEmptyState } from '../blocks/BlockEmptyState'
+import { BlockHeader } from '../blocks/BlockHeader'
 
 export type BlockSettingsTabProps = {
   selectedBlockPath: string | null
@@ -45,16 +46,11 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
     onClearSelection,
   })
 
-  // RAF defers to next paint so the drawer is mounted (the sidebar tab
-  // may have just auto-switched to "Blocks").
-  const lastHandledRequestRef = useRef(0)
-  useEffect(() => {
-    if (!addBelowRequestId || addBelowRequestId === lastHandledRequestRef.current) return
-    if (!selectedBlockPath) return
-    lastHandledRequestRef.current = addBelowRequestId
-    const raf = requestAnimationFrame(() => toggleModal(addAfterDrawerSlug))
-    return () => cancelAnimationFrame(raf)
-  }, [addBelowRequestId, selectedBlockPath, toggleModal, addAfterDrawerSlug])
+  useAddBlockDrawer({
+    drawerSlug: addAfterDrawerSlug,
+    requestId: addBelowRequestId,
+    selectedBlockPath,
+  })
 
   const blocksFieldInfo = useMemo(() => {
     if (!docFields) return null
@@ -80,7 +76,12 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
             slug={addBlockDrawerSlug}
             blocks={availableBlocks}
             addRow={(index, blockType) =>
-              actions.addAfter(blockType, blocksSchemaPath, blocksField, index)
+              actions.addAfter({
+                blockType,
+                schemaPath: blocksSchemaPath,
+                containerPath: blocksField,
+                index,
+              })
             }
             addRowIndex={addRowIndex}
           />
@@ -90,7 +91,7 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
   }
 
   const resolved = docFields
-    ? resolveBlockSchema(docFields, docSlug || '', selectedBlockPath, fields)
+    ? resolveBlockSchema({ docFields, docSlug: docSlug || '', formFields: fields }, selectedBlockPath)
     : null
 
   return (
@@ -120,12 +121,12 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
           slug={addAfterDrawerSlug}
           blocks={resolved.blocksFieldBlocks}
           addRow={(index, blockType) =>
-            actions.addAfter(
+            actions.addAfter({
               blockType,
-              resolved.blocksFieldSchemaPath,
-              actions.parentPath,
+              schemaPath: resolved.blocksFieldSchemaPath,
+              containerPath: actions.parentPath,
               index,
-            )
+            })
           }
           addRowIndex={actions.rowIndex + 1}
         />

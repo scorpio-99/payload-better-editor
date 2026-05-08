@@ -23,3 +23,7 @@ Initial release.
 - `getBlockProps(block)` helper for the consumer's frontend to mark blocks as editable
 - `BetterEditorSettings` global for sidebar position, hover colors, breakpoint widths, hover-toolbar position and visibility
 - Loading skeleton in the iframe and an error boundary so a single bad block can't take the admin down
+- `adminPortalSelector` config option for overriding the Payload admin DOM selector the overlay portals into
+- `storageNamespace` config option to prefix all `localStorage` keys (avoids collisions when multiple instances share an origin)
+- CSS custom properties `--better-editor-z-overlay` and `--better-editor-z-toolbar` for z-index overrides
+- Dev-mode warning when no `[data-better-editor-id]` elements are present in the preview iframe

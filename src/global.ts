@@ -50,8 +50,6 @@ export const betterEditorSettingsGlobal: GlobalConfig = {
         components: {
           Field: 'payload-better-editor/client#SettingsBanner',
         },
-        // Hidden when the user opts out via `hideSettingsBanner`.
-        condition: (_, siblingData) => !siblingData?.hideSettingsBanner,
       },
     },
     {
@@ -182,22 +180,6 @@ export const betterEditorSettingsGlobal: GlobalConfig = {
                 { label: 'Bottom right', value: 'bottom-right' },
                 { label: 'Bottom left', value: 'bottom-left' },
               ],
-            },
-          ],
-        },
-        {
-          label: 'Admin UI',
-          description: 'Display preferences for this admin settings page.',
-          fields: [
-            {
-              name: 'hideSettingsBanner',
-              type: 'checkbox',
-              label: 'Hide info banner',
-              defaultValue: false,
-              admin: {
-                description:
-                  "Don't show the project info / support card above the settings tabs.",
-              },
             },
           ],
         },

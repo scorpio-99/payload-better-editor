@@ -75,7 +75,19 @@ Passed to `betterEditor({ … })`:
 |---|---|---|---|
 | `disabled` | `boolean` | `false` | Disable the plugin entirely |
 | `collections` | `string[]` | `[]` | Collection slugs where the toggle should appear |
+| `globals` | `string[]` | `[]` | Global slugs where the toggle should appear |
 | `blocksField` | `string` | `'layout'` | Name of the document field holding the top-level blocks array |
+| `adminPortalSelector` | `string` | Payload `__main-wrapper` | CSS selector for the admin element the overlay portals into. Override only if the default selector breaks against a future Payload version. Falls back to `<main>` then `<body>`. |
+| `storageNamespace` | `string` | `'better-editor'` | Prefix for `localStorage` keys (sidebar width, responsive viewport width, toggle preference). Set if multiple instances on the same origin would otherwise collide. |
+
+### CSS variable overrides
+
+The overlay and the in-iframe hover toolbar expose two z-index custom properties so consumers can keep their own modals on top:
+
+| Variable | Default | Scope |
+|---|---|---|
+| `--better-editor-z-overlay` | `50` | Overlay shell (admin document) |
+| `--better-editor-z-toolbar` | `2147483647` | Hover-action toolbar (preview iframe document) |
 
 ## Runtime settings
 `BetterEditorSettings` global, editable in the admin. Defaults shown.
@@ -91,6 +103,20 @@ Passed to `betterEditor({ … })`:
 | `hoverOutlineWidth` | `number` | `2` | Outline width in px (1–5) |
 | `showHoverToolbar` | `boolean` | `true` | Show the floating action toolbar on hovered blocks |
 | `hoverToolbarPosition` | `'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left'` | `'top-right'` | Toolbar anchor corner |
+
+## Module layout
+The plugin source lives under `src/` with the following top-level split:
+
+| Folder | Purpose |
+|---|---|
+| `admin/` | All Payload admin UI components (`'use client'`). Holds the overlay shell, sidebar tabs, the preview frame, viewport controls, and the block-action UI. |
+| `preview/` | Iframe-side bridge — installed into the consumer's preview document. Click-to-focus, hover styles, the hover toolbar controller, and the parent-postMessage protocol. |
+| `hooks/` | React hooks shared between admin components (resize, viewport state, focus trap, preview binding/sync, block actions, …). |
+| `state/` | Long-lived state contexts: settings (`BetterEditorSettings`) and undo/redo history. |
+| `providers/` | Top-level overlay provider tree, including the runtime config context (storage namespace, labels). |
+| `internal/` | Private utilities: storage, postMessage, path helpers, labels defaults, DOM constants. Not part of the public API. |
+| `styles/` | Plain CSS, opted in via `import` side-effects. |
+| `index.ts` / `client.ts` | Public entry points (server plugin factory + client UI). |
 
 ## Contributing
 See [CONTRIBUTING.md](./CONTRIBUTING.md).

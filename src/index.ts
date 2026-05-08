@@ -1,6 +1,6 @@
 import type { CollectionConfig, Config, Field, GlobalConfig } from 'payload'
 import type { BetterEditorConfig } from './types'
-import { betterEditorSettingsGlobal } from './global'
+import { BETTER_EDITOR_SETTINGS_BANNER_FIELD, betterEditorSettingsGlobal } from './global'
 
 export type { BetterEditorConfig }
 export type { BetterEditorSettings, HoverToolbarPosition } from './state/useBetterEditorSettings'
@@ -74,11 +74,21 @@ export const betterEditor =
       storageNamespace: pluginOptions?.storageNamespace,
     }
 
+    const showBanner = pluginOptions?.showSettingsBanner !== false
+    const settingsGlobal: GlobalConfig = showBanner
+      ? betterEditorSettingsGlobal
+      : {
+          ...betterEditorSettingsGlobal,
+          fields: betterEditorSettingsGlobal.fields.filter(
+            (f) => !('name' in f && f.name === BETTER_EDITOR_SETTINGS_BANNER_FIELD),
+          ),
+        }
+
     const existingGlobals = config.globals ?? []
-    const hasSettingsGlobal = existingGlobals.some((g) => g.slug === betterEditorSettingsGlobal.slug)
+    const hasSettingsGlobal = existingGlobals.some((g) => g.slug === settingsGlobal.slug)
     config.globals = hasSettingsGlobal
       ? existingGlobals
-      : [...existingGlobals, betterEditorSettingsGlobal]
+      : [...existingGlobals, settingsGlobal]
 
     if (collectionSlugs.size === 0 && globalSlugs.size === 0) {
       if (isDev) {

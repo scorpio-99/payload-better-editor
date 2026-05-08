@@ -32,4 +32,10 @@ export type BetterEditorConfig = {
    * Defaults to `'better-editor'`.
    */
   storageNamespace?: string
+  /**
+   * Show the plugin info banner (version, GitHub links, "Report a bug")
+   * at the top of the `BetterEditorSettings` global. Set to `false` to
+   * hide it for end users. Defaults to `true`.
+   */
+  showSettingsBanner?: boolean
 }

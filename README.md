@@ -4,7 +4,9 @@
 [![downloads](https://img.shields.io/npm/dt/payload-better-editor?logo=npm&color=ce421b)](https://www.npmjs.com/package/payload-better-editor)
 [![stars](https://img.shields.io/github/stars/scorpio-99/payload-better-editor?logo=github)](https://github.com/scorpio-99/payload-better-editor)
 
-Block editor plugin for [Payload CMS](https://payloadcms.com) that adds a side-by-side live-preview iframe and sidebar to the edit view. Open the editor from any document's edit view. The preview iframe loads your live frontend; clicking a block selects it and opens its real Payload fields in the sidebar - no schema duplication, no custom components.
+Block editor plugin for [Payload CMS](https://payloadcms.com) that adds a side-by-side live-preview iframe and sidebar to the edit view.
+
+Open the editor from any document's edit view. The preview iframe loads your live frontend; clicking a block selects it and opens its real Payload fields in the sidebar - no schema duplication, no custom components.
 
 ![Better Editor overview](./assets/overview.gif)
 

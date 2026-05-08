@@ -4,13 +4,7 @@
 [![downloads](https://img.shields.io/npm/dt/payload-better-editor?logo=npm&color=ce421b)](https://www.npmjs.com/package/payload-better-editor)
 [![stars](https://img.shields.io/github/stars/scorpio-99/payload-better-editor?logo=github)](https://github.com/scorpio-99/payload-better-editor)
 
-Block editor plugin for [Payload CMS](https://payloadcms.com) that adds a side-by-side live-preview iframe and sidebar to the edit view. Hover any block in the preview to see it highlighted with a floating action toolbar (move, duplicate, add, delete); click it to open its fields in the sidebar. The sidebar mirrors your document's real tabs (page-level fields, the selected block's fields, and document settings) and renders everything with Payload's own field components, validations, and access control.
-
-> **Found a bug?** Early-stage plugin, feedback is appreciated. [Open an issue](https://github.com/scorpio-99/payload-better-editor/issues/new) with steps to reproduce, your Payload version, and a minimal example. PRs welcome.
-
-## Click any block to edit it
-
-Open the editor from any document's edit view. The preview iframe loads your live frontend; clicking a block selects it and opens its real Payload fields in the sidebar - no schema duplication, no custom components.
+Block editor plugin for [Payload CMS](https://payloadcms.com) that adds a side-by-side live-preview iframe and sidebar to the edit view. Open the editor from any document's edit view. The preview iframe loads your live frontend; clicking a block selects it and opens its real Payload fields in the sidebar - no schema duplication, no custom components.
 
 ![Better Editor overview](./assets/overview.gif)
 
@@ -49,6 +43,8 @@ See [DEVELOPERS.md](./DEVELOPERS.md) for setup, plugin options, runtime settings
 
 - Payload `>=3.81.0`
 - React 19
+
+> **Found a bug?** Early-stage plugin, feedback is appreciated. [Open an issue](https://github.com/scorpio-99/payload-better-editor/issues/new) with steps to reproduce, your Payload version, and a minimal example. PRs welcome.
 
 ## Contributors
 

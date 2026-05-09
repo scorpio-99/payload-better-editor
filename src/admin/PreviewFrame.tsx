@@ -128,14 +128,9 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     ? { width: `${viewportWidth}px`, maxWidth: '100%' as const }
     : undefined
 
-  // LiveEditorToggle gates by previewURL so this component only mounts
-  // when isPreviewEnabled and previewURL are both truthy. The early-
-  // returns that used to live here for the unconfigured / loading
-  // states are no longer reachable in practice.
-
-  // Iframe always lives in the same wrapper across viewport modes so React
-  // doesn't remount it (which would reload the page and drop the
-  // ResizeObserver registration).
+  // The iframe stays in the same wrapper across viewport modes so React
+  // doesn't remount it — that would reload the page and drop the
+  // ResizeObserver.
   return (
     <div className={viewportClassName}>
       {resizable ? (

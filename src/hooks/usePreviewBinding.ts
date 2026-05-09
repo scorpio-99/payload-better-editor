@@ -126,10 +126,9 @@ export const usePreviewBinding = ({
         }
         return
       }
-      // Fresh iframes report readyState='complete' on their `about:blank`
-      // document before `src` has navigated. Binding there would probe an
-      // empty body and falsely flash the setup-error banner. Wait for the
-      // real `load` event with a real URL instead.
+      // Fresh iframes report readyState='complete' on their initial
+      // `about:blank` document before `src` has navigated. Skip and wait
+      // for the real `load` event so we don't bind to an empty body.
       const href = doc.location.href
       if (!href || href === 'about:blank') return
       onLoadingChangeRef.current(false)

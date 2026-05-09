@@ -16,8 +16,27 @@ const DEFAULT_BLOCKS_FIELD = 'layout'
 const TOGGLE_COMPONENT_PATH = 'payload-better-editor/client#LiveEditorToggle'
 const isDev = process.env.NODE_ENV !== 'production'
 
-const hasBlocksField = (fields: Field[] | undefined, name: string): boolean =>
-  Array.isArray(fields) && fields.some((f) => 'name' in f && f.name === name)
+/**
+ * Checks whether a field with the given `name` exists at the document's
+ * top-level data path. Recurses into presentational containers that do
+ * not introduce a path segment (`tabs` without a name, `row`, `collapsible`)
+ * but stops at `group` and named tabs, since those namespace their children.
+ */
+const hasBlocksField = (fields: Field[] | undefined, name: string): boolean => {
+  if (!Array.isArray(fields)) return false
+  return fields.some((field) => {
+    if ('name' in field && field.name === name) return true
+    if (field.type === 'row' || field.type === 'collapsible') {
+      return hasBlocksField(field.fields, name)
+    }
+    if (field.type === 'tabs') {
+      return field.tabs.some((tab) =>
+        'name' in tab && tab.name ? false : hasBlocksField(tab.fields, name),
+      )
+    }
+    return false
+  })
+}
 
 type ToggleSlot = 'edit' | 'elements'
 

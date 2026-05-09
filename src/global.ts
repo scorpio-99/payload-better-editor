@@ -114,7 +114,7 @@ export const betterEditorSettingsGlobal: GlobalConfig = {
         },
         {
           label: 'Outline',
-          description: 'Outline + tint shown on the hovered block.',
+          description: 'Outline + tint shown on the hovered or selected block.',
           fields: [
             {
               type: 'row',
@@ -163,7 +163,7 @@ export const betterEditorSettingsGlobal: GlobalConfig = {
         {
           label: 'Toolbar',
           description:
-            'Floating Move / Duplicate / Delete toolbar that appears on the hovered block.',
+            'Floating Move / Duplicate / Delete toolbar that appears on the selected block.',
           fields: [
             {
               name: 'showHoverToolbar',

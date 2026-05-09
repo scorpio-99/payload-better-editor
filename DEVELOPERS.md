@@ -31,11 +31,21 @@ export default buildConfig({
 })
 ```
 
-The plugin relies on Payload's standard `admin.livePreview.url`. Without it, the preview pane shows a setup hint.
+The plugin relies on Payload's standard `admin.livePreview.url`. Without it the toggle button stays hidden.
 
-The plugin also auto-registers a `BetterEditorSettings` global (slug `better-editor-settings`, group "Site") for editor-wide options the user can change in the admin without redeploying.
+The plugin also auto-registers a `BetterEditorSettings` global (slug `better-editor-settings`, group "Better Editor") for editor-wide options the user can change in the admin without redeploying.
 
-### 2. Add `data-better-editor-id` to your block wrappers
+### 2. Regenerate the import map
+
+Payload resolves the toggle button and settings banner through its admin import map. After installing or updating the plugin, regenerate it once:
+
+```bash
+pnpm payload generate:importmap
+```
+
+(Use `npx payload generate:importmap` if you're not on pnpm.) Skipping this step results in `getFromImportMap: PayloadComponent not found in importMap` errors and a missing toggle button.
+
+### 3. Add `data-better-editor-id` to your block wrappers
 Each rendered block needs a unique `data-better-editor-id` so the editor can resolve clicks back to a form-state path. Use the block row's `id`:
 
 ```tsx

@@ -151,13 +151,16 @@ The plugin renders the consumer's `admin.livePreview.url` in an unsandboxed `<if
 
 ## Troubleshooting
 
-### Preview shows the "Click-to-edit is disabled" banner
+### Clicking blocks in the preview does nothing
 
-The iframe loaded but no `[data-better-editor-id]` elements were found. Spread `getBlockProps(block)` on each block wrapper in your frontend (see step 2 above), and on each Lexical block converter if you embed blocks in rich text.
+The iframe loaded but no `[data-better-editor-id]` elements were found. Spread `getBlockProps(block)` on each block wrapper in your frontend (see step 2 above), and on each Lexical block converter if you embed blocks in rich text. In dev mode the browser console prints a `[better-editor]` warning when this happens.
 
-### Preview is blank / says "Live preview is not configured"
+### The "Open Better Editor" toggle button is missing
 
-Add `admin.livePreview.url` to the collection or global config. The plugin reads the URL through Payload's `useLivePreviewContext`; without it, there is nothing to render.
+The toggle only renders once `previewURL` resolves through Payload's `useLivePreviewContext`. Two common causes:
+
+- The collection or global has no `admin.livePreview.url` configured. Add one (see Setup above).
+- The page is brand-new and your `livePreview.url(({ data }) => …)` callback returns nothing because required fields like `slug` aren't set yet. Save the document with the required fields first; the toggle appears once the URL function returns a value.
 
 ### Click-to-edit, hover styles, and the toolbar do nothing
 

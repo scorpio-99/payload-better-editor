@@ -8,25 +8,3 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 ## [1.0.0]
 
 Initial release.
-
-### Features
-
-- `betterEditor()` plugin with per-collection and per-global opt-in
-- Side-by-side editor overlay with a live-preview iframe and a 3-tab sidebar (Page, Blocks, Settings) auto-derived from your document's tab structure
-- Click any block in the preview to edit its fields via Payload's native `RenderFields`; works at any nesting depth
-- Floating in-iframe hover toolbar with move up, move down, duplicate, add-below, delete
-- Mirror block actions in the sidebar's Blocks tab (same form-state mutations, shared undo/redo history)
-- Viewport toggle: Desktop, Tablet, Mobile, Responsive (drag-resizable with live width chip), Fullscreen
-- Undo and Redo with `Cmd/Ctrl+Z` and `Cmd/Ctrl+Shift+Z`
-- Drag-resizable sidebar with collapse toggle; width persisted to localStorage
-- Interact mode toggle so clicks pass through to forms, accordions, and links inside the preview
-- `getBlockProps(block)` helper for the consumer's frontend to mark blocks as editable
-- `BetterEditorSettings` global for sidebar position, hover colors, breakpoint widths, hover-toolbar position and visibility
-- Loading skeleton in the iframe and an error boundary so a single bad block can't take the admin down
-- CSS custom properties `--better-editor-z-overlay` and `--better-editor-z-toolbar` for z-index overrides
-- Dev-mode warning + visible setup-error banner in the preview when no `[data-better-editor-id]` elements are present
-- Dev-mode warning when the preview iframe is cross-origin
-- Keyboard support on the sidebar resize handle (←/→, PgUp/PgDn, Home/End)
-- Off-screen `aria-live` announcer for block-selection changes
-- `SidebarPosition` and `LiveEditorToggleProps` are now part of the public type surface
-- Vitest test suite for the pure helpers (`splitFieldPath`, `buildStorageKeys`, `calculateToolbarPosition`, `findNamedField`, `resolveBlockSchema`)

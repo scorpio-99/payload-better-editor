@@ -129,13 +129,15 @@ export const usePreviewBinding = ({
       // Fresh iframes report readyState='complete' on their initial
       // `about:blank` document before `src` has navigated. Skip and wait
       // for the real `load` event so we don't bind to an empty body.
-      const href = doc.location.href
-      if (!href || href === 'about:blank') return
+      // `doc.URL` is a non-nullable string on Document — safer than
+      // `doc.location.href`, which Firefox can briefly expose as null.
+      if (!doc.URL || doc.URL === 'about:blank') return
       onLoadingChangeRef.current(false)
       bindToDocument(doc)
     }
 
-    if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
+    const initialDoc = getSameOriginDocument(iframe)
+    if (initialDoc && initialDoc.readyState === 'complete') {
       onLoad()
     }
     iframe.addEventListener('load', onLoad)

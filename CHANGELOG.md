@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.0.4]
+
+### Fixed
+- Firefox: preview iframe binding crashed with `TypeError: can't access property "href", doc.location is null` and got stuck on the loading skeleton. Firefox can briefly expose a Document whose `location` is `null` during the initial `about:blank` phase of a freshly mounted iframe; the binding hook read `doc.location.href` and threw before installing hover/click handlers or clearing the loading state. `getSameOriginDocument` now treats a missing `location` as "not ready" (returns `null`), and the readiness probe uses the non-nullable `doc.URL` instead of `doc.location.href`. ([#9](https://github.com/scorpio-99/payload-better-editor/issues/9))
+
 ## [1.0.3]
 
 ### Fixed

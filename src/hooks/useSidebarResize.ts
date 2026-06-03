@@ -11,6 +11,7 @@ import {
 } from '../internal/constants'
 import { useBetterEditorConfig } from '../providers/BetterEditorConfigProvider'
 import { readNumber, writeString } from '../internal/storage'
+import { startHorizontalDrag } from '../internal/drag'
 
 const clampSidebar = (n: number): number =>
   Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, n))
@@ -75,25 +76,14 @@ export const useSidebarResize = (
     const startX = e.clientX
     const startWidth = widthRef.current
     const direction = positionRef.current === 'right' ? -1 : 1
-
     setIsResizing(true)
-    document.body.style.cursor = 'col-resize'
-    document.body.style.userSelect = 'none'
-
-    const onMove = (ev: MouseEvent) => {
-      setSidebarWidth(clampSidebar(startWidth + (ev.clientX - startX) * direction))
-    }
-    const cleanup = () => {
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseup', cleanup)
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
-      setIsResizing(false)
-      dragCleanupRef.current = null
-    }
-    dragCleanupRef.current = cleanup
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', cleanup)
+    dragCleanupRef.current = startHorizontalDrag('col-resize', {
+      onUpdate: (clientX) => setSidebarWidth(clampSidebar(startWidth + (clientX - startX) * direction)),
+      onEnd: () => {
+        setIsResizing(false)
+        dragCleanupRef.current = null
+      },
+    })
   }, [])
 
   // Arrow keys nudge the handle for keyboard users (WCAG 2.1 separator

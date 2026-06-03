@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { DocumentSettingsTab } from './DocumentSettingsTab'
 import { DocumentMetaTab } from './DocumentMetaTab'
 import { BlockSettingsTab } from './BlockSettingsTab'
+import { ValidationSummary } from './ValidationSummary'
 
 export type SidebarProps = {
   selectedBlockPath: string | null
@@ -83,6 +84,8 @@ export const Sidebar = React.memo(function Sidebar({
           />
         ))}
       </div>
+
+      <ValidationSummary blocksField={blocksField} onSelectPath={onSelectPath} />
 
       <div
         className={`${ROOT_CLASS}__content`}

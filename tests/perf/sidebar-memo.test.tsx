@@ -17,6 +17,8 @@ vi.mock('../../src/admin/sidebar/DocumentSettingsTab', () => ({
 }))
 vi.mock('../../src/admin/sidebar/DocumentMetaTab', () => ({ DocumentMetaTab: () => null }))
 vi.mock('../../src/admin/sidebar/BlockSettingsTab', () => ({ BlockSettingsTab: () => null }))
+// Calls useAllFormFields, which needs Payload's form context the harness lacks.
+vi.mock('../../src/admin/sidebar/ValidationSummary', () => ({ ValidationSummary: () => null }))
 
 // Imported after the mocks so Sidebar picks up the stubbed tabs.
 const { Sidebar } = await import('../../src/admin/sidebar/Sidebar')

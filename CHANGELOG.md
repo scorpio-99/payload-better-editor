@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to [Semantic Versioning](https://semver.org).
 
 ## [1.1.0]
+### Added
+- Validation summary in the sidebar: after a failed save, every invalid field across all blocks is listed (not just the selected block, which the overlay otherwise hides behind Payload's own form). Block-field entries are clickable to jump straight to the offending block.
 ### Changed
 - **Removed the `lucide-react` peer dependency.** The ~20 icons the editor uses are now vendored inline (ISC-licensed; attribution in the icons source header), so consumers no longer need `lucide-react` installed at a compatible version. ([#11](https://github.com/scorpio-99/payload-better-editor/issues/11))
 ### Fixed

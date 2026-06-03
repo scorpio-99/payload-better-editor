@@ -50,14 +50,15 @@ const SidebarTab: React.FC<SidebarTabProps> = ({ tabKey, label, active, onSelect
   </button>
 )
 
-export const Sidebar: React.FC<SidebarProps> = ({
+// Memoized so resize-drag re-renders of the overlay skip the field tree.
+export const Sidebar = React.memo(function Sidebar({
   selectedBlockPath,
   onClearSelection,
   onSelectPath,
   forceFullWidthFields,
   blocksField,
   addBelowRequestId = 0,
-}) => {
+}: SidebarProps) {
   const [tab, setTab] = useState<TabKey>('page')
 
   // Auto-jump to the block tab when the iframe selects a new block.
@@ -106,7 +107,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <SelectionAnnouncer selectedBlockPath={selectedBlockPath} />
     </div>
   )
-}
+})
 
 // Off-screen live region announces block-selection changes to screen
 // readers; visible UI updates handle sighted users via the tab switch.

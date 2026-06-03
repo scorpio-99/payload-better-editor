@@ -1,7 +1,8 @@
 'use client'
 
-import React from 'react'
+import React, { type RefObject } from 'react'
 import { ViewportToggle, type Viewport } from './ViewportToggle'
+import { WidthChip } from './WidthChip'
 import {
   FullscreenExitIcon,
   FullscreenIcon,
@@ -18,7 +19,7 @@ export type PreviewToolbarProps = {
   history: ReturnType<typeof useEditorHistory>
   viewport: Viewport
   onViewportChange: (viewport: Viewport) => void
-  iframeWidth: number | null
+  iframeRef: RefObject<HTMLIFrameElement | null>
   isFullscreen: boolean
   onFullscreenToggle: () => void
   interactMode: boolean
@@ -27,11 +28,12 @@ export type PreviewToolbarProps = {
   onSidebarToggle: () => void
 }
 
-export const PreviewToolbar: React.FC<PreviewToolbarProps> = ({
+// Memoized so resize-drag re-renders of the overlay skip the toolbar.
+export const PreviewToolbar = React.memo<PreviewToolbarProps>(({
   history,
   viewport,
   onViewportChange,
-  iframeWidth,
+  iframeRef,
   isFullscreen,
   onFullscreenToggle,
   interactMode,
@@ -42,12 +44,7 @@ export const PreviewToolbar: React.FC<PreviewToolbarProps> = ({
   <div className="better-editor__preview-toolbar">
     <HistoryButtons history={history} />
     <div className="better-editor__preview-toolbar-right">
-      {iframeWidth ? (
-        <span className="better-editor__width-chip" aria-live="polite">
-          {iframeWidth}
-          <span className="better-editor__width-chip-unit">px</span>
-        </span>
-      ) : null}
+      <WidthChip iframeRef={iframeRef} />
       <ViewportToggle value={viewport} onChange={onViewportChange} />
       <div className="better-editor-viewport">
         <button
@@ -95,7 +92,7 @@ export const PreviewToolbar: React.FC<PreviewToolbarProps> = ({
       </div>
     </div>
   </div>
-)
+))
 
 const HistoryButtons: React.FC<{ history: ReturnType<typeof useEditorHistory> }> = ({
   history,

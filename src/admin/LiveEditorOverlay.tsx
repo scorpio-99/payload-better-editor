@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useRef, useState } from 'react'
 import { useLivePreviewContext } from '@payloadcms/ui'
 import { PreviewFrame } from './PreviewFrame'
 import { PreviewToolbar } from './PreviewToolbar'
@@ -83,9 +83,8 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
     setResponsiveWidth,
     viewportWidth,
   } = useViewportState(settings)
-  // Live-observed iframe width; PreviewFrame reports it via the
-  // ResizeObserver, the toolbar's width-chip reads it.
-  const [iframeWidth, setIframeWidth] = useState<number | null>(null)
+  // Shared with the toolbar's width chip, which measures the iframe directly.
+  const iframeRef = useRef<HTMLIFrameElement | null>(null)
 
   const [isFullscreen, setIsFullscreen] = useState(false)
   const toggleFullscreen = useCallback(() => setIsFullscreen((v) => !v), [])
@@ -138,7 +137,7 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
             history={history}
             viewport={viewport}
             onViewportChange={setViewport}
-            iframeWidth={iframeWidth}
+            iframeRef={iframeRef}
             isFullscreen={isFullscreen}
             onFullscreenToggle={toggleFullscreen}
             interactMode={interactMode}
@@ -148,6 +147,7 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
           />
           <div className="better-editor__preview-stage">
             <PreviewFrame
+              iframeRef={iframeRef}
               previewURL={previewURL}
               hoverColorTopLevel={settings.hoverColorTopLevel}
               hoverColorNested={settings.hoverColorNested}
@@ -160,7 +160,6 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
               viewportWidth={viewportWidth}
               resizable={viewport === 'responsive'}
               onResize={setResponsiveWidth}
-              onIframeWidthChange={setIframeWidth}
             />
           </div>
         </div>

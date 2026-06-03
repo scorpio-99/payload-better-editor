@@ -73,6 +73,59 @@
   border-bottom-color: var(--theme-text);
 }
 
+/* Validation summary — surfaces invalid fields across all blocks. */
+.better-editor-sidebar__errors {
+  margin: 12px 16px 0;
+  padding: 10px 12px;
+  border: 1px solid var(--theme-error-250, #f1b0ad);
+  background: var(--theme-error-50, #fdeceb);
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.better-editor-sidebar__errors-title {
+  margin: 0 0 6px;
+  font-weight: 600;
+  color: var(--theme-error-600, #b22a22);
+}
+
+.better-editor-sidebar__errors-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.better-editor-sidebar__errors-item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: baseline;
+}
+
+.better-editor-sidebar__errors-jump {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--theme-error-600, #b22a22);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.better-editor-sidebar__errors-label {
+  font-weight: 600;
+  color: var(--theme-error-600, #b22a22);
+}
+
+.better-editor-sidebar__errors-message {
+  color: var(--theme-elevation-600, #555);
+}
+
 /* Visually hidden but available to assistive technology — used by the
    selection live region. Standard SR-only recipe. */
 .better-editor-sr-only {

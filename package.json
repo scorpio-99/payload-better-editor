@@ -1,6 +1,6 @@
 {
   "name": "payload-better-editor",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "Block editor plugin for Payload CMS that adds a side-by-side live-preview iframe and sidebar to the edit view.",
   "license": "MIT",
   "author": "scorpio-99",
@@ -65,7 +65,6 @@
     "prepublishOnly": "pnpm clean && pnpm build"
   },
   "peerDependencies": {
-    "lucide-react": ">=0.577.0",
     "payload": ">=3.81.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
@@ -75,13 +74,15 @@
     "@payloadcms/ui": "3.81.0",
     "@swc/cli": "0.6.0",
     "@swc/core": "1.10.7",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.0",
     "@types/node": "22.5.4",
     "@types/react": "19.2.1",
     "@types/react-dom": "19.2.1",
     "copyfiles": "2.4.1",
     "eslint": "^9.16.0",
     "eslint-plugin-react-hooks": "^5.2.0",
-    "lucide-react": "^0.577.0",
+    "jsdom": "^26.1.0",
     "payload": "3.81.0",
     "react": "19.2.1",
     "react-dom": "19.2.1",

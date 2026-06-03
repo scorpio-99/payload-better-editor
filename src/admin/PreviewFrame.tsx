@@ -1,11 +1,10 @@
 'use client'
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState, type RefObject } from 'react'
 import type { HoverToolbarPosition } from '../internal/constants'
 import { postToParent } from '../internal/postmessage'
 import type { BlockActionMessage } from '../preview/protocol'
 import type { Viewport } from './ViewportToggle'
-import { useIframeResizeObserver } from '../hooks/useIframeResizeObserver'
 import { usePreviewHandleDrag } from '../hooks/usePreviewHandleDrag'
 import { useLatestRef } from '../hooks/useLatestRef'
 import { usePreviewBinding } from '../hooks/usePreviewBinding'
@@ -13,6 +12,7 @@ import { usePreviewSettingsSync } from '../hooks/usePreviewSettingsSync'
 import { usePreviewSelectionSync } from '../hooks/usePreviewSelectionSync'
 
 export type PreviewFrameProps = {
+  iframeRef: RefObject<HTMLIFrameElement | null>
   previewURL: string | undefined
   hoverColorTopLevel: string
   hoverColorNested: string
@@ -28,12 +28,13 @@ export type PreviewFrameProps = {
   viewportWidth?: number | null
   resizable?: boolean
   onResize?: (next: number) => void
-  onIframeWidthChange?: (width: number) => void
 }
 
 type BlockAction = BlockActionMessage['action']
 
-export const PreviewFrame: React.FC<PreviewFrameProps> = ({
+// Memoized so resize-drag re-renders of the overlay skip the frame.
+export const PreviewFrame = React.memo(function PreviewFrame({
+  iframeRef,
   previewURL,
   hoverColorTopLevel,
   hoverColorNested,
@@ -46,9 +47,7 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
   viewportWidth,
   resizable = false,
   onResize,
-  onIframeWidthChange,
-}) => {
-  const iframeRef = useRef<HTMLIFrameElement | null>(null)
+}: PreviewFrameProps) {
   const [isLoading, setIsLoading] = useState(true)
   const interactModeRef = useLatestRef(interactMode)
 
@@ -57,7 +56,6 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
     viewportWidth,
     onResize,
   })
-  useIframeResizeObserver(iframeRef, onIframeWidthChange)
 
   useEffect(() => {
     setIsLoading(true)
@@ -172,4 +170,4 @@ export const PreviewFrame: React.FC<PreviewFrameProps> = ({
       ) : null}
     </div>
   )
-}
+})

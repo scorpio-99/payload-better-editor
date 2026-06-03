@@ -6,12 +6,12 @@ import {
   MobileIcon,
   ResponsiveIcon,
   TabletIcon,
-  type LucideProps,
+  type IconProps,
 } from './icons'
 
 export type Viewport = 'desktop' | 'tablet' | 'mobile' | 'responsive'
 
-type Item = { id: Viewport; label: string; Icon: React.FC<LucideProps> }
+type Item = { id: Viewport; label: string; Icon: React.FC<IconProps> }
 
 const ITEMS: ReadonlyArray<Item> = [
   { id: 'desktop', label: 'Desktop', Icon: DesktopIcon },

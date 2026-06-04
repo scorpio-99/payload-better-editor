@@ -17,12 +17,12 @@ export const HOVER_CSS = `
   body:not([${INTERACT_BODY_ATTR}]) [${BLOCK_ID_ATTR}].${ACTIVE_CLASS} {
     outline: var(${VAR_OUTLINE_WIDTH}) solid var(${VAR_TOP});
     outline-offset: calc(-1 * var(${VAR_OUTLINE_WIDTH}) - 1px);
-    background-color: color-mix(in srgb, var(${VAR_TOP}) 10%, transparent);
+    box-shadow: inset 0 0 0 100vmax color-mix(in srgb, var(${VAR_TOP}) 10%, transparent);
   }
   body:not([${INTERACT_BODY_ATTR}]) [${BLOCK_ID_ATTR}] [${BLOCK_ID_ATTR}]:hover,
   body:not([${INTERACT_BODY_ATTR}]) [${BLOCK_ID_ATTR}] [${BLOCK_ID_ATTR}].${ACTIVE_CLASS} {
     outline-color: var(${VAR_NESTED});
-    background-color: color-mix(in srgb, var(${VAR_NESTED}) 10%, transparent);
+    box-shadow: inset 0 0 0 100vmax color-mix(in srgb, var(${VAR_NESTED}) 10%, transparent);
   }
   body[${INTERACT_BODY_ATTR}] #${TOOLBAR_ID} { display: none; }
 

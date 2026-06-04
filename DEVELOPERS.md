@@ -20,18 +20,26 @@ export default buildConfig({
       collections: ['pages'], // collection slugs where the toggle appears
     }),
   ],
-  admin: {
-    livePreview: {
-      collections: ['pages'],
-      url({ data }) {
-        return `/${data.slug}`
-      },
-    },
-  },
 })
 ```
 
-The plugin relies on Payload's standard `admin.livePreview.url`. Without it the toggle button stays hidden.
+Configure `admin.preview` on each enabled collection/global so the toggle has a URL to load:
+
+```ts
+// collections/Pages.ts
+import type { CollectionConfig } from 'payload'
+
+export const Pages: CollectionConfig = {
+  slug: 'pages',
+  admin: {
+    // The toggle appears once this returns a non-empty URL.
+    preview: (doc) => (doc?.slug ? `/${doc.slug}` : ''),
+  },
+  // ...
+}
+```
+
+The plugin reads the preview URL from the collection/global's `admin.preview`. Without it the toggle button stays hidden. (Payload's separate `admin.livePreview` feature does **not** drive the toggle.)
 
 The plugin also auto-registers a `BetterEditorSettings` global (slug `better-editor-settings`, group "Better Editor") for editor-wide options the user can change in the admin without redeploying.
 
@@ -76,6 +84,8 @@ const jsxConverters: JSXConvertersFunction = ({ defaultConverters }) => ({
 })
 ```
 
+> **`blocksField` is unrelated to RichText blocks.** It names only the *top-level document field* the sidebar's Blocks tab targets — your RichText field can be named anything and need not match `blocksField`. Blocks embedded in a RichText are made selectable purely by the `data-better-editor-id` you add in their converters (above); they don't live under `blocksField` or share its name.
+
 **Scope** — the editor resolves `blocks`-field rows. `array`-field rows (e.g. an array of column objects inside a Content block) are not selectable; mark only the rows that live inside a `blocks` field.
 
 ## Plugin options
@@ -84,9 +94,9 @@ Passed to `betterEditor({ … })`:
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `disabled` | `boolean` | `false` | Disable the plugin entirely |
-| `collections` | `string[]` | `[]` | Collection slugs where the toggle should appear |
-| `globals` | `string[]` | `[]` | Global slugs where the toggle should appear |
-| `blocksField` | `string` | `'layout'` | Name of the document field holding the top-level blocks array |
+| `collections` | `string[]` \| `Record<slug, { blocksField?: string }>` | `[]` | Collection slugs — or a slug → options record for per-collection settings (e.g. a different `blocksField`) — where the toggle should appear |
+| `globals` | `string[]` \| `Record<slug, { blocksField?: string }>` | `[]` | Global slugs, or a slug → options record, where the toggle should appear |
+| `blocksField` | `string` | `'layout'` | Default name of the document field holding the top-level blocks array; per-collection overrides in the `collections`/`globals` record take precedence |
 | `adminPortalSelector` | `string` | Payload `__main-wrapper` | CSS selector for the admin element the overlay portals into. Override only if the default selector breaks against a future Payload version. Falls back to `<main>` then `<body>`. |
 | `storageNamespace` | `string` | `'better-editor'` | Prefix for `localStorage` keys (sidebar width, responsive viewport width, toggle preference). Set if multiple instances on the same origin would otherwise collide. |
 | `showSettingsBanner` | `boolean` | `true` | Show the plugin info banner (version, GitHub links) at the top of the `BetterEditorSettings` global. Set to `false` to hide it from end users. |
@@ -153,7 +163,7 @@ Do not add sensitive fields to `BetterEditorSettings` without tightening the rea
 
 ## Security: iframe trust boundary
 
-The plugin renders the consumer's `admin.livePreview.url` in an unsandboxed `<iframe>` so the preview can run scripts, render forms, and apply styles normally. That means the preview origin is part of the editor's trust boundary:
+The plugin renders the consumer's `admin.preview` URL in an unsandboxed `<iframe>` so the preview can run scripts, render forms, and apply styles normally. That means the preview origin is part of the editor's trust boundary:
 
 - Serve the preview from an origin you control. The plugin enforces same-origin postMessage, but a compromised preview can still read whatever the parent admin can read in the same origin.
 - Consider a strong Content-Security-Policy on the preview frontend (`frame-ancestors`, `script-src`).
@@ -169,8 +179,8 @@ The iframe loaded but no `[data-better-editor-id]` elements were found. Spread `
 
 The toggle only renders once `previewURL` resolves through Payload's `useLivePreviewContext`. Two common causes:
 
-- The collection or global has no `admin.livePreview.url` configured. Add one (see Setup above).
-- The page is brand-new and your `livePreview.url(({ data }) => …)` callback returns nothing because required fields like `slug` aren't set yet. Save the document with the required fields first; the toggle appears once the URL function returns a value.
+- The collection or global has no `admin.preview` configured. Add one (see Setup above).
+- The page is brand-new and your `admin.preview(doc => …)` callback returns nothing because required fields like `slug` aren't set yet. Save the document with the required fields first; the toggle appears once it returns a value.
 
 ### Click-to-edit, hover styles, and the toolbar do nothing
 
@@ -182,6 +192,19 @@ The plugin walks form-state paths like `layout.0`. Check that:
 
 - `blocksField` matches your document's blocks-field name (default is `'layout'`)
 - The selected element's `data-better-editor-id` matches the row's `id` in form state
+
+### The preview doesn't update when I move / duplicate / edit blocks
+
+Block actions change the form state but don't save on their own, and the standard `RefreshRouteOnSave` live-preview helper only re-renders the iframe **on save** (it re-fetches the saved document from the database). So unsaved edits aren't reflected until the document is saved.
+
+- **Recommended:** enable drafts + autosave on the collection (as Payload's website template does) so edits persist and the preview refreshes automatically:
+
+  ```ts
+  versions: { drafts: { autosave: { interval: 100 } } }
+  ```
+
+- Without autosave, the preview updates each time you save the document.
+- To reflect *unsaved* edits without autosave, render the preview with Payload's `useLivePreview` (live data channel) instead of `RefreshRouteOnSave`.
 
 ### Multiple plugins are fighting over the document toggle
 

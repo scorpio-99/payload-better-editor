@@ -14,6 +14,28 @@ export type BlockSchemaContext = {
   docFields: ClientField[]
   docSlug: string
   formFields: FormState
+  /** Client config block registry, used to resolve `blockReferences` slugs. */
+  blocksMap?: Record<string, ClientBlock>
+}
+
+type BlocksLikeField = {
+  blocks?: ClientBlock[]
+  blockReferences?: (ClientBlock | string)[]
+}
+
+// Resolves a blocks field's block configs, handling `blockReferences` (slugs
+// looked up in the config block registry) where the field's own `blocks` is empty.
+export const resolveFieldBlocks = (
+  field: BlocksLikeField,
+  blocksMap: Record<string, ClientBlock> | undefined,
+): ClientBlock[] => {
+  if (!field.blockReferences) return field.blocks ?? []
+  const out: ClientBlock[] = []
+  for (const ref of field.blockReferences) {
+    const block = typeof ref === 'string' ? blocksMap?.[ref] : ref
+    if (block) out.push(block)
+  }
+  return out
 }
 
 const tabHasName = (tab: ClientTab): tab is ClientTab & { name: string } =>
@@ -51,7 +73,7 @@ export const resolveBlockSchema = (
   context: BlockSchemaContext,
   blockPath: string,
 ): Resolved | null => {
-  const { docFields, docSlug, formFields } = context
+  const { docFields, docSlug, formFields, blocksMap } = context
   const segments = blockPath.split('.')
   let currentFields: ClientField[] = docFields
   let currentSchemaPath = docSlug
@@ -80,7 +102,7 @@ export const resolveBlockSchema = (
       const row = rows[index] as { blockType?: string } | undefined
       if (!row?.blockType) return null
       blockType = row.blockType
-      const blocks = field.blocks
+      const blocks = resolveFieldBlocks(field, blocksMap)
       blockConfig = blocks.find((b) => b.slug === blockType) ?? null
       if (!blockConfig) return null
       // Capture parent before descending — used by "add sibling block".

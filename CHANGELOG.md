@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.2.0]
+### Added
+- Per-collection/global `blocksField`: `collections` and `globals` now also accept a `{ slug: { blocksField } }` record, so entities can use different blocks-field names. The plain slug-array form still works. ([#13](https://github.com/scorpio-99/payload-better-editor/issues/13))
+### Fixed
+- Editor no longer crashes (`Cannot read properties of undefined (reading 'length')`) when the blocks field uses Payload's `blockReferences` instead of inline `blocks` — block configs are now resolved from the client config's block registry. ([#14](https://github.com/scorpio-99/payload-better-editor/issues/14))
+- Hovering/selecting a block no longer overrides its `background-color` (which clobbered dark/muted block backgrounds). The highlight tint is now an `inset box-shadow` painted over the block's own background. ([#15](https://github.com/scorpio-99/payload-better-editor/issues/15))
+### Docs
+- Setup guide now documents `admin.preview` (collection/global level) as the source of the preview URL that surfaces the toggle, instead of `admin.livePreview.url`, which the plugin does not read. ([#16](https://github.com/scorpio-99/payload-better-editor/issues/16))
+- Clarified that the preview only reflects edits once the document is saved (enable drafts + autosave for automatic refresh), and that `blocksField` is unrelated to RichText-embedded blocks (which are selected purely via `data-better-editor-id`).
+
 ## [1.1.0]
 ### Added
 - Validation summary in the sidebar: after a failed save, every invalid field across all blocks is listed (not just the selected block, which the overlay otherwise hides behind Payload's own form). Block-field entries are clickable to jump straight to the offending block.

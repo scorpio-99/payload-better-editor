@@ -4,6 +4,7 @@ import React, { useMemo } from 'react'
 import {
   RenderFields,
   useAllFormFields,
+  useConfig,
   useDrawerSlug,
   useField,
   useModal,
@@ -13,7 +14,7 @@ import { useAddBlockDrawer } from '../../hooks/useAddBlockDrawer'
 import { AddBlockDrawer } from '../blocks/AddBlockDrawer'
 import { BlockActionsToolbar } from '../blocks/BlockActionsToolbar'
 import { useBlockActions } from '../blocks/useBlockActions'
-import { findNamedField, resolveBlockSchema } from '../blocks/schema'
+import { findNamedField, resolveBlockSchema, resolveFieldBlocks } from '../blocks/schema'
 import type { ClientBlock } from 'payload'
 import { BlockEmptyState } from '../blocks/BlockEmptyState'
 import { BlockHeader } from '../blocks/BlockHeader'
@@ -36,6 +37,8 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
 }) => {
   const { fields: docFields, slug: docSlug } = useDocConfig()
   const [fields] = useAllFormFields()
+  const { config } = useConfig()
+  const blocksMap = config.blocksMap
   const { toggleModal } = useModal()
   const addBlockDrawerSlug = useDrawerSlug('better-editor-add-block')
   const addAfterDrawerSlug = useDrawerSlug('better-editor-add-after')
@@ -59,7 +62,9 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
 
   const blocksFieldField = blocksFieldInfo?.field
   const availableBlocks: ClientBlock[] =
-    blocksFieldField && blocksFieldField.type === 'blocks' ? blocksFieldField.blocks : []
+    blocksFieldField && blocksFieldField.type === 'blocks'
+      ? resolveFieldBlocks(blocksFieldField, blocksMap)
+      : []
   const blocksSchemaPath = blocksFieldInfo?.schemaPath || ''
   const topLevelRows = fields[blocksField]?.rows
   const addRowIndex = Array.isArray(topLevelRows) ? topLevelRows.length : 0
@@ -91,7 +96,10 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
   }
 
   const resolved = docFields
-    ? resolveBlockSchema({ docFields, docSlug: docSlug || '', formFields: fields }, selectedBlockPath)
+    ? resolveBlockSchema(
+        { docFields, docSlug: docSlug || '', formFields: fields, blocksMap },
+        selectedBlockPath,
+      )
     : null
 
   return (

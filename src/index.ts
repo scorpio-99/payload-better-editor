@@ -1,6 +1,7 @@
 import type { CollectionConfig, Config, Field, GlobalConfig } from 'payload'
 import type { BetterEditorConfig } from './types'
 import { BETTER_EDITOR_SETTINGS_BANNER_FIELD, betterEditorSettingsGlobal } from './global'
+import { normalizeEntities } from './internal/entities'
 
 export type { BetterEditorConfig }
 export type { BetterEditorSettings, HoverToolbarPosition } from './state/useBetterEditorSettings'
@@ -100,14 +101,14 @@ export const betterEditor =
   (config: Config): Config => {
     if (pluginOptions?.disabled) return config
 
-    const collectionSlugs = new Set(pluginOptions?.collections ?? [])
-    const globalSlugs = new Set(pluginOptions?.globals ?? [])
-    const blocksField = pluginOptions?.blocksField || DEFAULT_BLOCKS_FIELD
-    const clientProps: ToggleClientProps = {
+    const defaultBlocksField = pluginOptions?.blocksField || DEFAULT_BLOCKS_FIELD
+    const collectionMap = normalizeEntities(pluginOptions?.collections, defaultBlocksField)
+    const globalMap = normalizeEntities(pluginOptions?.globals, defaultBlocksField)
+    const toggleClientProps = (blocksField: string): ToggleClientProps => ({
       blocksField,
       adminPortalSelector: pluginOptions?.adminPortalSelector,
       storageNamespace: pluginOptions?.storageNamespace,
-    }
+    })
 
     const showBanner = pluginOptions?.showSettingsBanner !== false
     const settingsGlobal: GlobalConfig = showBanner
@@ -125,7 +126,7 @@ export const betterEditor =
       ? existingGlobals
       : [...existingGlobals, settingsGlobal]
 
-    if (collectionSlugs.size === 0 && globalSlugs.size === 0) {
+    if (collectionMap.size === 0 && globalMap.size === 0) {
       if (isDev) {
 
         console.warn(
@@ -135,23 +136,25 @@ export const betterEditor =
       return config
     }
 
-    if (collectionSlugs.size > 0 && config.collections) {
+    if (collectionMap.size > 0 && config.collections) {
       config.collections = config.collections.map((collection) => {
-        if (!collectionSlugs.has(collection.slug)) return collection
+        const blocksField = collectionMap.get(collection.slug)
+        if (blocksField === undefined) return collection
         if (isDev && !hasBlocksField(collection.fields, blocksField)) {
           warnMissingBlocksField('collection', collection.slug, blocksField)
         }
-        return withToggleInjected(collection, 'edit', clientProps)
+        return withToggleInjected(collection, 'edit', toggleClientProps(blocksField))
       })
     }
 
-    if (globalSlugs.size > 0) {
+    if (globalMap.size > 0) {
       config.globals = (config.globals ?? []).map((global) => {
-        if (!globalSlugs.has(global.slug)) return global
+        const blocksField = globalMap.get(global.slug)
+        if (blocksField === undefined) return global
         if (isDev && !hasBlocksField(global.fields, blocksField)) {
           warnMissingBlocksField('global', global.slug, blocksField)
         }
-        return withToggleInjected(global, 'elements', clientProps)
+        return withToggleInjected(global, 'elements', toggleClientProps(blocksField))
       })
     }
 

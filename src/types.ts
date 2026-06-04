@@ -1,22 +1,32 @@
+import type { CollectionSlug, GlobalSlug } from 'payload'
+
+/** Per-entity overrides for a collection/global. */
+export type BetterEditorEntityOptions = {
+  /** Blocks-field name for this entity; falls back to the top-level `blocksField`. */
+  blocksField?: string
+}
+
 export type BetterEditorConfig = {
   /** Skip plugin installation entirely (e.g. behind a feature flag). */
   disabled?: boolean
   /**
-   * Collection slugs that should get the "Open Better Editor" toggle in
-   * their `beforeDocumentControls`. Each collection must have an
-   * `admin.livePreview.url` configured for the preview to render.
+   * Collections that get the "Open Better Editor" toggle. Either a list of
+   * slugs, or a slug → options record for per-collection settings (e.g. a
+   * different `blocksField`). Each collection needs `admin.preview` configured
+   * for the preview to render and the toggle to appear.
    */
-  collections?: string[]
+  collections?: string[] | Partial<Record<CollectionSlug, BetterEditorEntityOptions>>
   /**
-   * Global slugs that should get the "Open Better Editor" toggle in
-   * their `beforeDocumentControls`. Each global must have an
-   * `admin.livePreview.url` configured for the preview to render.
+   * Globals that get the "Open Better Editor" toggle — a list of slugs or a
+   * slug → options record. Each global needs `admin.preview` configured for the
+   * toggle to appear.
    */
-  globals?: string[]
+  globals?: string[] | Partial<Record<GlobalSlug, BetterEditorEntityOptions>>
   /**
-   * Name of the `blocks` field inside the configured collections/globals
-   * that the sidebar should target. Top-level only for now; nested paths
-   * (e.g. `content.layout`) are not supported. Defaults to `'layout'`.
+   * Default name of the `blocks` field the sidebar targets. Top-level only;
+   * nested paths (e.g. `content.layout`) are not supported. Per-collection
+   * overrides via the `collections`/`globals` record take precedence.
+   * Defaults to `'layout'`.
    */
   blocksField?: string
   /**

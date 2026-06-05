@@ -1,10 +1,8 @@
 import { ACTIVE_CLASS, BLOCK_ID_ATTR } from '../internal/dom'
 
 export const HOVER_STYLE_ID = 'better-editor-hover-style'
+export const HOVER_VARS_STYLE_ID = 'better-editor-hover-vars'
 export const TOOLBAR_ID = 'better-editor-block-toolbar'
-// Set on doc.body to disable hover affordances + click-to-focus while
-// the user wants to interact with the consumer page (forms, accordions,
-// links). All hover/active rules below are gated on its absence.
 export const INTERACT_BODY_ATTR = 'data-bee-interact'
 
 const VAR_TOP = '--bee-top'
@@ -82,28 +80,27 @@ const warnInvalid = (kind: string, value: unknown): void => {
   }
 }
 
+const buildVarsRule = (vars: HoverVars): string => {
+  const decls: string[] = []
+  if (isValidColor(vars.topColor)) decls.push(`${VAR_TOP}: ${vars.topColor.trim()};`)
+  else warnInvalid('topColor', vars.topColor)
+  if (isValidColor(vars.nestedColor)) decls.push(`${VAR_NESTED}: ${vars.nestedColor.trim()};`)
+  else warnInvalid('nestedColor', vars.nestedColor)
+  if (isValidOutline(vars.outlineWidth)) decls.push(`${VAR_OUTLINE_WIDTH}: ${vars.outlineWidth}px;`)
+  else warnInvalid('outlineWidth', vars.outlineWidth)
+  return `:root { ${decls.join(' ')} }`
+}
+
 export const setHoverVars = (doc: Document, vars: HoverVars): void => {
-  const root = doc.documentElement
-  if (isValidColor(vars.topColor)) {
-    root.style.setProperty(VAR_TOP, vars.topColor)
-  } else {
-    warnInvalid('topColor', vars.topColor)
+  let el = doc.getElementById(HOVER_VARS_STYLE_ID) as HTMLStyleElement | null
+  if (!el) {
+    el = doc.createElement('style')
+    el.id = HOVER_VARS_STYLE_ID
+    doc.head.appendChild(el)
   }
-  if (isValidColor(vars.nestedColor)) {
-    root.style.setProperty(VAR_NESTED, vars.nestedColor)
-  } else {
-    warnInvalid('nestedColor', vars.nestedColor)
-  }
-  if (isValidOutline(vars.outlineWidth)) {
-    root.style.setProperty(VAR_OUTLINE_WIDTH, `${vars.outlineWidth}px`)
-  } else {
-    warnInvalid('outlineWidth', vars.outlineWidth)
-  }
+  el.textContent = buildVarsRule(vars)
 }
 
 export const clearHoverVars = (doc: Document): void => {
-  const root = doc.documentElement
-  root.style.removeProperty(VAR_TOP)
-  root.style.removeProperty(VAR_NESTED)
-  root.style.removeProperty(VAR_OUTLINE_WIDTH)
+  doc.getElementById(HOVER_VARS_STYLE_ID)?.remove()
 }

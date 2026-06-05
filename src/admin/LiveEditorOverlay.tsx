@@ -50,7 +50,6 @@ export const LiveEditorOverlay: React.FC<LiveEditorOverlayProps> = ({
       adminPortalSelector={adminPortalSelector}
     >
       <LiveEditorOverlayInner
-        onClose={onClose}
         blocksField={blocksField}
         selectedBlockPath={selectedBlockPath}
         setSelectedBlockPath={setSelectedBlockPath}
@@ -59,13 +58,12 @@ export const LiveEditorOverlay: React.FC<LiveEditorOverlayProps> = ({
   )
 }
 
-type InnerProps = LiveEditorOverlayProps & {
+type InnerProps = Omit<LiveEditorOverlayProps, 'onClose'> & {
   selectedBlockPath: string | null
   setSelectedBlockPath: React.Dispatch<React.SetStateAction<string | null>>
 }
 
 const LiveEditorOverlayInner: React.FC<InnerProps> = ({
-  onClose,
   blocksField,
   selectedBlockPath,
   setSelectedBlockPath,
@@ -102,7 +100,7 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
     setSelectedBlockPath,
   })
 
-  useOverlayKeyboard({ onClose, history })
+  useOverlayKeyboard({ history })
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const toggleSidebar = useCallback(() => setSidebarCollapsed((v) => !v), [])

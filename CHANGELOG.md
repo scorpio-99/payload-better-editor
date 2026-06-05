@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.2.1]
+### Changed
+- Escape no longer closes the editor. The overlay is a full working surface rather than a transient modal, so closing it on Escape was surprising — and it fired alongside the Escape that dismisses an open Payload drawer, tearing the whole editor down together with the drawer. Close via the toggle button instead; browser-native Escape still exits fullscreen. ([#18](https://github.com/scorpio-99/payload-better-editor/issues/18))
+
 ## [1.2.0]
 ### Added
 - Per-collection/global `blocksField`: `collections` and `globals` now also accept a `{ slug: { blocksField } }` record, so entities can use different blocks-field names. The plain slug-array form still works. ([#13](https://github.com/scorpio-99/payload-better-editor/issues/13))

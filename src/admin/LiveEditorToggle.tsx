@@ -16,12 +16,14 @@ export type LiveEditorToggleProps = {
   blocksField: string
   adminPortalSelector?: string
   storageNamespace?: string
+  hideToggleLabel?: boolean
 }
 
 export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({
   blocksField,
   adminPortalSelector,
   storageNamespace,
+  hideToggleLabel,
 }) => {
   const [open, setOpen] = useState(false)
   const { collectionSlug, globalSlug } = useDocumentInfo()
@@ -78,7 +80,9 @@ export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({
         title={label}
         type="button"
       >
-        <span className="better-editor-toggle__label">{label}</span>
+        {hideToggleLabel ? null : (
+          <span className="better-editor-toggle__label">{label}</span>
+        )}
         <LayoutIcon />
       </button>
 

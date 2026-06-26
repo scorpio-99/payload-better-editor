@@ -48,4 +48,10 @@ export type BetterEditorConfig = {
    * hide it for end users. Defaults to `true`.
    */
   showSettingsBanner?: boolean
+  /**
+   * Hide the "Open/Close Better Editor" text next to the toggle button's icon,
+   * leaving an icon-only button. The accessible label (`aria-label`/`title`)
+   * is kept either way. Defaults to `false` (label shown).
+   */
+  hideToggleLabel?: boolean
 }

@@ -8,6 +8,9 @@ import {
   TABLET_WIDTH_MAX,
   TABLET_WIDTH_MIN,
 } from './internal/limits'
+import type { BetterEditorTranslations } from './i18n/types'
+import { en } from './i18n/en'
+import { de } from './i18n/de'
 
 export const BETTER_EDITOR_SETTINGS_SLUG = 'better-editor-settings'
 
@@ -22,13 +25,26 @@ type AnyT = (key: string) => string
 
 const settingsKey = (path: string) => `betterEditor:settings.${path}`
 
-// Returns a label/description function that looks up our custom translation key at render time.
-// Typed as `any` to satisfy Payload's LabelFunction/EntityDescriptionFunction signatures,
-// which use a contravariant TFunction parameter incompatible with a generic string key.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const translatedLabel = (path: string): any =>
-  (args: unknown) =>
-    ((args as { t?: AnyT })?.t ?? ((k: string) => k))(settingsKey(path))
+// Locales the plugin ships built-in translations for.
+const SETTINGS_TRANSLATIONS: Record<string, BetterEditorTranslations['settings']> = {
+  en: en.settings,
+  de: de.settings,
+}
+
+const lookupSetting = (settings: BetterEditorTranslations['settings'], path: string): string =>
+  path
+    .split('.')
+    .reduce<unknown>((value, key) => (value as Record<string, unknown> | undefined)?.[key], settings) as string
+
+// Entity/field labels and descriptions are serialized into the admin RootLayout
+// (a Client Component), so they must be plain data — a function (e.g. `({ t }) => …`)
+// can't cross that RSC boundary. Return a Payload locale map built from our bundled
+// translations; Payload selects the entry for the admin UI language. (Runtime `t()`
+// stays available for `validate`, which Payload strips before client serialization.)
+const translatedLabel = (path: string): Record<string, string> =>
+  Object.fromEntries(
+    Object.entries(SETTINGS_TRANSLATIONS).map(([locale, settings]) => [locale, lookupSetting(settings, path)]),
+  )
 
 const validateHoverColor = (value: unknown, args: unknown): string | true => {
   const t: AnyT = (args as { t?: AnyT })?.t ?? ((k) => k)

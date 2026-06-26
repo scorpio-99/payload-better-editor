@@ -37,11 +37,19 @@ describe('findNamedField', () => {
     expect(found).toEqual({ field: inner, schemaPath: 'pages.hidden' })
   })
 
-  it('appends the named-tab segment to the schema path', () => {
+  it('surfaces a named tab as a group field at its own path segment', () => {
     const inner = text('seoTitle')
     const fields = [tabs([{ name: 'seo', fields: [inner] }])]
-    const found = findNamedField(fields, 'seoTitle', 'pages')
-    expect(found).toEqual({ field: inner, schemaPath: 'pages.seo.seoTitle' })
+    const found = findNamedField(fields, 'seo', 'pages')
+    expect(found).not.toBeNull()
+    expect(found!.field).toMatchObject({ type: 'group', name: 'seo' })
+    expect(found!.schemaPath).toBe('pages.seo')
+  })
+
+  it('does not descend into named tabs (they own their path segment)', () => {
+    const inner = text('seoTitle')
+    const fields = [tabs([{ name: 'seo', fields: [inner] }])]
+    expect(findNamedField(fields, 'seoTitle', 'pages')).toBeNull()
   })
 
   it('does not descend into a group (groups own their path segment)', () => {
@@ -102,5 +110,25 @@ describe('resolveBlockSchema', () => {
       'layout.-1',
     )
     expect(out).toBeNull()
+  })
+
+  it('resolves a block nested inside a named tab', () => {
+    const tabDocFields: ClientField[] = [
+      tabs([{ name: 'content', fields: [blocksField('layout', [heroBlock])] }]),
+    ]
+    const tabFormState = ({
+      'content.layout': { rows: [{ blockType: 'hero' }] },
+    }) as unknown as FormState
+
+    const out = resolveBlockSchema(
+      { docFields: tabDocFields, docSlug: 'pages', formFields: tabFormState },
+      'content.layout.0',
+    )
+    expect(out).not.toBeNull()
+    expect(out!.blockType).toBe('hero')
+    expect(out!.blockFields).toBe(heroFields)
+    expect(out!.schemaPath).toBe('pages.content.layout.hero')
+    expect(out!.parentPath).toBe('content.layout.0')
+    expect(out!.blocksFieldSchemaPath).toBe('pages.content.layout')
   })
 })

@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to [Semantic Versioning](https://semver.org).
 
+## [Unreleased]
+### Fixed
+- Blocks inside named tabs were not resolved: the schema path walker assumed every field is followed by an array index, but named tabs own a path segment without one. The walker now steps dynamically — named tabs (and groups) consume only their own segment; `blocks` and `array` fields still consume the following index.
+
 ## [1.2.2]
 ### Fixed
 - Hydration mismatch in App Router frontends: the hover variables (`--bee-top`, `--bee-nested`, `--bee-outline-width`) were written as an inline `style` on the preview iframe's `<html>` element, which the consumer's `RootLayout` hydrates — an attribute the server never rendered. They are now injected through the plugin's own `<style>` (a `:root` rule), leaving the consumer page's `<html>` untouched. ([#20](https://github.com/scorpio-99/payload-better-editor/issues/20))

@@ -3,6 +3,7 @@
 
 .better-editor__sidebar {
   overflow: hidden;
+  border-left: 1px solid var(--theme-elevation-100);
 }
 
 .better-editor-sidebar {

@@ -8,6 +8,7 @@ import {
   useDrawerSlug,
   useField,
   useModal,
+  useTranslation,
 } from '@payloadcms/ui'
 import { useDocConfig } from '../../hooks/useDocConfig'
 import { useAddBlockDrawer } from '../../hooks/useAddBlockDrawer'
@@ -37,6 +38,7 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
   addBelowRequestId = 0,
 }) => {
   const t = useBetterEditorT()
+  const { i18n } = useTranslation()
   const { fields: docFields, slug: docSlug } = useDocConfig()
   const [fields] = useAllFormFields()
   const { config } = useConfig()
@@ -104,10 +106,22 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
       )
     : null
 
+  const blockLabel = (() => {
+    if (!resolved) return undefined
+    const cfg = resolved.blocksFieldBlocks.find((b) => b.slug === resolved.blockType)
+    const singular = cfg?.labels?.singular
+    if (typeof singular === 'string') return singular
+    if (singular && typeof singular === 'object') {
+      return (singular as Record<string, string>)[i18n.language] ?? Object.values(singular)[0] as string | undefined
+    }
+    return undefined
+  })()
+
   return (
     <div className="better-editor-tab better-editor-tab--native">
       <BlockHeader
         blockType={resolved?.blockType || 'unknown'}
+        blockLabel={blockLabel}
         path={selectedBlockPath}
         onClearSelection={onClearSelection}
       />

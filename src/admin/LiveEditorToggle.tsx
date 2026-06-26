@@ -79,12 +79,18 @@ export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({
         style={
           open
             ? {
+                width: 'auto',
                 borderColor: 'var(--theme-elevation-300)',
                 backgroundColor: 'var(--theme-elevation-100)',
               }
-            : undefined
+            : {width: 'auto'}
         }
       >
+        <span style={{
+          color: 'var(--theme-elevation-700)',
+          display: 'inline-block',
+          marginRight: '0.5em'
+        }}>{label}</span>
         <LayoutIcon />
       </button>
 

@@ -18,8 +18,7 @@ export const BlockHeader: React.FC<BlockHeaderProps> = ({
   <div className="better-editor-tab__header">
     <div>
       <span className="better-editor-tab__kicker">Block</span>
-      <h3 className="better-editor-tab__heading">{blockLabel || blockType}</h3>
-      <code className="better-editor-tab__path">{path}</code>
+      <h3 className="better-editor-tab__heading" title={blockLabel ? `${blockType} | ${path}` : path}>{blockLabel || blockType}</h3>
     </div>
     <button
       type="button"

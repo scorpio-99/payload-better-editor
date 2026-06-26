@@ -24,12 +24,6 @@
   line-height: 1.2;
 }
 
-.better-editor-tab__path {
-  font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: 11px;
-  color: var(--theme-elevation-500);
-}
-
 .better-editor-tab__clear {
   flex-shrink: 0;
   padding: 6px 10px;

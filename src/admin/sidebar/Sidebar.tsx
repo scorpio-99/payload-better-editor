@@ -5,6 +5,7 @@ import { DocumentSettingsTab } from './DocumentSettingsTab'
 import { DocumentMetaTab } from './DocumentMetaTab'
 import { BlockSettingsTab } from './BlockSettingsTab'
 import { ValidationSummary } from './ValidationSummary'
+import { useBetterEditorT } from '../../i18n/useBetterEditorT'
 
 export type SidebarProps = {
   selectedBlockPath: string | null
@@ -16,12 +17,6 @@ export type SidebarProps = {
 }
 
 type TabKey = 'page' | 'block' | 'settings'
-
-const TABS: ReadonlyArray<{ key: TabKey; label: string }> = [
-  { key: 'page', label: 'Page' },
-  { key: 'block', label: 'Blocks' },
-  { key: 'settings', label: 'Settings' },
-]
 
 const ROOT_CLASS = 'better-editor-sidebar'
 const TAB_CLASS = `${ROOT_CLASS}__tab`
@@ -60,6 +55,12 @@ export const Sidebar = React.memo(function Sidebar({
   blocksField,
   addBelowRequestId = 0,
 }: SidebarProps) {
+  const t = useBetterEditorT()
+  const TABS: ReadonlyArray<{ key: TabKey; label: string }> = [
+    { key: 'page', label: t.sidebar.tabs.page },
+    { key: 'block', label: t.sidebar.tabs.block },
+    { key: 'settings', label: t.sidebar.tabs.settings },
+  ]
   const [tab, setTab] = useState<TabKey>('page')
 
   // Auto-jump to the block tab when the iframe selects a new block.
@@ -116,8 +117,13 @@ export const Sidebar = React.memo(function Sidebar({
 // readers; visible UI updates handle sighted users via the tab switch.
 const SelectionAnnouncer: React.FC<{ selectedBlockPath: string | null }> = ({
   selectedBlockPath,
-}) => (
-  <div role="status" aria-live="polite" aria-atomic="true" className="better-editor-sr-only">
-    {selectedBlockPath ? `Block selected: ${selectedBlockPath}` : 'No block selected'}
-  </div>
-)
+}) => {
+  const t = useBetterEditorT()
+  return (
+    <div role="status" aria-live="polite" aria-atomic="true" className="better-editor-sr-only">
+      {selectedBlockPath
+        ? `${t.sidebar.blockSelected}${selectedBlockPath}`
+        : t.sidebar.noBlockSelected}
+    </div>
+  )
+}

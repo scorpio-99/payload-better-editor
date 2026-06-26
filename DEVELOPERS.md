@@ -100,6 +100,61 @@ Passed to `betterEditor({ … })`:
 | `adminPortalSelector` | `string` | Payload `__main-wrapper` | CSS selector for the admin element the overlay portals into. Override only if the default selector breaks against a future Payload version. Falls back to `<main>` then `<body>`. |
 | `storageNamespace` | `string` | `'better-editor'` | Prefix for `localStorage` keys (sidebar width, responsive viewport width, toggle preference). Set if multiple instances on the same origin would otherwise collide. |
 | `showSettingsBanner` | `boolean` | `true` | Show the plugin info banner (version, GitHub links) at the top of the `BetterEditorSettings` global. Set to `false` to hide it from end users. |
+| `hideToggleLabel` | `boolean` | `false` | Hide the "Open/Close Better Editor" text next to the toggle button's icon, leaving an icon-only button. The accessible `aria-label`/`title` is kept either way. |
+
+### Translations
+
+The plugin ships with English (`en`) and German (`de`). English is the fallback for any locale without a translation object.
+
+#### Override individual strings
+
+Set your overrides in `config.i18n.translations` before the plugin entry in `plugins: []`. The plugin deep-merges them so your values take precedence - you only need to supply the keys you want to change:
+
+```ts
+import type { BetterEditorTranslations } from 'payload-better-editor'
+
+export default buildConfig({
+  i18n: {
+    translations: {
+      en: {
+        betterEditor: {
+          toggle: { open: 'Open live preview' },
+        } satisfies Partial<BetterEditorTranslations>,
+      },
+    },
+  },
+  plugins: [betterEditor({ collections: ['pages'] })],
+})
+```
+
+#### Add a new language
+
+Provide the complete translation object for the new locale under `config.i18n.translations.<locale>.betterEditor`. The plugin leaves all other locales untouched:
+
+```ts
+import type { BetterEditorTranslations } from 'payload-better-editor'
+
+const fr: BetterEditorTranslations = {
+  toggle: { open: 'Ouvrir Better Editor', close: 'Fermer Better Editor' },
+  // ... all other keys
+}
+
+export default buildConfig({
+  i18n: {
+    translations: { fr: { betterEditor: fr } },
+  },
+  plugins: [betterEditor({ collections: ['pages'] })],
+})
+```
+
+> **Exception — the `BetterEditorSettings` global's own labels.** The field/tab
+> labels and descriptions of the settings global are baked from the plugin's
+> bundled `en`/`de` at config-build time, because Payload serializes entity and
+> field labels into the admin layout (a React Server Component) where a runtime
+> translation function can't be passed. As a result, overriding these specific
+> strings via `config.i18n.translations` has no effect, and a newly added locale
+> falls back to English for them (it still applies everywhere else, including the
+> settings *validation messages*, which do run through the runtime `t()`).
 
 ### CSS variable overrides
 

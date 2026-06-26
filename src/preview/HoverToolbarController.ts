@@ -4,14 +4,31 @@ import type { HoverToolbarPosition } from '../internal/constants'
 import { ACTIVE_CLASS, BLOCK_ID_ATTR, BLOCK_ID_SELECTOR } from '../internal/dom'
 import type { BlockActionMessage } from './protocol'
 import { TOOLBAR_ID } from './hover-css'
-import { HoverToolbar } from './HoverToolbar'
+import { HoverToolbar, type HoverToolbarLabels } from './HoverToolbar'
 import { calculateToolbarPosition } from './toolbar-position'
+import type { BetterEditorTranslations } from '../i18n/types'
 
 export type HoverToolbarOptions = {
   position: HoverToolbarPosition
   outlineWidth: number
   onAction: (id: string, action: BlockActionMessage['action']) => void
+  labels: HoverToolbarLabels
 }
+
+export type { HoverToolbarLabels }
+
+// The toolbar only needs the five short action labels, not the longer `*Label`
+// aria variants in `blocks.actions` — pick them in one place so the two preview
+// hooks that build a controller stay in sync.
+export const toHoverToolbarLabels = (
+  actions: BetterEditorTranslations['blocks']['actions'],
+): HoverToolbarLabels => ({
+  moveUp: actions.moveUp,
+  moveDown: actions.moveDown,
+  duplicate: actions.duplicate,
+  addBelow: actions.addBelow,
+  delete: actions.delete,
+})
 
 const FALLBACK_TB_WIDTH = 120
 const FALLBACK_TB_HEIGHT = 32
@@ -41,13 +58,7 @@ export class HoverToolbarController {
     this.toolbar = toolbar
 
     this.root = createRoot(toolbar)
-    this.root.render(
-      React.createElement(HoverToolbar, {
-        onAction: (action) => {
-          if (this.currentBlockId) this.opts.onAction(this.currentBlockId, action)
-        },
-      }),
-    )
+    this.renderToolbar()
 
     this.onScroll = () => this.scheduleReposition()
     doc.defaultView?.addEventListener('scroll', this.onScroll, true)
@@ -73,7 +84,19 @@ export class HoverToolbarController {
 
   update(opts: HoverToolbarOptions): void {
     this.opts = opts
+    this.renderToolbar()
     if (this.currentBlockEl) this.scheduleReposition()
+  }
+
+  private renderToolbar(): void {
+    this.root.render(
+      React.createElement(HoverToolbar, {
+        labels: this.opts.labels,
+        onAction: (action) => {
+          if (this.currentBlockId) this.opts.onAction(this.currentBlockId, action)
+        },
+      }),
+    )
   }
 
   select(id: string): void {

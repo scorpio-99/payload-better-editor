@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.3.0]
+### Added
+- German (`de`) translation: all UI strings are now translatable. English (`en`) remains the default. The active language follows Payload's admin UI language setting; translations are injected automatically by the plugin via `config.i18n.translations`.
+### Changed
+- The editor toggle button now renders its configured label text next to the icon, making the entry point more discoverable in the Payload toolbar. Set `hideToggleLabel: true` in the plugin options for an icon-only button (the accessible `aria-label`/`title` is kept either way).
+- Subtle `1px` borders now separate the editor overlay (top), the resize handle (left), and the sidebar (left) from the surrounding Payload interface, giving the editor a cleaner visual boundary.
+- The block header in the settings tab now shows the block's `labels.singular` value instead of the raw block-type slug. When `labels.singular` is a locale map, the value for the current admin language is used.
+- The block path is no longer shown inline in the block header; it is available as a tooltip (`title` attribute) on hover to reduce visual noise in the normal workflow.
+### Fixed
+- Blocks inside named tabs were not resolved: the schema path walker assumed every field is followed by an array index, but named tabs own a path segment without one. The walker now steps dynamically — named tabs (and groups) consume only their own segment; `blocks` and `array` fields still consume the following index.
+- `betterEditorSettingsGlobal` was not exported from the package even though the docs described using it for multi-tenant access control overrides.
+
 ## [1.2.2]
 ### Fixed
 - Hydration mismatch in App Router frontends: the hover variables (`--bee-top`, `--bee-nested`, `--bee-outline-width`) were written as an inline `style` on the preview iframe's `<html>` element, which the consumer's `RootLayout` hydrates — an attribute the server never rendered. They are now injected through the plugin's own `<style>` (a `:root` rule), leaving the consumer page's `<html>` untouched. ([#20](https://github.com/scorpio-99/payload-better-editor/issues/20))

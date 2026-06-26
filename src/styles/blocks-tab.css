@@ -1,4 +1,4 @@
-/* Blocks tab — header (kicker / heading / path / Deselect),
+/* Blocks tab — header (kicker / heading / Deselect),
    action toolbar, dividers, Block Name input, empty-state CTA. */
 
 .better-editor-tab__header {
@@ -22,12 +22,6 @@
   font-size: 16px;
   font-weight: 600;
   line-height: 1.2;
-}
-
-.better-editor-tab__path {
-  font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: 11px;
-  color: var(--theme-elevation-500);
 }
 
 .better-editor-tab__clear {

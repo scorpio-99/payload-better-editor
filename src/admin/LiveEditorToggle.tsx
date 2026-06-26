@@ -7,6 +7,8 @@ import { LiveEditorOverlay } from './LiveEditorOverlay'
 import { useMainWrapperPortal } from '../hooks/useMainWrapperPortal'
 import { buildStorageKeys } from '../internal/storage-keys'
 import { LayoutIcon } from './icons'
+import { useBetterEditorT } from '../i18n/useBetterEditorT'
+import '../styles/toggle.css'
 
 type Pref = { open?: boolean }
 
@@ -14,12 +16,14 @@ export type LiveEditorToggleProps = {
   blocksField: string
   adminPortalSelector?: string
   storageNamespace?: string
+  hideToggleLabel?: boolean
 }
 
 export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({
   blocksField,
   adminPortalSelector,
   storageNamespace,
+  hideToggleLabel,
 }) => {
   const [open, setOpen] = useState(false)
   const { collectionSlug, globalSlug } = useDocumentInfo()
@@ -55,7 +59,8 @@ export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({
   const handleClose = useCallback(() => setOpen(false), [])
 
   const mountNode = useMainWrapperPortal(open, adminPortalSelector)
-  const label = open ? 'Close Better Editor' : 'Open Better Editor'
+  const t = useBetterEditorT()
+  const label = open ? t.toggle.close : t.toggle.open
 
   // Mirror Payload's official live-preview behaviour: only surface the
   // toggle once a previewURL is actually resolvable (collection has
@@ -70,19 +75,14 @@ export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({
       <button
         aria-label={label}
         aria-pressed={open}
-        className="preview-btn"
+        className="preview-btn better-editor-toggle"
         onClick={handleToggle}
         title={label}
         type="button"
-        style={
-          open
-            ? {
-                borderColor: 'var(--theme-elevation-300)',
-                backgroundColor: 'var(--theme-elevation-100)',
-              }
-            : undefined
-        }
       >
+        {hideToggleLabel ? null : (
+          <span className="better-editor-toggle__label">{label}</span>
+        )}
         <LayoutIcon />
       </button>
 

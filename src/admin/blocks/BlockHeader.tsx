@@ -4,19 +4,21 @@ import React from 'react'
 
 export type BlockHeaderProps = {
   blockType: string
+  blockLabel?: string
   path: string
   onClearSelection: () => void
 }
 
 export const BlockHeader: React.FC<BlockHeaderProps> = ({
   blockType,
+  blockLabel,
   path,
   onClearSelection,
 }) => (
   <div className="better-editor-tab__header">
     <div>
       <span className="better-editor-tab__kicker">Block</span>
-      <h3 className="better-editor-tab__heading">{blockType}</h3>
+      <h3 className="better-editor-tab__heading">{blockLabel || blockType}</h3>
       <code className="better-editor-tab__path">{path}</code>
     </div>
     <button

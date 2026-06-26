@@ -6,7 +6,7 @@ import { normalizeEntities } from './internal/entities'
 export type { BetterEditorConfig }
 export type { BetterEditorSettings, HoverToolbarPosition } from './state/useBetterEditorSettings'
 export type { SidebarPosition } from './internal/constants'
-export { BETTER_EDITOR_SETTINGS_SLUG } from './global'
+export { BETTER_EDITOR_SETTINGS_SLUG, betterEditorSettingsGlobal } from './global'
 
 /** Plugin signature — handy for typing plugin lists in consumer code. */
 export type BetterEditorPlugin = (config: Config) => Config

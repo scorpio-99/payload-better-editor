@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, type RefObject } from 'react'
-import { HoverToolbarController } from '../preview/HoverToolbarController'
+import { HoverToolbarController, toHoverToolbarLabels } from '../preview/HoverToolbarController'
 import { useBetterEditorT } from '../i18n/useBetterEditorT'
 import { installClickToFocus } from '../preview/installClickToFocus'
 import { installHoverStyles } from '../preview/installHoverStyles'
@@ -77,18 +77,11 @@ export const usePreviewBinding = ({
       })
 
       if (s.showHoverToolbar) {
-        const actions = labelsRef.current
         controllerRef.current = new HoverToolbarController(doc, {
           position: s.hoverToolbarPosition,
           outlineWidth: s.hoverOutlineWidth,
           onAction: (id, action) => onBlockActionRef.current(id, action),
-          labels: {
-            moveUp: actions.moveUp,
-            moveDown: actions.moveDown,
-            duplicate: actions.duplicate,
-            addBelow: actions.addBelow,
-            delete: actions.delete,
-          },
+          labels: toHoverToolbarLabels(labelsRef.current),
         })
       }
 

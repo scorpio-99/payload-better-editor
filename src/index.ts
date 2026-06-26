@@ -15,7 +15,6 @@ export { BETTER_EDITOR_SETTINGS_SLUG, betterEditorSettingsGlobal } from './globa
 /** Plugin signature — handy for typing plugin lists in consumer code. */
 export type BetterEditorPlugin = (config: Config) => Config
 
-
 export { VERSION } from './version'
 
 const DEFAULT_BLOCKS_FIELD = 'layout'

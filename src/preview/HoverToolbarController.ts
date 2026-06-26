@@ -6,6 +6,7 @@ import type { BlockActionMessage } from './protocol'
 import { TOOLBAR_ID } from './hover-css'
 import { HoverToolbar, type HoverToolbarLabels } from './HoverToolbar'
 import { calculateToolbarPosition } from './toolbar-position'
+import type { BetterEditorTranslations } from '../i18n/types'
 
 export type HoverToolbarOptions = {
   position: HoverToolbarPosition
@@ -15,6 +16,19 @@ export type HoverToolbarOptions = {
 }
 
 export type { HoverToolbarLabels }
+
+// The toolbar only needs the five short action labels, not the longer `*Label`
+// aria variants in `blocks.actions` — pick them in one place so the two preview
+// hooks that build a controller stay in sync.
+export const toHoverToolbarLabels = (
+  actions: BetterEditorTranslations['blocks']['actions'],
+): HoverToolbarLabels => ({
+  moveUp: actions.moveUp,
+  moveDown: actions.moveDown,
+  duplicate: actions.duplicate,
+  addBelow: actions.addBelow,
+  delete: actions.delete,
+})
 
 const FALLBACK_TB_WIDTH = 120
 const FALLBACK_TB_HEIGHT = 32

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, type RefObject } from 'react'
-import { HoverToolbarController, type HoverToolbarOptions } from '../preview/HoverToolbarController'
+import { HoverToolbarController, toHoverToolbarLabels, type HoverToolbarOptions } from '../preview/HoverToolbarController'
 import { useBetterEditorT } from '../i18n/useBetterEditorT'
 import { ACTIVE_CLASS, ACTIVE_SELECTOR } from '../internal/dom'
 import { TOOLBAR_ID, setHoverVars } from '../preview/hover-css'
@@ -57,13 +57,7 @@ export const usePreviewSettingsSync = ({
         position: hoverToolbarPosition,
         outlineWidth: hoverOutlineWidth,
         onAction: onBlockAction,
-        labels: {
-          moveUp: actions.moveUp,
-          moveDown: actions.moveDown,
-          duplicate: actions.duplicate,
-          addBelow: actions.addBelow,
-          delete: actions.delete,
-        },
+        labels: toHoverToolbarLabels(actions),
       }
       if (controllerRef.current) {
         controllerRef.current.update(next)

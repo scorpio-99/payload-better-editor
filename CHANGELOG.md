@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to [Semantic Versioning](https://semver.org).
 
-## [Unreleased]
+## [1.3.0]
 ### Added
 - German (`de`) translation: all UI strings are now translatable. English (`en`) remains the default. The active language follows Payload's admin UI language setting; translations are injected automatically by the plugin via `config.i18n.translations`.
 ### Changed

@@ -36,6 +36,7 @@ export type BetterEditorTranslations = {
     validationPlural: string
   }
   blocks: {
+    kicker: string
     emptyPrompt: string
     addBlock: string
     blockName: string
@@ -83,7 +84,6 @@ export type BetterEditorTranslations = {
   settings: {
     globalLabel: string
     globalDescription: string
-    adminGroup: string
     sidebar: {
       tabLabel: string
       tabDescription: string

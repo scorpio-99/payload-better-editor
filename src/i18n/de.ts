@@ -42,6 +42,7 @@ export const de: BetterEditorTranslations = {
     validationPlural: ' Felder benötigen Aufmerksamkeit',
   },
   blocks: {
+    kicker: 'Block',
     emptyPrompt: 'Block in der Vorschau auswählen, um seine Einstellungen zu bearbeiten.',
     addBlock: 'Block hinzufügen',
     blockName: 'Blockname',
@@ -89,7 +90,6 @@ export const de: BetterEditorTranslations = {
   settings: {
     globalLabel: 'Einstellungen',
     globalDescription: 'Editorweite Einstellungen für das Better Editor Overlay.',
-    adminGroup: 'Better Editor',
     sidebar: {
       tabLabel: 'Sidebar',
       tabDescription: 'Position und Feldanordnung der Sidebar.',

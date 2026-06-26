@@ -8,6 +8,7 @@ import { useMainWrapperPortal } from '../hooks/useMainWrapperPortal'
 import { buildStorageKeys } from '../internal/storage-keys'
 import { LayoutIcon } from './icons'
 import { useBetterEditorT } from '../i18n/useBetterEditorT'
+import '../styles/toggle.css'
 
 type Pref = { open?: boolean }
 
@@ -72,25 +73,12 @@ export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({
       <button
         aria-label={label}
         aria-pressed={open}
-        className="preview-btn"
+        className="preview-btn better-editor-toggle"
         onClick={handleToggle}
         title={label}
         type="button"
-        style={
-          open
-            ? {
-                width: 'auto',
-                borderColor: 'var(--theme-elevation-300)',
-                backgroundColor: 'var(--theme-elevation-100)',
-              }
-            : {width: 'auto'}
-        }
       >
-        <span style={{
-          color: 'var(--theme-elevation-700)',
-          display: 'inline-block',
-          marginRight: '0.5em'
-        }}>{label}</span>
+        <span className="better-editor-toggle__label">{label}</span>
         <LayoutIcon />
       </button>
 

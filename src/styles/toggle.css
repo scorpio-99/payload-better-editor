@@ -1,0 +1,17 @@
+/* Editor toggle button — visible label + open-state emphasis layered on top
+   of Payload's own .preview-btn. */
+
+.better-editor-toggle {
+  width: auto;
+}
+
+.better-editor-toggle[aria-pressed='true'] {
+  border-color: var(--theme-elevation-300);
+  background-color: var(--theme-elevation-100);
+}
+
+.better-editor-toggle__label {
+  display: inline-block;
+  margin-right: 0.5em;
+  color: var(--theme-elevation-700);
+}

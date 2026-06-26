@@ -1,6 +1,8 @@
 'use client'
 
 import React from 'react'
+import { useBetterEditorT } from '../i18n/useBetterEditorT'
+import type { BetterEditorTranslations } from '../i18n/types'
 
 type Props = {
   onClose: () => void
@@ -8,13 +10,15 @@ type Props = {
   children: React.ReactNode
 }
 
+type InnerProps = Props & { labels: BetterEditorTranslations['error'] }
+
 type State = {
   error: Error | null
 }
 
 const isDev = process.env.NODE_ENV !== 'production'
 
-export class OverlayErrorBoundary extends React.Component<Props, State> {
+class OverlayErrorBoundaryInner extends React.Component<InnerProps, State> {
   state: State = { error: null }
 
   static getDerivedStateFromError(error: Error): State {
@@ -34,22 +38,28 @@ export class OverlayErrorBoundary extends React.Component<Props, State> {
     const { error } = this.state
     if (!error) return this.props.children
 
+    const { labels } = this.props
     return (
       <div className="better-editor better-editor--errored" role="alert">
         <div className="better-editor__error">
-          <h3>Better Editor crashed</h3>
-          <p>{error.message || 'Unknown error.'}</p>
+          <h3>{labels.heading}</h3>
+          <p>{error.message || labels.unknown}</p>
           {isDev && error.stack ? <pre>{error.stack}</pre> : null}
           <div className="better-editor__error-actions">
             <button type="button" onClick={this.reset}>
-              Try again
+              {labels.tryAgain}
             </button>
             <button type="button" onClick={this.props.onClose}>
-              Close editor
+              {labels.closeEditor}
             </button>
           </div>
         </div>
       </div>
     )
   }
+}
+
+export const OverlayErrorBoundary: React.FC<Props> = (props) => {
+  const t = useBetterEditorT()
+  return <OverlayErrorBoundaryInner {...props} labels={t.error} />
 }

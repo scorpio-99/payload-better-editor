@@ -2,14 +2,19 @@ import type { CollectionConfig, Config, Field, GlobalConfig } from 'payload'
 import type { BetterEditorConfig } from './types'
 import { BETTER_EDITOR_SETTINGS_BANNER_FIELD, betterEditorSettingsGlobal } from './global'
 import { normalizeEntities } from './internal/entities'
+import { en } from './i18n/en'
+import { de } from './i18n/de'
+import { mergeTranslations } from './i18n/merge'
 
 export type { BetterEditorConfig }
 export type { BetterEditorSettings, HoverToolbarPosition } from './state/useBetterEditorSettings'
 export type { SidebarPosition } from './internal/constants'
+export type { BetterEditorTranslations } from './i18n/types'
 export { BETTER_EDITOR_SETTINGS_SLUG } from './global'
 
 /** Plugin signature — handy for typing plugin lists in consumer code. */
 export type BetterEditorPlugin = (config: Config) => Config
+
 
 export { VERSION } from './version'
 
@@ -125,6 +130,22 @@ export const betterEditor =
     config.globals = hasSettingsGlobal
       ? existingGlobals
       : [...existingGlobals, settingsGlobal]
+
+    const existingTranslations = config.i18n?.translations ?? {}
+    config.i18n = {
+      ...config.i18n,
+      translations: {
+        ...existingTranslations,
+        en: {
+          ...(existingTranslations.en as object ?? {}),
+          betterEditor: mergeTranslations(en, existingTranslations.en),
+        },
+        de: {
+          ...(existingTranslations.de as object ?? {}),
+          betterEditor: mergeTranslations(de, existingTranslations.de),
+        },
+      },
+    }
 
     if (collectionMap.size === 0 && globalMap.size === 0) {
       if (isDev) {

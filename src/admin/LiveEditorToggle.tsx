@@ -7,6 +7,7 @@ import { LiveEditorOverlay } from './LiveEditorOverlay'
 import { useMainWrapperPortal } from '../hooks/useMainWrapperPortal'
 import { buildStorageKeys } from '../internal/storage-keys'
 import { LayoutIcon } from './icons'
+import { useBetterEditorT } from '../i18n/useBetterEditorT'
 
 type Pref = { open?: boolean }
 
@@ -55,7 +56,8 @@ export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({
   const handleClose = useCallback(() => setOpen(false), [])
 
   const mountNode = useMainWrapperPortal(open, adminPortalSelector)
-  const label = open ? 'Close Better Editor' : 'Open Better Editor'
+  const t = useBetterEditorT()
+  const label = open ? t.toggle.close : t.toggle.open
 
   // Mirror Payload's official live-preview behaviour: only surface the
   // toggle once a previewURL is actually resolvable (collection has

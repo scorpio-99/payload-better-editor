@@ -101,6 +101,51 @@ Passed to `betterEditor({ … })`:
 | `storageNamespace` | `string` | `'better-editor'` | Prefix for `localStorage` keys (sidebar width, responsive viewport width, toggle preference). Set if multiple instances on the same origin would otherwise collide. |
 | `showSettingsBanner` | `boolean` | `true` | Show the plugin info banner (version, GitHub links) at the top of the `BetterEditorSettings` global. Set to `false` to hide it from end users. |
 
+### Translations
+
+The plugin ships with English (`en`) and German (`de`). English is the fallback for any locale without a translation object.
+
+#### Override individual strings
+
+Set your overrides in `config.i18n.translations` before the plugin entry in `plugins: []`. The plugin deep-merges them so your values take precedence - you only need to supply the keys you want to change:
+
+```ts
+import type { BetterEditorTranslations } from 'payload-better-editor'
+
+export default buildConfig({
+  i18n: {
+    translations: {
+      en: {
+        betterEditor: {
+          toggle: { open: 'Open live preview' },
+        } satisfies Partial<BetterEditorTranslations>,
+      },
+    },
+  },
+  plugins: [betterEditor({ collections: ['pages'] })],
+})
+```
+
+#### Add a new language
+
+Provide the complete translation object for the new locale under `config.i18n.translations.<locale>.betterEditor`. The plugin leaves all other locales untouched:
+
+```ts
+import type { BetterEditorTranslations } from 'payload-better-editor'
+
+const fr: BetterEditorTranslations = {
+  toggle: { open: 'Ouvrir Better Editor', close: 'Fermer Better Editor' },
+  // ... all other keys
+}
+
+export default buildConfig({
+  i18n: {
+    translations: { fr: { betterEditor: fr } },
+  },
+  plugins: [betterEditor({ collections: ['pages'] })],
+})
+```
+
 ### CSS variable overrides
 
 The overlay and the in-iframe hover toolbar expose two z-index custom properties so consumers can keep their own modals on top:

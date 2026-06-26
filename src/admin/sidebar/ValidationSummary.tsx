@@ -4,6 +4,7 @@ import React, { useMemo } from 'react'
 import { useAllFormFields } from '@payloadcms/ui'
 import type { FormState } from 'payload'
 import { collectFieldErrors } from './validation'
+import { useBetterEditorT } from '../../i18n/useBetterEditorT'
 
 export type ValidationSummaryProps = {
   blocksField: string
@@ -15,6 +16,7 @@ export const ValidationSummary: React.FC<ValidationSummaryProps> = ({
   blocksField,
   onSelectPath,
 }) => {
+  const t = useBetterEditorT()
   const [fields] = useAllFormFields()
   const errors = useMemo(
     () => collectFieldErrors(fields as FormState, blocksField),
@@ -23,11 +25,18 @@ export const ValidationSummary: React.FC<ValidationSummaryProps> = ({
 
   if (errors.length === 0) return null
 
+  const countLabel =
+    errors.length === 1
+      ? t.sidebar.validationSingular
+      : `${errors.length}${t.sidebar.validationPlural}`
+
   return (
-    <div className="better-editor-sidebar__errors" role="region" aria-label="Validation errors">
-      <p className="better-editor-sidebar__errors-title">
-        {errors.length === 1 ? '1 field needs attention' : `${errors.length} fields need attention`}
-      </p>
+    <div
+      className="better-editor-sidebar__errors"
+      role="region"
+      aria-label={t.sidebar.validationLabel}
+    >
+      <p className="better-editor-sidebar__errors-title">{countLabel}</p>
       <ul className="better-editor-sidebar__errors-list">
         {errors.map((error) => (
           <li key={error.path} className="better-editor-sidebar__errors-item">

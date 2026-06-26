@@ -6,38 +6,45 @@ import type { BlockActionMessage } from './protocol'
 
 type Action = BlockActionMessage['action']
 
-const BUTTONS: ReadonlyArray<{
-  action: Action
-  Icon: React.ComponentType<{ size?: number }>
-  label: string
-}> = [
-  { action: 'move-up', Icon: ChevronUp, label: 'Move up' },
-  { action: 'move-down', Icon: ChevronDown, label: 'Move down' },
-  { action: 'duplicate', Icon: CopyIcon, label: 'Duplicate' },
-  { action: 'add', Icon: PlusIcon, label: 'Add block below' },
-  { action: 'delete', Icon: TrashIcon, label: 'Delete' },
-]
+export type HoverToolbarLabels = {
+  moveUp: string
+  moveDown: string
+  duplicate: string
+  addBelow: string
+  delete: string
+}
 
 export type HoverToolbarProps = {
   onAction: (action: Action) => void
+  labels: HoverToolbarLabels
 }
 
-export const HoverToolbar: React.FC<HoverToolbarProps> = ({ onAction }) => (
-  <>
-    {BUTTONS.map(({ action, Icon, label }) => (
-      <button
-        key={action}
-        type="button"
-        aria-label={label}
-        title={label}
-        data-action={action}
-        onClick={(e) => {
-          e.stopPropagation()
-          onAction(action)
-        }}
-      >
-        <Icon size={14} />
-      </button>
-    ))}
-  </>
-)
+export const HoverToolbar: React.FC<HoverToolbarProps> = ({ onAction, labels }) => {
+  const buttons: ReadonlyArray<{ action: Action; Icon: React.ComponentType<{ size?: number }>; label: string }> = [
+    { action: 'move-up', Icon: ChevronUp, label: labels.moveUp },
+    { action: 'move-down', Icon: ChevronDown, label: labels.moveDown },
+    { action: 'duplicate', Icon: CopyIcon, label: labels.duplicate },
+    { action: 'add', Icon: PlusIcon, label: labels.addBelow },
+    { action: 'delete', Icon: TrashIcon, label: labels.delete },
+  ]
+
+  return (
+    <>
+      {buttons.map(({ action, Icon, label }) => (
+        <button
+          key={action}
+          type="button"
+          aria-label={label}
+          title={label}
+          data-action={action}
+          onClick={(e) => {
+            e.stopPropagation()
+            onAction(action)
+          }}
+        >
+          <Icon size={14} />
+        </button>
+      ))}
+    </>
+  )
+}

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useRef } from 'react'
+import React, { useCallback, useMemo, useRef } from 'react'
 import {
   DesktopIcon,
   MobileIcon,
@@ -8,17 +8,11 @@ import {
   TabletIcon,
   type IconProps,
 } from './icons'
+import { useBetterEditorT } from '../i18n/useBetterEditorT'
 
 export type Viewport = 'desktop' | 'tablet' | 'mobile' | 'responsive'
 
 type Item = { id: Viewport; label: string; Icon: React.FC<IconProps> }
-
-const ITEMS: ReadonlyArray<Item> = [
-  { id: 'desktop', label: 'Desktop', Icon: DesktopIcon },
-  { id: 'tablet', label: 'Tablet', Icon: TabletIcon },
-  { id: 'mobile', label: 'Mobile', Icon: MobileIcon },
-  { id: 'responsive', label: 'Responsive (drag to resize)', Icon: ResponsiveIcon },
-]
 
 const ROOT_CLASS = 'better-editor-viewport'
 const BTN_CLASS = `${ROOT_CLASS}__btn`
@@ -55,6 +49,16 @@ const ViewportButton: React.FC<ButtonProps> = ({ item, active, onSelect, buttonR
 }
 
 export const ViewportToggle: React.FC<ViewportToggleProps> = ({ value, onChange }) => {
+  const t = useBetterEditorT()
+  const ITEMS = useMemo<ReadonlyArray<Item>>(
+    () => [
+      { id: 'desktop', label: t.viewport.desktop, Icon: DesktopIcon },
+      { id: 'tablet', label: t.viewport.tablet, Icon: TabletIcon },
+      { id: 'mobile', label: t.viewport.mobile, Icon: MobileIcon },
+      { id: 'responsive', label: t.viewport.responsive, Icon: ResponsiveIcon },
+    ],
+    [t],
+  )
   const btnsRef = useRef<Array<HTMLButtonElement | null>>([])
 
   const onKeyDown = useCallback(
@@ -72,14 +76,14 @@ export const ViewportToggle: React.FC<ViewportToggleProps> = ({ value, onChange 
       onChange(next.id)
       btnsRef.current[nextIdx]?.focus()
     },
-    [onChange, value],
+    [onChange, value, ITEMS],
   )
 
   return (
     <div
       className={ROOT_CLASS}
       role="radiogroup"
-      aria-label="Preview viewport"
+      aria-label={t.viewport.groupLabel}
       onKeyDown={onKeyDown}
     >
       {ITEMS.map((item, i) => (

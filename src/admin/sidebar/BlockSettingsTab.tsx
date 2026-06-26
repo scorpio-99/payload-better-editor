@@ -18,6 +18,7 @@ import { findNamedField, resolveBlockSchema, resolveFieldBlocks } from '../block
 import type { ClientBlock } from 'payload'
 import { BlockEmptyState } from '../blocks/BlockEmptyState'
 import { BlockHeader } from '../blocks/BlockHeader'
+import { useBetterEditorT } from '../../i18n/useBetterEditorT'
 
 export type BlockSettingsTabProps = {
   selectedBlockPath: string | null
@@ -35,6 +36,7 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
   blocksField,
   addBelowRequestId = 0,
 }) => {
+  const t = useBetterEditorT()
   const { fields: docFields, slug: docSlug } = useDocConfig()
   const [fields] = useAllFormFields()
   const { config } = useConfig()
@@ -141,9 +143,7 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
       ) : null}
 
       {!resolved ? (
-        <div className="better-editor-tab__empty">
-          Could not resolve block schema for this path.
-        </div>
+        <div className="better-editor-tab__empty">{t.blocks.schemaError}</div>
       ) : (
         <>
           <BlockNameInput path={`${selectedBlockPath}.blockName`} />
@@ -165,11 +165,12 @@ export const BlockSettingsTab: React.FC<BlockSettingsTabProps> = ({
 
 const BlockNameInput: React.FC<{ path: string }> = ({ path }) => {
   const { value, setValue } = useField<string>({ path })
+  const t = useBetterEditorT()
   const inputId = `be-blockname-${path}`
   return (
     <div className="better-editor-tab__block-name">
       <label className="better-editor-tab__block-name-label" htmlFor={inputId}>
-        Block Name
+        {t.blocks.blockName}
       </label>
       <input
         id={inputId}
@@ -177,7 +178,7 @@ const BlockNameInput: React.FC<{ path: string }> = ({ path }) => {
         type="text"
         value={value || ''}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Optional label for this block"
+        placeholder={t.blocks.blockNamePlaceholder}
       />
     </div>
   )

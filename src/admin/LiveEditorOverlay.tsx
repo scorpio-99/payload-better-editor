@@ -14,6 +14,7 @@ import { useBlockActionMessages } from '../hooks/useBlockActionMessages'
 import { useOverlayKeyboard } from '../hooks/useOverlayKeyboard'
 import { useFocusTrap } from '../hooks/useFocusTrap'
 import { OverlayProviders } from '../providers/OverlayProviders'
+import { useBetterEditorT } from '../i18n/useBetterEditorT'
 import '../styles/overlay.css'
 import '../styles/preview.css'
 import '../styles/sidebar.css'
@@ -68,6 +69,7 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
   selectedBlockPath,
   setSelectedBlockPath,
 }) => {
+  const t = useBetterEditorT()
   const settings = useBetterEditorSettings()
   const history = useEditorHistory()
   const { previewURL } = useLivePreviewContext()
@@ -126,7 +128,7 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
       )}
       role="dialog"
       aria-modal="true"
-      aria-label="Better Editor"
+      aria-label={t.overlay.dialogLabel}
       tabIndex={-1}
     >
       <div className="better-editor__body" style={{ gridTemplateColumns }}>
@@ -168,7 +170,7 @@ const LiveEditorOverlayInner: React.FC<InnerProps> = ({
               style={{ order: 1 }}
               role="separator"
               aria-orientation="vertical"
-              aria-label="Resize sidebar (use ← / → arrow keys)"
+              aria-label={t.overlay.resizeSidebar}
               aria-valuenow={sidebarWidth}
               tabIndex={0}
               onMouseDown={onResizeStart}

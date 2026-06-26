@@ -9,6 +9,10 @@ import { act, cleanup, render } from '@testing-library/react'
 
 const counters = vi.hoisted(() => ({ pageTabRenders: 0 }))
 
+vi.mock('../../src/i18n/useBetterEditorT', async () => {
+  const { en } = await import('../../src/i18n/en')
+  return { useBetterEditorT: () => en }
+})
 vi.mock('../../src/admin/sidebar/DocumentSettingsTab', () => ({
   DocumentSettingsTab: () => {
     counters.pageTabRenders++

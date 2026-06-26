@@ -14,6 +14,7 @@ import {
   UndoIcon,
 } from './icons'
 import type { useEditorHistory } from '../state/useEditorHistory'
+import { useBetterEditorT } from '../i18n/useBetterEditorT'
 
 export type PreviewToolbarProps = {
   history: ReturnType<typeof useEditorHistory>
@@ -40,83 +41,85 @@ export const PreviewToolbar = React.memo<PreviewToolbarProps>(({
   onInteractToggle,
   sidebarCollapsed,
   onSidebarToggle,
-}) => (
-  <div className="better-editor__preview-toolbar">
-    <HistoryButtons history={history} />
-    <div className="better-editor__preview-toolbar-right">
-      <WidthChip iframeRef={iframeRef} />
-      <ViewportToggle value={viewport} onChange={onViewportChange} />
-      <div className="better-editor-viewport">
-        <button
-          type="button"
-          className={
-            isFullscreen
-              ? 'better-editor-viewport__btn better-editor-viewport__btn--active'
-              : 'better-editor-viewport__btn'
-          }
-          onClick={onFullscreenToggle}
-          aria-pressed={isFullscreen}
-          title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-          aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-        >
-          {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
-        </button>
-        <button
-          type="button"
-          className={
-            interactMode
-              ? 'better-editor-viewport__btn better-editor-viewport__btn--active'
-              : 'better-editor-viewport__btn'
-          }
-          onClick={onInteractToggle}
-          aria-pressed={interactMode}
-          title={
-            interactMode
-              ? 'Switch to edit mode'
-              : 'Switch to interact mode (use forms, accordions, links)'
-          }
-          aria-label={interactMode ? 'Switch to edit mode' : 'Switch to interact mode'}
-        >
-          {interactMode ? <InteractIcon /> : <InteractOffIcon />}
-        </button>
-        <button
-          type="button"
-          className="better-editor-viewport__btn"
-          onClick={onSidebarToggle}
-          aria-pressed={sidebarCollapsed}
-          title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
-          aria-label={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
-        >
-          {sidebarCollapsed ? <SidebarShowIcon /> : <SidebarHideIcon />}
-        </button>
+}) => {
+  const t = useBetterEditorT()
+  return (
+    <div className="better-editor__preview-toolbar">
+      <HistoryButtons history={history} />
+      <div className="better-editor__preview-toolbar-right">
+        <WidthChip iframeRef={iframeRef} />
+        <ViewportToggle value={viewport} onChange={onViewportChange} />
+        <div className="better-editor-viewport">
+          <button
+            type="button"
+            className={
+              isFullscreen
+                ? 'better-editor-viewport__btn better-editor-viewport__btn--active'
+                : 'better-editor-viewport__btn'
+            }
+            onClick={onFullscreenToggle}
+            aria-pressed={isFullscreen}
+            title={isFullscreen ? t.toolbar.exitFullscreen : t.toolbar.enterFullscreen}
+            aria-label={isFullscreen ? t.toolbar.exitFullscreen : t.toolbar.enterFullscreen}
+          >
+            {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+          </button>
+          <button
+            type="button"
+            className={
+              interactMode
+                ? 'better-editor-viewport__btn better-editor-viewport__btn--active'
+                : 'better-editor-viewport__btn'
+            }
+            onClick={onInteractToggle}
+            aria-pressed={interactMode}
+            title={interactMode ? t.toolbar.switchToEdit : t.toolbar.switchToInteract}
+            aria-label={interactMode ? t.toolbar.switchToEdit : t.toolbar.switchToInteractShort}
+          >
+            {interactMode ? <InteractIcon /> : <InteractOffIcon />}
+          </button>
+          <button
+            type="button"
+            className="better-editor-viewport__btn"
+            onClick={onSidebarToggle}
+            aria-pressed={sidebarCollapsed}
+            title={sidebarCollapsed ? t.toolbar.showSidebar : t.toolbar.hideSidebar}
+            aria-label={sidebarCollapsed ? t.toolbar.showSidebar : t.toolbar.hideSidebar}
+          >
+            {sidebarCollapsed ? <SidebarShowIcon /> : <SidebarHideIcon />}
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-))
+  )
+})
 
 const HistoryButtons: React.FC<{ history: ReturnType<typeof useEditorHistory> }> = ({
   history,
-}) => (
-  <div className="better-editor__history">
-    <button
-      type="button"
-      className="better-editor__history-btn"
-      onClick={history.undo}
-      disabled={!history.canUndo}
-      title="Undo (Cmd/Ctrl+Z)"
-      aria-label="Undo"
-    >
-      <UndoIcon />
-    </button>
-    <button
-      type="button"
-      className="better-editor__history-btn"
-      onClick={history.redo}
-      disabled={!history.canRedo}
-      title="Redo (Cmd/Ctrl+Shift+Z)"
-      aria-label="Redo"
-    >
-      <RedoIcon />
-    </button>
-  </div>
-)
+}) => {
+  const t = useBetterEditorT()
+  return (
+    <div className="better-editor__history">
+      <button
+        type="button"
+        className="better-editor__history-btn"
+        onClick={history.undo}
+        disabled={!history.canUndo}
+        title={t.toolbar.undoTitle}
+        aria-label={t.toolbar.undo}
+      >
+        <UndoIcon />
+      </button>
+      <button
+        type="button"
+        className="better-editor__history-btn"
+        onClick={history.redo}
+        disabled={!history.canRedo}
+        title={t.toolbar.redoTitle}
+        aria-label={t.toolbar.redo}
+      >
+        <RedoIcon />
+      </button>
+    </div>
+  )
+}

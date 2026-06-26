@@ -2,6 +2,7 @@
 
 import React, { useCallback, useRef, useState } from 'react'
 import { ChevronDown, ChevronUp, CopyIcon, PlusIcon, TrashIcon } from '../icons'
+import { useBetterEditorT } from '../../i18n/useBetterEditorT'
 
 export type BlockActionsToolbarProps = {
   canMoveUp: boolean
@@ -52,6 +53,8 @@ export const BlockActionsToolbar: React.FC<BlockActionsToolbarProps> = ({
     if (idx >= 0) setFocusIdx(idx)
   }, [])
 
+  const t = useBetterEditorT()
+
   if (!canMutate) return null
 
   const setRef = (i: number) => (el: HTMLButtonElement | null) => {
@@ -64,7 +67,7 @@ export const BlockActionsToolbar: React.FC<BlockActionsToolbarProps> = ({
     <div
       className="better-editor-tab__actions"
       role="toolbar"
-      aria-label="Block actions"
+      aria-label={t.blocks.actions.toolbar}
       onKeyDown={onKeyDown}
     >
       <button
@@ -75,8 +78,8 @@ export const BlockActionsToolbar: React.FC<BlockActionsToolbarProps> = ({
         className="better-editor-tab__action"
         onClick={onMoveUp}
         disabled={!canMoveUp}
-        title="Move up"
-        aria-label="Move block up"
+        title={t.blocks.actions.moveUp}
+        aria-label={t.blocks.actions.moveUpLabel}
       >
         <ChevronUp />
       </button>
@@ -88,8 +91,8 @@ export const BlockActionsToolbar: React.FC<BlockActionsToolbarProps> = ({
         className="better-editor-tab__action"
         onClick={onMoveDown}
         disabled={!canMoveDown}
-        title="Move down"
-        aria-label="Move block down"
+        title={t.blocks.actions.moveDown}
+        aria-label={t.blocks.actions.moveDownLabel}
       >
         <ChevronDown />
       </button>
@@ -100,8 +103,8 @@ export const BlockActionsToolbar: React.FC<BlockActionsToolbarProps> = ({
         onFocus={onFocus(2)}
         className="better-editor-tab__action"
         onClick={onDuplicate}
-        title="Duplicate"
-        aria-label="Duplicate block"
+        title={t.blocks.actions.duplicate}
+        aria-label={t.blocks.actions.duplicateLabel}
       >
         <CopyIcon />
       </button>
@@ -113,8 +116,8 @@ export const BlockActionsToolbar: React.FC<BlockActionsToolbarProps> = ({
         className="better-editor-tab__action"
         onClick={onAddBelow}
         disabled={!canAddBelow}
-        title="Add block below"
-        aria-label="Add block below"
+        title={t.blocks.actions.addBelow}
+        aria-label={t.blocks.actions.addBelowLabel}
       >
         <PlusIcon />
       </button>
@@ -125,8 +128,8 @@ export const BlockActionsToolbar: React.FC<BlockActionsToolbarProps> = ({
         onFocus={onFocus(4)}
         className="better-editor-tab__action better-editor-tab__action--danger"
         onClick={onDelete}
-        title="Delete"
-        aria-label="Delete block"
+        title={t.blocks.actions.delete}
+        aria-label={t.blocks.actions.deleteLabel}
       >
         <TrashIcon />
       </button>

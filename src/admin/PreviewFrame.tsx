@@ -10,6 +10,7 @@ import { useLatestRef } from '../hooks/useLatestRef'
 import { usePreviewBinding } from '../hooks/usePreviewBinding'
 import { usePreviewSettingsSync } from '../hooks/usePreviewSettingsSync'
 import { usePreviewSelectionSync } from '../hooks/usePreviewSelectionSync'
+import { useBetterEditorT } from '../i18n/useBetterEditorT'
 
 export type PreviewFrameProps = {
   iframeRef: RefObject<HTMLIFrameElement | null>
@@ -48,6 +49,7 @@ export const PreviewFrame = React.memo(function PreviewFrame({
   resizable = false,
   onResize,
 }: PreviewFrameProps) {
+  const t = useBetterEditorT()
   const [isLoading, setIsLoading] = useState(true)
   const interactModeRef = useLatestRef(interactMode)
 
@@ -136,7 +138,7 @@ export const PreviewFrame = React.memo(function PreviewFrame({
           className="better-editor-frame__handle better-editor-frame__handle--left"
           role="separator"
           aria-orientation="vertical"
-          aria-label="Resize preview from left"
+          aria-label={t.preview.resizeLeft}
           onMouseDown={onHandleMouseDown('left')}
         />
       ) : null}
@@ -144,14 +146,14 @@ export const PreviewFrame = React.memo(function PreviewFrame({
         ref={iframeRef}
         className="better-editor-frame"
         src={previewURL}
-        title="Better Editor preview"
+        title={t.preview.title}
         style={iframeStyle}
       />
       {isLoading ? (
         <div
           className="better-editor-frame__skeleton"
           role="status"
-          aria-label="Loading preview"
+          aria-label={t.preview.loading}
         >
           <div className="better-editor-frame__skeleton-bar better-editor-frame__skeleton-bar--lg" />
           <div className="better-editor-frame__skeleton-bar" />
@@ -164,7 +166,7 @@ export const PreviewFrame = React.memo(function PreviewFrame({
           className="better-editor-frame__handle better-editor-frame__handle--right"
           role="separator"
           aria-orientation="vertical"
-          aria-label="Resize preview from right"
+          aria-label={t.preview.resizeRight}
           onMouseDown={onHandleMouseDown('right')}
         />
       ) : null}

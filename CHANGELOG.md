@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to [Semantic Versioning](https://semver.org).
 
 ## [Unreleased]
+### Added
+- German (`de`) translation: all UI strings are now translatable. English (`en`) remains the default. The active language follows Payload's admin UI language setting; translations are injected automatically by the plugin via `config.i18n.translations`.
 ### Fixed
 - Blocks inside named tabs were not resolved: the schema path walker assumed every field is followed by an array index, but named tabs own a path segment without one. The walker now steps dynamically — named tabs (and groups) consume only their own segment; `blocks` and `array` fields still consume the following index.
 - `betterEditorSettingsGlobal` was not exported from the package even though the docs described using it for multi-tenant access control overrides.

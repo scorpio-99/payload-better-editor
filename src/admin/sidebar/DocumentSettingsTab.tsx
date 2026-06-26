@@ -3,6 +3,7 @@
 import React from 'react'
 import type { ClientField, ClientTab } from 'payload'
 import { DocumentFieldsTab } from './DocumentFieldsTab'
+import { useBetterEditorT } from '../../i18n/useBetterEditorT'
 
 const isNotSidebar = (f: ClientField): boolean =>
   !('admin' in f) || f.admin?.position !== 'sidebar'
@@ -39,10 +40,13 @@ const stripBlocks = (fields: ClientField[]): ClientField[] => {
   return result
 }
 
-export const DocumentSettingsTab: React.FC = () => (
-  <DocumentFieldsTab
-    filter={isNotSidebar}
-    transform={stripBlocks}
-    emptyText="No document-level fields found."
-  />
-)
+export const DocumentSettingsTab: React.FC = () => {
+  const t = useBetterEditorT()
+  return (
+    <DocumentFieldsTab
+      filter={isNotSidebar}
+      transform={stripBlocks}
+      emptyText={t.documentFields.noFields}
+    />
+  )
+}

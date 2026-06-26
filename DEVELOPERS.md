@@ -147,6 +147,15 @@ export default buildConfig({
 })
 ```
 
+> **Exception — the `BetterEditorSettings` global's own labels.** The field/tab
+> labels and descriptions of the settings global are baked from the plugin's
+> bundled `en`/`de` at config-build time, because Payload serializes entity and
+> field labels into the admin layout (a React Server Component) where a runtime
+> translation function can't be passed. As a result, overriding these specific
+> strings via `config.i18n.translations` has no effect, and a newly added locale
+> falls back to English for them (it still applies everywhere else, including the
+> settings *validation messages*, which do run through the runtime `t()`).
+
 ### CSS variable overrides
 
 The overlay and the in-iframe hover toolbar expose two z-index custom properties so consumers can keep their own modals on top:

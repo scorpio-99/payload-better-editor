@@ -10,6 +10,7 @@ import {
 } from './internal/limits'
 import type { BetterEditorTranslations } from './i18n/types'
 import { en } from './i18n/en'
+import { cs } from './i18n/cs'
 import { de } from './i18n/de'
 
 export const BETTER_EDITOR_SETTINGS_SLUG = 'better-editor-settings'
@@ -28,6 +29,7 @@ const settingsKey = (path: string) => `betterEditor:settings.${path}`
 // Locales the plugin ships built-in translations for.
 const SETTINGS_TRANSLATIONS: Record<string, BetterEditorTranslations['settings']> = {
   en: en.settings,
+  cs: cs.settings,
   de: de.settings,
 }
 

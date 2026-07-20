@@ -3,6 +3,7 @@ import type { BetterEditorConfig } from './types'
 import { BETTER_EDITOR_SETTINGS_BANNER_FIELD, betterEditorSettingsGlobal } from './global'
 import { normalizeEntities } from './internal/entities'
 import { en } from './i18n/en'
+import { cs } from './i18n/cs'
 import { de } from './i18n/de'
 import { mergeTranslations } from './i18n/merge'
 
@@ -144,6 +145,10 @@ export const betterEditor =
         de: {
           ...(existingTranslations.de as object ?? {}),
           betterEditor: mergeTranslations(de, existingTranslations.de),
+        },
+        cs: {
+          ...(existingTranslations.cs as object ?? {}),
+          betterEditor: mergeTranslations(cs, existingTranslations.cs),
         },
       },
     }

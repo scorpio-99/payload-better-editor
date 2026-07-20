@@ -104,7 +104,7 @@ Passed to `betterEditor({ … })`:
 
 ### Translations
 
-The plugin ships with English (`en`) and German (`de`). English is the fallback for any locale without a translation object.
+The plugin ships with English (`en`), Czech (`cs`), and German (`de`). English is the fallback for any locale without a translation object.
 
 #### Override individual strings
 

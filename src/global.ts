@@ -9,8 +9,7 @@ import {
   TABLET_WIDTH_MIN,
 } from './internal/limits'
 import type { BetterEditorTranslations } from './i18n/types'
-import { en } from './i18n/en'
-import { de } from './i18n/de'
+import { translations } from './i18n'
 
 export const BETTER_EDITOR_SETTINGS_SLUG = 'better-editor-settings'
 
@@ -25,11 +24,9 @@ type AnyT = (key: string) => string
 
 const settingsKey = (path: string) => `betterEditor:settings.${path}`
 
-// Locales the plugin ships built-in translations for.
-const SETTINGS_TRANSLATIONS: Record<string, BetterEditorTranslations['settings']> = {
-  en: en.settings,
-  de: de.settings,
-}
+// Settings-label locale maps, derived from every bundled translation.
+const SETTINGS_TRANSLATIONS: Record<string, BetterEditorTranslations['settings']> =
+  Object.fromEntries(Object.entries(translations).map(([locale, t]) => [locale, t.settings]))
 
 const lookupSetting = (settings: BetterEditorTranslations['settings'], path: string): string =>
   path

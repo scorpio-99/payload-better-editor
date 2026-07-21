@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.4.0]
+### Added
+- Thirteen more built-in translations, activated automatically when the host enables the matching locale in `i18n.supportedLanguages` (English remains the fallback). The non-English/German locales are machine-translated and may contain errors. Built-in languages now live in a single `src/i18n` registry, so adding one is a single file plus one entry. ([#27](https://github.com/scorpio-99/payload-better-editor/issues/27))
+  - French (`fr`)
+  - Spanish (`es`)
+  - Italian (`it`)
+  - Portuguese (`pt`)
+  - Dutch (`nl`)
+  - Polish (`pl`)
+  - Czech (`cs`)
+  - Swedish (`sv`)
+  - Danish (`da`)
+  - Norwegian Bokmål (`nb`)
+  - Ukrainian (`uk`)
+  - Turkish (`tr`)
+  - Romanian (`ro`)
+
 ## [1.3.0]
 ### Added
 - German (`de`) translation: all UI strings are now translatable. English (`en`) remains the default. The active language follows Payload's admin UI language setting; translations are injected automatically by the plugin via `config.i18n.translations`.

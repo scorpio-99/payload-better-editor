@@ -104,7 +104,25 @@ Passed to `betterEditor({ … })`:
 
 ### Translations
 
-The plugin ships with English (`en`) and German (`de`). English is the fallback for any locale without a translation object.
+The plugin ships with these built-in languages:
+
+- English (`en`)
+- German (`de`)
+- French (`fr`)
+- Spanish (`es`)
+- Italian (`it`)
+- Portuguese (`pt`)
+- Dutch (`nl`)
+- Polish (`pl`)
+- Czech (`cs`)
+- Swedish (`sv`)
+- Danish (`da`)
+- Norwegian Bokmål (`nb`)
+- Ukrainian (`uk`)
+- Turkish (`tr`)
+- Romanian (`ro`)
+
+English is the fallback for any locale without a translation object. A built-in language shows up only when the host app enables that locale in `i18n.supportedLanguages`. All locales except English and German are machine-translated and may contain errors — corrections via PR are welcome.
 
 #### Override individual strings
 

@@ -2,8 +2,7 @@ import type { CollectionConfig, Config, Field, GlobalConfig } from 'payload'
 import type { BetterEditorConfig } from './types'
 import { BETTER_EDITOR_SETTINGS_BANNER_FIELD, betterEditorSettingsGlobal } from './global'
 import { normalizeEntities } from './internal/entities'
-import { en } from './i18n/en'
-import { de } from './i18n/de'
+import { translations as builtinTranslations } from './i18n'
 import { mergeTranslations } from './i18n/merge'
 
 export type { BetterEditorConfig }
@@ -132,19 +131,23 @@ export const betterEditor =
       ? existingGlobals
       : [...existingGlobals, settingsGlobal]
 
-    const existingTranslations = config.i18n?.translations ?? {}
+    const existingTranslations = (config.i18n?.translations ?? {}) as Record<
+      string,
+      Record<string, unknown> | undefined
+    >
     config.i18n = {
       ...config.i18n,
       translations: {
         ...existingTranslations,
-        en: {
-          ...(existingTranslations.en as object ?? {}),
-          betterEditor: mergeTranslations(en, existingTranslations.en),
-        },
-        de: {
-          ...(existingTranslations.de as object ?? {}),
-          betterEditor: mergeTranslations(de, existingTranslations.de),
-        },
+        ...Object.fromEntries(
+          Object.entries(builtinTranslations).map(([locale, builtin]) => [
+            locale,
+            {
+              ...(existingTranslations[locale] ?? {}),
+              betterEditor: mergeTranslations(builtin, existingTranslations[locale]),
+            },
+          ]),
+        ),
       },
     }
 

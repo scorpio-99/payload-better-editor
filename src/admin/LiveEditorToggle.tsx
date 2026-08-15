@@ -3,11 +3,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useDocumentInfo, useLivePreviewContext, usePreferences } from '@payloadcms/ui'
-import { LiveEditorOverlay } from './LiveEditorOverlay'
-import { useMainWrapperPortal } from '../hooks/useMainWrapperPortal'
-import { buildStorageKeys } from '../internal/storage-keys'
-import { LayoutIcon } from './icons'
-import { useBetterEditorT } from '../i18n/useBetterEditorT'
+import { LiveEditorOverlay } from './LiveEditorOverlay.js'
+import { useMainWrapperPortal } from '../hooks/useMainWrapperPortal.js'
+import { buildStorageKeys } from '../internal/storage-keys.js'
+import { LayoutIcon } from './icons.js'
+import { useBetterEditorT } from '../i18n/useBetterEditorT.js'
 import '../styles/toggle.css'
 
 type Pref = { open?: boolean }

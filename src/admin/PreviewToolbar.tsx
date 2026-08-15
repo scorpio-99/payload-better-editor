@@ -1,8 +1,8 @@
 'use client'
 
 import React, { type RefObject } from 'react'
-import { ViewportToggle, type Viewport } from './ViewportToggle'
-import { WidthChip } from './WidthChip'
+import { ViewportToggle, type Viewport } from './ViewportToggle.js'
+import { WidthChip } from './WidthChip.js'
 import {
   FullscreenExitIcon,
   FullscreenIcon,
@@ -12,9 +12,9 @@ import {
   SidebarHideIcon,
   SidebarShowIcon,
   UndoIcon,
-} from './icons'
-import type { useEditorHistory } from '../state/useEditorHistory'
-import { useBetterEditorT } from '../i18n/useBetterEditorT'
+} from './icons.js'
+import type { useEditorHistory } from '../state/useEditorHistory.js'
+import { useBetterEditorT } from '../i18n/useBetterEditorT.js'
 
 export type PreviewToolbarProps = {
   history: ReturnType<typeof useEditorHistory>

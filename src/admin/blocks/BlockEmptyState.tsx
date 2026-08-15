@@ -1,8 +1,8 @@
 'use client'
 
 import React from 'react'
-import { PlusIcon } from '../icons'
-import { useBetterEditorT } from '../../i18n/useBetterEditorT'
+import { PlusIcon } from '../icons.js'
+import { useBetterEditorT } from '../../i18n/useBetterEditorT.js'
 
 export type BlockEmptyStateProps = {
   canAdd: boolean

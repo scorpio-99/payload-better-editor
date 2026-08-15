@@ -3,8 +3,8 @@
  * Better Editor overlay. Auto-injected by the plugin factory; consumers
  * usually don't render it directly.
  */
-export { LiveEditorToggle } from './admin/LiveEditorToggle'
-export type { LiveEditorToggleProps } from './admin/LiveEditorToggle'
+export { LiveEditorToggle } from './admin/LiveEditorToggle.js'
+export type { LiveEditorToggleProps } from './admin/LiveEditorToggle.js'
 
 /**
  * The full editor overlay (preview iframe + 3-tab sidebar). Mounted into
@@ -12,14 +12,14 @@ export type { LiveEditorToggleProps } from './admin/LiveEditorToggle'
  * can build a custom toggle / wrapper if they need to bypass the
  * auto-injected button.
  */
-export { LiveEditorOverlay } from './admin/LiveEditorOverlay'
-export type { LiveEditorOverlayProps } from './admin/LiveEditorOverlay'
+export { LiveEditorOverlay } from './admin/LiveEditorOverlay.js'
+export type { LiveEditorOverlayProps } from './admin/LiveEditorOverlay.js'
 
 /**
  * Banner shown at the top of the `BetterEditorSettings` global. Wired up
  * automatically; hide it via `betterEditor({ showSettingsBanner: false })`.
  */
-export { SettingsBanner } from './admin/SettingsBanner'
+export { SettingsBanner } from './admin/SettingsBanner.js'
 
 /**
  * Spread these props on every block wrapper in your frontend so the

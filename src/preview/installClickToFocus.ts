@@ -1,4 +1,4 @@
-import { BLOCK_ID_ATTR, BLOCK_ID_SELECTOR } from '../internal/dom'
+import { BLOCK_ID_ATTR, BLOCK_ID_SELECTOR } from '../internal/dom.js'
 
 export type InstallClickToFocusOptions = {
   /** Returning false from this gate lets the click propagate to the

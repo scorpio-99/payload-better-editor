@@ -1,12 +1,12 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import type { Viewport } from '../admin/ViewportToggle'
-import type { BetterEditorSettings } from '../state/useBetterEditorSettings'
-import { clampViewport } from '../internal/limits'
-import { DEFAULT_RESPONSIVE_WIDTH } from '../internal/constants'
-import { useBetterEditorConfig } from '../providers/BetterEditorConfigProvider'
-import { readNumber, writeString } from '../internal/storage'
+import type { Viewport } from '../admin/ViewportToggle.js'
+import type { BetterEditorSettings } from '../state/useBetterEditorSettings.js'
+import { clampViewport } from '../internal/limits.js'
+import { DEFAULT_RESPONSIVE_WIDTH } from '../internal/constants.js'
+import { useBetterEditorConfig } from '../providers/BetterEditorConfigProvider.js'
+import { readNumber, writeString } from '../internal/storage.js'
 
 export type UseViewportStateReturn = {
   viewport: Viewport

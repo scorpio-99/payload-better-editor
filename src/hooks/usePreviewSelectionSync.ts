@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, type RefObject } from 'react'
 import { useAllFormFields, useDocumentEvents, useDocumentInfo } from '@payloadcms/ui'
-import { HoverToolbarController } from '../preview/HoverToolbarController'
-import { INTERACT_BODY_ATTR } from '../preview/hover-css'
-import { getSameOriginDocument } from '../internal/iframe'
-import { useEditorHistory } from '../state/useEditorHistory'
+import { HoverToolbarController } from '../preview/HoverToolbarController.js'
+import { INTERACT_BODY_ATTR } from '../preview/hover-css.js'
+import { getSameOriginDocument } from '../internal/iframe.js'
+import { useEditorHistory } from '../state/useEditorHistory.js'
 
 export type UsePreviewSelectionSyncArgs = {
   iframeRef: RefObject<HTMLIFrameElement | null>

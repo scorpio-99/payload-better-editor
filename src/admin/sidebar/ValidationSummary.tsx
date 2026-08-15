@@ -3,8 +3,8 @@
 import React, { useMemo } from 'react'
 import { useAllFormFields } from '@payloadcms/ui'
 import type { FormState } from 'payload'
-import { collectFieldErrors } from './validation'
-import { useBetterEditorT } from '../../i18n/useBetterEditorT'
+import { collectFieldErrors } from './validation.js'
+import { useBetterEditorT } from '../../i18n/useBetterEditorT.js'
 
 export type ValidationSummaryProps = {
   blocksField: string

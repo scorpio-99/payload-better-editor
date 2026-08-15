@@ -1,16 +1,16 @@
 'use client'
 
 import React, { useCallback, useEffect, useMemo, useState, type RefObject } from 'react'
-import type { HoverToolbarPosition } from '../internal/constants'
-import { postToParent } from '../internal/postmessage'
-import type { BlockActionMessage } from '../preview/protocol'
-import type { Viewport } from './ViewportToggle'
-import { usePreviewHandleDrag } from '../hooks/usePreviewHandleDrag'
-import { useLatestRef } from '../hooks/useLatestRef'
-import { usePreviewBinding } from '../hooks/usePreviewBinding'
-import { usePreviewSettingsSync } from '../hooks/usePreviewSettingsSync'
-import { usePreviewSelectionSync } from '../hooks/usePreviewSelectionSync'
-import { useBetterEditorT } from '../i18n/useBetterEditorT'
+import type { HoverToolbarPosition } from '../internal/constants.js'
+import { postToParent } from '../internal/postmessage.js'
+import type { BlockActionMessage } from '../preview/protocol.js'
+import type { Viewport } from './ViewportToggle.js'
+import { usePreviewHandleDrag } from '../hooks/usePreviewHandleDrag.js'
+import { useLatestRef } from '../hooks/useLatestRef.js'
+import { usePreviewBinding } from '../hooks/usePreviewBinding.js'
+import { usePreviewSettingsSync } from '../hooks/usePreviewSettingsSync.js'
+import { usePreviewSelectionSync } from '../hooks/usePreviewSelectionSync.js'
+import { useBetterEditorT } from '../i18n/useBetterEditorT.js'
 
 export type PreviewFrameProps = {
   iframeRef: RefObject<HTMLIFrameElement | null>

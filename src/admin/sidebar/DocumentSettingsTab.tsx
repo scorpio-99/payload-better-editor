@@ -2,8 +2,8 @@
 
 import React from 'react'
 import type { ClientField, ClientTab } from 'payload'
-import { DocumentFieldsTab } from './DocumentFieldsTab'
-import { useBetterEditorT } from '../../i18n/useBetterEditorT'
+import { DocumentFieldsTab } from './DocumentFieldsTab.js'
+import { useBetterEditorT } from '../../i18n/useBetterEditorT.js'
 
 const isNotSidebar = (f: ClientField): boolean =>
   !('admin' in f) || f.admin?.position !== 'sidebar'

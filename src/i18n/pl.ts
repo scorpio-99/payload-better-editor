@@ -1,5 +1,5 @@
 // Machine-translated (not reviewed by a native speaker) — may contain errors.
-import type { BetterEditorTranslations } from './types'
+import type { BetterEditorTranslations } from './types.js'
 
 export const pl: BetterEditorTranslations = {
   toggle: {

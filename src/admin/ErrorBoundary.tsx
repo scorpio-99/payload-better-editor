@@ -1,8 +1,8 @@
 'use client'
 
 import React from 'react'
-import { useBetterEditorT } from '../i18n/useBetterEditorT'
-import type { BetterEditorTranslations } from '../i18n/types'
+import { useBetterEditorT } from '../i18n/useBetterEditorT.js'
+import type { BetterEditorTranslations } from '../i18n/types.js'
 
 type Props = {
   onClose: () => void

@@ -1,8 +1,8 @@
 'use client'
 
 import { useTranslation } from '@payloadcms/ui'
-import type { BetterEditorTranslations } from './types'
-import { en } from './en'
+import type { BetterEditorTranslations } from './types.js'
+import { en } from './en.js'
 
 export const useBetterEditorT = (): BetterEditorTranslations => {
   const { i18n } = useTranslation()

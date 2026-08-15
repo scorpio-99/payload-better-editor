@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useCallback, useRef, useState } from 'react'
-import { ChevronDown, ChevronUp, CopyIcon, PlusIcon, TrashIcon } from '../icons'
-import { useBetterEditorT } from '../../i18n/useBetterEditorT'
+import { ChevronDown, ChevronUp, CopyIcon, PlusIcon, TrashIcon } from '../icons.js'
+import { useBetterEditorT } from '../../i18n/useBetterEditorT.js'
 
 export type BlockActionsToolbarProps = {
   canMoveUp: boolean

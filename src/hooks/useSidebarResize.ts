@@ -8,10 +8,10 @@ import {
   SIDEBAR_KEYBOARD_STEP_PX,
   SIDEBAR_KEYBOARD_STEP_LARGE_PX,
   STORAGE_DEBOUNCE_MS,
-} from '../internal/constants'
-import { useBetterEditorConfig } from '../providers/BetterEditorConfigProvider'
-import { readNumber, writeString } from '../internal/storage'
-import { startHorizontalDrag } from '../internal/drag'
+} from '../internal/constants.js'
+import { useBetterEditorConfig } from '../providers/BetterEditorConfigProvider.js'
+import { readNumber, writeString } from '../internal/storage.js'
+import { startHorizontalDrag } from '../internal/drag.js'
 
 const clampSidebar = (n: number): number =>
   Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, n))

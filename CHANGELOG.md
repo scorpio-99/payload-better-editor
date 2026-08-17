@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.4.1]
+### Fixed
+- Relative imports in the built package now carry file extensions, so the package loads under Node's native ESM resolver — not just under bundlers. Previously anything on Node's resolver (Vitest, `tsx`/`node` scripts importing a Payload config with the plugin registered) threw `ERR_MODULE_NOT_FOUND` at import time, while bundlers (Next/Turbopack) masked it. ([#29](https://github.com/scorpio-99/payload-better-editor/issues/29))
+
 ## [1.4.0]
 ### Added
 - Thirteen more built-in translations, activated automatically when the host enables the matching locale in `i18n.supportedLanguages` (English remains the fallback). The non-English/German locales are machine-translated and may contain errors. Built-in languages now live in a single `src/i18n` registry, so adding one is a single file plus one entry. ([#27](https://github.com/scorpio-99/payload-better-editor/issues/27))

@@ -1,4 +1,4 @@
-import type { HoverToolbarPosition } from '../internal/constants'
+import type { HoverToolbarPosition } from '../internal/constants.js'
 
 // Mirrors the 1px outline-edge gap in HOVER_CSS so the toolbar stays a
 // consistent visual distance from the outline regardless of outline width.

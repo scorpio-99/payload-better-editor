@@ -1,8 +1,8 @@
 'use client'
 
 import { useAllFormFields, useForm } from '@payloadcms/ui'
-import { useEditorHistory } from '../../state/useEditorHistory'
-import { splitFieldPath } from '../../internal/path'
+import { useEditorHistory } from '../../state/useEditorHistory.js'
+import { splitFieldPath } from '../../internal/path.js'
 
 type Args = {
   selectedBlockPath: string | null

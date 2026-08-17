@@ -1,20 +1,20 @@
 import type { CollectionConfig, Config, Field, GlobalConfig } from 'payload'
-import type { BetterEditorConfig } from './types'
-import { BETTER_EDITOR_SETTINGS_BANNER_FIELD, betterEditorSettingsGlobal } from './global'
-import { normalizeEntities } from './internal/entities'
-import { translations as builtinTranslations } from './i18n'
-import { mergeTranslations } from './i18n/merge'
+import type { BetterEditorConfig } from './types.js'
+import { BETTER_EDITOR_SETTINGS_BANNER_FIELD, betterEditorSettingsGlobal } from './global.js'
+import { normalizeEntities } from './internal/entities.js'
+import { translations as builtinTranslations } from './i18n/index.js'
+import { mergeTranslations } from './i18n/merge.js'
 
 export type { BetterEditorConfig }
-export type { BetterEditorSettings, HoverToolbarPosition } from './state/useBetterEditorSettings'
-export type { SidebarPosition } from './internal/constants'
-export type { BetterEditorTranslations } from './i18n/types'
-export { BETTER_EDITOR_SETTINGS_SLUG, betterEditorSettingsGlobal } from './global'
+export type { BetterEditorSettings, HoverToolbarPosition } from './state/useBetterEditorSettings.js'
+export type { SidebarPosition } from './internal/constants.js'
+export type { BetterEditorTranslations } from './i18n/types.js'
+export { BETTER_EDITOR_SETTINGS_SLUG, betterEditorSettingsGlobal } from './global.js'
 
 /** Plugin signature — handy for typing plugin lists in consumer code. */
 export type BetterEditorPlugin = (config: Config) => Config
 
-export { VERSION } from './version'
+export { VERSION } from './version.js'
 
 const DEFAULT_BLOCKS_FIELD = 'layout'
 const TOGGLE_COMPONENT_PATH = 'payload-better-editor/client#LiveEditorToggle'

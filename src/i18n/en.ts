@@ -1,4 +1,4 @@
-import type { BetterEditorTranslations } from './types'
+import type { BetterEditorTranslations } from './types.js'
 
 export const en: BetterEditorTranslations = {
   toggle: {

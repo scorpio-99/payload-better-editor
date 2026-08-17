@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useEditorHistory } from '../state/useEditorHistory'
-import { useLatestRef } from './useLatestRef'
+import { useEditorHistory } from '../state/useEditorHistory.js'
+import { useLatestRef } from './useLatestRef.js'
 
 export type UseOverlayKeyboardArgs = {
   history: ReturnType<typeof useEditorHistory>

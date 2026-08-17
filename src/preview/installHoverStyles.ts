@@ -1,4 +1,4 @@
-import { HOVER_CSS, HOVER_STYLE_ID, clearHoverVars, setHoverVars, type HoverVars } from './hover-css'
+import { HOVER_CSS, HOVER_STYLE_ID, clearHoverVars, setHoverVars, type HoverVars } from './hover-css.js'
 
 export const installHoverStyles = (doc: Document, vars: HoverVars): (() => void) => {
   doc.getElementById(HOVER_STYLE_ID)?.remove()

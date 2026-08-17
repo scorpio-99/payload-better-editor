@@ -3,7 +3,7 @@
 import React from 'react'
 import { BlocksDrawer } from '@payloadcms/ui'
 import type { ClientBlock } from 'payload'
-import { useBetterEditorT } from '../../i18n/useBetterEditorT'
+import { useBetterEditorT } from '../../i18n/useBetterEditorT.js'
 
 export type AddBlockDrawerProps = {
   slug: string

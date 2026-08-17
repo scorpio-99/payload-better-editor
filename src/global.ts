@@ -1,5 +1,5 @@
 import type { GlobalConfig } from 'payload'
-import { DEFAULT_BETTER_EDITOR_SETTINGS as D } from './internal/constants'
+import { DEFAULT_BETTER_EDITOR_SETTINGS as D } from './internal/constants.js'
 import {
   HOVER_OUTLINE_MAX,
   HOVER_OUTLINE_MIN,
@@ -7,9 +7,9 @@ import {
   MOBILE_WIDTH_MIN,
   TABLET_WIDTH_MAX,
   TABLET_WIDTH_MIN,
-} from './internal/limits'
-import type { BetterEditorTranslations } from './i18n/types'
-import { translations } from './i18n'
+} from './internal/limits.js'
+import type { BetterEditorTranslations } from './i18n/types.js'
+import { translations } from './i18n/index.js'
 
 export const BETTER_EDITOR_SETTINGS_SLUG = 'better-editor-settings'
 

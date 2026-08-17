@@ -1,13 +1,13 @@
 'use client'
 
 import { useEffect, type RefObject } from 'react'
-import { HoverToolbarController, toHoverToolbarLabels, type HoverToolbarOptions } from '../preview/HoverToolbarController'
-import { useBetterEditorT } from '../i18n/useBetterEditorT'
-import { ACTIVE_CLASS, ACTIVE_SELECTOR } from '../internal/dom'
-import { TOOLBAR_ID, setHoverVars } from '../preview/hover-css'
-import type { BlockActionMessage } from '../preview/protocol'
-import { getSameOriginDocument } from '../internal/iframe'
-import type { PreviewBindingSettings } from './usePreviewBinding'
+import { HoverToolbarController, toHoverToolbarLabels, type HoverToolbarOptions } from '../preview/HoverToolbarController.js'
+import { useBetterEditorT } from '../i18n/useBetterEditorT.js'
+import { ACTIVE_CLASS, ACTIVE_SELECTOR } from '../internal/dom.js'
+import { TOOLBAR_ID, setHoverVars } from '../preview/hover-css.js'
+import type { BlockActionMessage } from '../preview/protocol.js'
+import { getSameOriginDocument } from '../internal/iframe.js'
+import type { PreviewBindingSettings } from './usePreviewBinding.js'
 
 export type UsePreviewSettingsSyncArgs = {
   iframeRef: RefObject<HTMLIFrameElement | null>

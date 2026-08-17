@@ -7,8 +7,8 @@ import {
   ResponsiveIcon,
   TabletIcon,
   type IconProps,
-} from './icons'
-import { useBetterEditorT } from '../i18n/useBetterEditorT'
+} from './icons.js'
+import { useBetterEditorT } from '../i18n/useBetterEditorT.js'
 
 export type Viewport = 'desktop' | 'tablet' | 'mobile' | 'responsive'
 

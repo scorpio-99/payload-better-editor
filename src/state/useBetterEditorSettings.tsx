@@ -1,14 +1,14 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import { BETTER_EDITOR_SETTINGS_SLUG } from '../global'
+import { BETTER_EDITOR_SETTINGS_SLUG } from '../global.js'
 import {
   DEFAULT_BETTER_EDITOR_SETTINGS,
   HOVER_TOOLBAR_POSITIONS,
   SIDEBAR_POSITIONS,
   type HoverToolbarPosition,
   type SidebarPosition,
-} from '../internal/constants'
+} from '../internal/constants.js'
 
 export type { HoverToolbarPosition }
 

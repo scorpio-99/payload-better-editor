@@ -6,7 +6,7 @@ import {
   DEFAULT_STORAGE_KEYS,
   DEFAULT_STORAGE_NAMESPACE,
   type StorageKeys,
-} from '../internal/storage-keys'
+} from '../internal/storage-keys.js'
 
 export type BetterEditorRuntimeConfig = {
   storageKeys: StorageKeys

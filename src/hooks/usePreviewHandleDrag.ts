@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { clampViewport } from '../internal/limits'
-import { startHorizontalDrag } from '../internal/drag'
+import { clampViewport } from '../internal/limits.js'
+import { startHorizontalDrag } from '../internal/drag.js'
 
 export type UsePreviewHandleDragOptions = {
   resizable: boolean

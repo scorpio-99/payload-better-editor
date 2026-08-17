@@ -1,9 +1,9 @@
 'use client'
 
 import React from 'react'
-import { BugIcon, GithubIcon, StarIcon } from './icons'
-import { VERSION } from '../version'
-import { useBetterEditorT } from '../i18n/useBetterEditorT'
+import { BugIcon, GithubIcon, StarIcon } from './icons.js'
+import { VERSION } from '../version.js'
+import { useBetterEditorT } from '../i18n/useBetterEditorT.js'
 import '../styles/settings-banner.css'
 
 const REPO = 'scorpio-99/payload-better-editor'

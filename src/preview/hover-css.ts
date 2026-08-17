@@ -1,4 +1,4 @@
-import { ACTIVE_CLASS, BLOCK_ID_ATTR } from '../internal/dom'
+import { ACTIVE_CLASS, BLOCK_ID_ATTR } from '../internal/dom.js'
 
 export const HOVER_STYLE_ID = 'better-editor-hover-style'
 export const HOVER_VARS_STYLE_ID = 'better-editor-hover-vars'

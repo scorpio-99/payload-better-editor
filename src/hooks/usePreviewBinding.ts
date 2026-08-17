@@ -1,21 +1,21 @@
 'use client'
 
 import { useCallback, useEffect, useRef, type RefObject } from 'react'
-import { HoverToolbarController, toHoverToolbarLabels } from '../preview/HoverToolbarController'
-import { useBetterEditorT } from '../i18n/useBetterEditorT'
-import { installClickToFocus } from '../preview/installClickToFocus'
-import { installHoverStyles } from '../preview/installHoverStyles'
-import type { BlockActionMessage } from '../preview/protocol'
-import { BLOCK_ID_SELECTOR } from '../internal/dom'
-import { getSameOriginDocument } from '../internal/iframe'
-import { useLatestRef } from './useLatestRef'
+import { HoverToolbarController, toHoverToolbarLabels } from '../preview/HoverToolbarController.js'
+import { useBetterEditorT } from '../i18n/useBetterEditorT.js'
+import { installClickToFocus } from '../preview/installClickToFocus.js'
+import { installHoverStyles } from '../preview/installHoverStyles.js'
+import type { BlockActionMessage } from '../preview/protocol.js'
+import { BLOCK_ID_SELECTOR } from '../internal/dom.js'
+import { getSameOriginDocument } from '../internal/iframe.js'
+import { useLatestRef } from './useLatestRef.js'
 
 export type PreviewBindingSettings = {
   hoverColorTopLevel: string
   hoverColorNested: string
   hoverOutlineWidth: number
   showHoverToolbar: boolean
-  hoverToolbarPosition: import('../internal/constants').HoverToolbarPosition
+  hoverToolbarPosition: import('../internal/constants.js').HoverToolbarPosition
 }
 
 export type UsePreviewBindingArgs = {

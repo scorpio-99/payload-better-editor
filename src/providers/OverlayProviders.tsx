@@ -1,13 +1,13 @@
 'use client'
 
 import React from 'react'
-import { OverlayErrorBoundary } from '../admin/ErrorBoundary'
-import { BetterEditorSettingsProvider } from '../state/useBetterEditorSettings'
-import { EditorHistoryProvider } from '../state/useEditorHistory'
+import { OverlayErrorBoundary } from '../admin/ErrorBoundary.js'
+import { BetterEditorSettingsProvider } from '../state/useBetterEditorSettings.js'
+import { EditorHistoryProvider } from '../state/useEditorHistory.js'
 import {
   BetterEditorConfigProvider,
   type BetterEditorConfigProviderProps,
-} from './BetterEditorConfigProvider'
+} from './BetterEditorConfigProvider.js'
 
 export type OverlayProvidersProps = {
   onClose: () => void

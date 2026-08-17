@@ -1,5 +1,5 @@
-import type { ParentInboundMessage } from '../preview/protocol'
-import { isParentInboundMessage } from '../preview/protocol'
+import type { ParentInboundMessage } from '../preview/protocol.js'
+import { isParentInboundMessage } from '../preview/protocol.js'
 
 // Same-origin only: parent and iframe live under one Payload host. Any
 // message from a different origin is dropped before reaching `handler`.

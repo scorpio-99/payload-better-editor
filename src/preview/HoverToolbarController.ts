@@ -1,12 +1,12 @@
 import React from 'react'
 import { createRoot, type Root } from 'react-dom/client'
-import type { HoverToolbarPosition } from '../internal/constants'
-import { ACTIVE_CLASS, BLOCK_ID_ATTR, BLOCK_ID_SELECTOR } from '../internal/dom'
-import type { BlockActionMessage } from './protocol'
-import { TOOLBAR_ID } from './hover-css'
-import { HoverToolbar, type HoverToolbarLabels } from './HoverToolbar'
-import { calculateToolbarPosition } from './toolbar-position'
-import type { BetterEditorTranslations } from '../i18n/types'
+import type { HoverToolbarPosition } from '../internal/constants.js'
+import { ACTIVE_CLASS, BLOCK_ID_ATTR, BLOCK_ID_SELECTOR } from '../internal/dom.js'
+import type { BlockActionMessage } from './protocol.js'
+import { TOOLBAR_ID } from './hover-css.js'
+import { HoverToolbar, type HoverToolbarLabels } from './HoverToolbar.js'
+import { calculateToolbarPosition } from './toolbar-position.js'
+import type { BetterEditorTranslations } from '../i18n/types.js'
 
 export type HoverToolbarOptions = {
   position: HoverToolbarPosition

@@ -10,16 +10,16 @@ import {
   useModal,
   useTranslation,
 } from '@payloadcms/ui'
-import { useDocConfig } from '../../hooks/useDocConfig'
-import { useAddBlockDrawer } from '../../hooks/useAddBlockDrawer'
-import { AddBlockDrawer } from '../blocks/AddBlockDrawer'
-import { BlockActionsToolbar } from '../blocks/BlockActionsToolbar'
-import { useBlockActions } from '../blocks/useBlockActions'
-import { findNamedField, resolveBlockSchema, resolveFieldBlocks } from '../blocks/schema'
+import { useDocConfig } from '../../hooks/useDocConfig.js'
+import { useAddBlockDrawer } from '../../hooks/useAddBlockDrawer.js'
+import { AddBlockDrawer } from '../blocks/AddBlockDrawer.js'
+import { BlockActionsToolbar } from '../blocks/BlockActionsToolbar.js'
+import { useBlockActions } from '../blocks/useBlockActions.js'
+import { findNamedField, resolveBlockSchema, resolveFieldBlocks } from '../blocks/schema.js'
 import type { ClientBlock } from 'payload'
-import { BlockEmptyState } from '../blocks/BlockEmptyState'
-import { BlockHeader } from '../blocks/BlockHeader'
-import { useBetterEditorT } from '../../i18n/useBetterEditorT'
+import { BlockEmptyState } from '../blocks/BlockEmptyState.js'
+import { BlockHeader } from '../blocks/BlockHeader.js'
+import { useBetterEditorT } from '../../i18n/useBetterEditorT.js'
 
 export type BlockSettingsTabProps = {
   selectedBlockPath: string | null

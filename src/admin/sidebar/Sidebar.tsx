@@ -1,11 +1,11 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { DocumentSettingsTab } from './DocumentSettingsTab'
-import { DocumentMetaTab } from './DocumentMetaTab'
-import { BlockSettingsTab } from './BlockSettingsTab'
-import { ValidationSummary } from './ValidationSummary'
-import { useBetterEditorT } from '../../i18n/useBetterEditorT'
+import { DocumentSettingsTab } from './DocumentSettingsTab.js'
+import { DocumentMetaTab } from './DocumentMetaTab.js'
+import { BlockSettingsTab } from './BlockSettingsTab.js'
+import { ValidationSummary } from './ValidationSummary.js'
+import { useBetterEditorT } from '../../i18n/useBetterEditorT.js'
 
 export type SidebarProps = {
   selectedBlockPath: string | null

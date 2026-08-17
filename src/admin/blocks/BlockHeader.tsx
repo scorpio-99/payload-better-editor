@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { useBetterEditorT } from '../../i18n/useBetterEditorT'
+import { useBetterEditorT } from '../../i18n/useBetterEditorT.js'
 
 export type BlockHeaderProps = {
   blockType: string

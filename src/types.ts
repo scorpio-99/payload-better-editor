@@ -4,6 +4,13 @@ import type { CollectionSlug, GlobalSlug } from 'payload'
 export type BetterEditorEntityOptions = {
   /** Blocks-field name for this entity; falls back to the top-level `blocksField`. */
   blocksField?: string
+  /**
+   * Open the editor automatically for users who have not toggled it yet on
+   * this entity. Once a user opens or closes it, their saved preference wins.
+   * The editor still only appears once a preview URL resolves (e.g. after a
+   * new document's slug is saved). Defaults to `false`.
+   */
+  defaultOpen?: boolean
 }
 
 export type BetterEditorConfig = {

@@ -94,13 +94,25 @@ Passed to `betterEditor({ … })`:
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `disabled` | `boolean` | `false` | Disable the plugin entirely |
-| `collections` | `string[]` \| `Record<slug, { blocksField?: string }>` | `[]` | Collection slugs — or a slug → options record for per-collection settings (e.g. a different `blocksField`) — where the toggle should appear |
-| `globals` | `string[]` \| `Record<slug, { blocksField?: string }>` | `[]` | Global slugs, or a slug → options record, where the toggle should appear |
+| `collections` | `string[]` \| `Record<slug, { blocksField?: string; defaultOpen?: boolean }>` | `[]` | Collection slugs — or a slug → options record for per-collection settings (e.g. a different `blocksField`) — where the toggle should appear |
+| `globals` | `string[]` \| `Record<slug, { blocksField?: string; defaultOpen?: boolean }>` | `[]` | Global slugs, or a slug → options record, where the toggle should appear |
 | `blocksField` | `string` | `'layout'` | Default name of the document field holding the top-level blocks array; per-collection overrides in the `collections`/`globals` record take precedence |
 | `adminPortalSelector` | `string` | Payload `__main-wrapper` | CSS selector for the admin element the overlay portals into. Override only if the default selector breaks against a future Payload version. Falls back to `<main>` then `<body>`. |
-| `storageNamespace` | `string` | `'better-editor'` | Prefix for `localStorage` keys (sidebar width, responsive viewport width, toggle preference). Set if multiple instances on the same origin would otherwise collide. |
+| `storageNamespace` | `string` | `'better-editor'` | Prefix for `localStorage` keys (sidebar width, responsive viewport width) and for the toggle's open/closed Payload preference. Set if multiple instances on the same origin would otherwise collide. |
 | `showSettingsBanner` | `boolean` | `true` | Show the plugin info banner (version, GitHub links) at the top of the `BetterEditorSettings` global. Set to `false` to hide it from end users. |
 | `hideToggleLabel` | `boolean` | `false` | Hide the "Open/Close Better Editor" text next to the toggle button's icon, leaving an icon-only button. The accessible `aria-label`/`title` is kept either way. |
+
+### Open the editor by default
+
+The editor's open/closed state is saved per user and per collection/global as a Payload preference, so it survives reloads and new sessions. To open it automatically for users who haven't toggled it yet, set `defaultOpen` on the entity:
+
+```ts
+betterEditor({
+  collections: { pages: { defaultOpen: true } },
+})
+```
+
+Once a user opens or closes the editor, their saved choice wins over the default. The editor still only appears when a preview URL resolves. For a new document whose preview URL depends on a slug, the regular edit view shows until the slug is saved, then the editor opens.
 
 ### Translations
 

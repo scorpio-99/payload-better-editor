@@ -1,7 +1,12 @@
 import type { CollectionConfig, Config, Field, GlobalConfig } from 'payload'
 import type { BetterEditorConfig } from './types.js'
-import { BETTER_EDITOR_SETTINGS_BANNER_FIELD, betterEditorSettingsGlobal } from './global.js'
+import {
+  BETTER_EDITOR_SETTINGS_BANNER_FIELD,
+  BETTER_EDITOR_SETTINGS_SLUG,
+  betterEditorSettingsGlobal,
+} from './global.js'
 import { normalizeEntities, type NormalizedEntity } from './internal/entities.js'
+import { findPermissiveSettingsAccess } from './internal/settings-access.js'
 import { translations as builtinTranslations } from './i18n/index.js'
 import { mergeTranslations } from './i18n/merge.js'
 
@@ -19,6 +24,10 @@ export { VERSION } from './version.js'
 const DEFAULT_BLOCKS_FIELD = 'layout'
 const TOGGLE_COMPONENT_PATH = 'payload-better-editor/client#LiveEditorToggle'
 const isDev = process.env.NODE_ENV !== 'production'
+
+// The plugin factory can run more than once per process (e.g. per Next.js
+// route compile); report the access warning only once.
+let warnedPermissiveSettingsAccess = false
 
 /**
  * Checks whether a field with the given `name` exists at the document's
@@ -118,7 +127,7 @@ export const betterEditor =
     })
 
     const showBanner = pluginOptions?.showSettingsBanner !== false
-    const settingsGlobal: GlobalConfig = showBanner
+    const defaultSettingsGlobal: GlobalConfig = showBanner
       ? betterEditorSettingsGlobal
       : {
           ...betterEditorSettingsGlobal,
@@ -126,12 +135,33 @@ export const betterEditor =
             (f) => !('name' in f && f.name === BETTER_EDITOR_SETTINGS_BANNER_FIELD),
           ),
         }
+    // The slug is pinned: the overlay fetches the global by it.
+    const settingsGlobal: GlobalConfig = pluginOptions?.settingsOverrides
+      ? {
+          ...pluginOptions.settingsOverrides({ defaultGlobal: defaultSettingsGlobal }),
+          slug: BETTER_EDITOR_SETTINGS_SLUG,
+        }
+      : defaultSettingsGlobal
 
     const existingGlobals = config.globals ?? []
-    const hasSettingsGlobal = existingGlobals.some((g) => g.slug === settingsGlobal.slug)
-    config.globals = hasSettingsGlobal
+    const ownSettingsGlobal = existingGlobals.find((g) => g.slug === BETTER_EDITOR_SETTINGS_SLUG)
+    config.globals = ownSettingsGlobal
       ? existingGlobals
       : [...existingGlobals, settingsGlobal]
+
+    const permissiveAccess = findPermissiveSettingsAccess(ownSettingsGlobal ?? settingsGlobal)
+    if (permissiveAccess.length > 0 && !warnedPermissiveSettingsAccess) {
+      warnedPermissiveSettingsAccess = true
+      const details = permissiveAccess
+        .map((op) =>
+          op === 'read' ? 'anyone can read it (no login required)' : 'any logged-in user can update it',
+        )
+        .join(', ')
+
+      console.warn(
+        `[better-editor] the "${BETTER_EDITOR_SETTINGS_SLUG}" global uses permissive default access: ${details}. Restrict it via the \`settingsOverrides\` plugin option — see "Access control" in DEVELOPERS.md.`,
+      )
+    }
 
     const existingTranslations = (config.i18n?.translations ?? {}) as Record<
       string,

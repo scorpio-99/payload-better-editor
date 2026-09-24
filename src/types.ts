@@ -1,4 +1,4 @@
-import type { CollectionSlug, GlobalSlug } from 'payload'
+import type { CollectionSlug, GlobalConfig, GlobalSlug } from 'payload'
 
 /** Per-entity overrides for a collection/global. */
 export type BetterEditorEntityOptions = {
@@ -61,4 +61,20 @@ export type BetterEditorConfig = {
    * is kept either way. Defaults to `false` (label shown).
    */
   hideToggleLabel?: boolean
+  /**
+   * Customize the auto-registered `BetterEditorSettings` global, e.g. to
+   * restrict its access. Receives the plugin's global and returns the one to
+   * register. Without it, the global keeps its permissive defaults: public
+   * `read` and `update` for any logged-in user.
+   *
+   * @example
+   *   settingsOverrides: ({ defaultGlobal }) => ({
+   *     ...defaultGlobal,
+   *     access: {
+   *       read: ({ req }) => Boolean(req.user),
+   *       update: ({ req }) => req.user?.role === 'admin',
+   *     },
+   *   })
+   */
+  settingsOverrides?: (args: { defaultGlobal: GlobalConfig }) => GlobalConfig
 }

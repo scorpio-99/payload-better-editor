@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.5.0]
+### Added
+- `defaultOpen` per collection/global (`collections: { pages: { defaultOpen: true } }`) opens the editor automatically for users who haven't toggled it yet. A user's saved open/closed choice still wins. Off by default, so existing setups are unchanged.
+- `settingsOverrides` plugin option to customize the auto-registered `BetterEditorSettings` global, e.g. to restrict its access. Without it, access stays as before.
+- A startup warning when the settings global still uses its permissive default access (public `read`, `update` for any logged-in user).
+### Changed
+- The toggle now saves its open/closed preference only when the user clicks it, not when the state is restored on load.
+
 ## [1.4.1]
 ### Fixed
 - Relative imports in the built package now carry file extensions, so the package loads under Node's native ESM resolver — not just under bundlers. Previously anything on Node's resolver (Vitest, `tsx`/`node` scripts importing a Payload config with the plugin registered) threw `ERR_MODULE_NOT_FOUND` at import time, while bundlers (Next/Turbopack) masked it. ([#29](https://github.com/scorpio-99/payload-better-editor/issues/29))

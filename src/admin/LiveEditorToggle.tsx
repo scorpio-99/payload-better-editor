@@ -17,6 +17,8 @@ export type LiveEditorToggleProps = {
   adminPortalSelector?: string
   storageNamespace?: string
   hideToggleLabel?: boolean
+  /** Initial state for users without a saved preference for this entity. */
+  defaultOpen?: boolean
 }
 
 export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({
@@ -24,6 +26,7 @@ export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({
   adminPortalSelector,
   storageNamespace,
   hideToggleLabel,
+  defaultOpen = false,
 }) => {
   const [open, setOpen] = useState(false)
   const { collectionSlug, globalSlug } = useDocumentInfo()
@@ -32,9 +35,9 @@ export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({
   const storageKeys = useMemo(() => buildStorageKeys(storageNamespace), [storageNamespace])
   const prefKey = storageKeys.togglePreference(collectionSlug, globalSlug)
 
-  // Tracks the prefKey we've successfully hydrated against so persistence
-  // can't fire with the initial `false` before the read resolves, and so
-  // switching documents reseeds without clobbering the new doc's pref.
+  // Tracks the prefKey we've successfully hydrated against so a toggle
+  // before the read resolves isn't persisted, and so switching documents
+  // reseeds without clobbering the new doc's pref.
   const hydratedKeyRef = useRef<string | null>(null)
 
   useEffect(() => {
@@ -43,20 +46,33 @@ export const LiveEditorToggle: React.FC<LiveEditorToggleProps> = ({
     void getPreference<Pref>(prefKey).then((pref) => {
       if (cancelled) return
       hydratedKeyRef.current = prefKey
-      setOpen(Boolean(pref?.open))
+      // A saved choice (open or closed) always wins over the configured default.
+      setOpen(typeof pref?.open === 'boolean' ? pref.open : defaultOpen)
     })
     return () => {
       cancelled = true
     }
-  }, [prefKey, getPreference])
+  }, [prefKey, getPreference, defaultOpen])
 
-  useEffect(() => {
-    if (hydratedKeyRef.current !== prefKey) return
-    void setPreference<Pref>(prefKey, { open }, true)
-  }, [open, prefKey, setPreference])
+  // Persist only explicit user actions, so a state seeded from `defaultOpen`
+  // never becomes a saved preference and later config changes still apply.
+  const persist = useCallback(
+    (next: boolean) => {
+      if (hydratedKeyRef.current !== prefKey) return
+      void setPreference<Pref>(prefKey, { open: next }, true)
+    },
+    [prefKey, setPreference],
+  )
 
-  const handleToggle = useCallback(() => setOpen((v) => !v), [])
-  const handleClose = useCallback(() => setOpen(false), [])
+  const handleToggle = useCallback(() => {
+    const next = !open
+    setOpen(next)
+    persist(next)
+  }, [open, persist])
+  const handleClose = useCallback(() => {
+    setOpen(false)
+    persist(false)
+  }, [persist])
 
   const mountNode = useMainWrapperPortal(open, adminPortalSelector)
   const t = useBetterEditorT()

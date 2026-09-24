@@ -94,13 +94,26 @@ Passed to `betterEditor({ … })`:
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `disabled` | `boolean` | `false` | Disable the plugin entirely |
-| `collections` | `string[]` \| `Record<slug, { blocksField?: string }>` | `[]` | Collection slugs — or a slug → options record for per-collection settings (e.g. a different `blocksField`) — where the toggle should appear |
-| `globals` | `string[]` \| `Record<slug, { blocksField?: string }>` | `[]` | Global slugs, or a slug → options record, where the toggle should appear |
+| `collections` | `string[]` \| `Record<slug, { blocksField?: string; defaultOpen?: boolean }>` | `[]` | Collection slugs — or a slug → options record for per-collection settings (e.g. a different `blocksField`) — where the toggle should appear |
+| `globals` | `string[]` \| `Record<slug, { blocksField?: string; defaultOpen?: boolean }>` | `[]` | Global slugs, or a slug → options record, where the toggle should appear |
 | `blocksField` | `string` | `'layout'` | Default name of the document field holding the top-level blocks array; per-collection overrides in the `collections`/`globals` record take precedence |
 | `adminPortalSelector` | `string` | Payload `__main-wrapper` | CSS selector for the admin element the overlay portals into. Override only if the default selector breaks against a future Payload version. Falls back to `<main>` then `<body>`. |
-| `storageNamespace` | `string` | `'better-editor'` | Prefix for `localStorage` keys (sidebar width, responsive viewport width, toggle preference). Set if multiple instances on the same origin would otherwise collide. |
+| `storageNamespace` | `string` | `'better-editor'` | Prefix for `localStorage` keys (sidebar width, responsive viewport width) and for the toggle's open/closed Payload preference. Set if multiple instances on the same origin would otherwise collide. |
 | `showSettingsBanner` | `boolean` | `true` | Show the plugin info banner (version, GitHub links) at the top of the `BetterEditorSettings` global. Set to `false` to hide it from end users. |
 | `hideToggleLabel` | `boolean` | `false` | Hide the "Open/Close Better Editor" text next to the toggle button's icon, leaving an icon-only button. The accessible `aria-label`/`title` is kept either way. |
+| `settingsOverrides` | `({ defaultGlobal }) => GlobalConfig` | — | Customize the auto-registered `BetterEditorSettings` global, e.g. its access control. The slug is kept fixed. See [Access control](#access-control). |
+
+### Open the editor by default
+
+The editor's open/closed state is saved per user and per collection/global as a Payload preference, so it survives reloads and new sessions. To open it automatically for users who haven't toggled it yet, set `defaultOpen` on the entity:
+
+```ts
+betterEditor({
+  collections: { pages: { defaultOpen: true } },
+})
+```
+
+Once a user opens or closes the editor, their saved choice wins over the default. The editor still only appears when a preview URL resolves. For a new document whose preview URL depends on a slug, the regular edit view shows until the slug is saved, then the editor opens.
 
 ### Translations
 
@@ -212,18 +225,40 @@ The plugin source lives under `src/` with the following top-level split:
 | `styles/` | Plain CSS, opted in via `import` side-effects. |
 | `index.ts` / `client.ts` | Public entry points (server plugin factory + client UI). |
 
-## Multi-tenant access control
+## Access control
 
-The auto-registered `BetterEditorSettings` global ships with `access: { read: () => true }` so any authenticated admin can read it (the values are cosmetic — colours, viewport widths, sidebar position).
+By default the auto-registered `BetterEditorSettings` global is permissive: `read` is public (`() => true`, no login required) and `update` falls back to Payload's default, which allows **any logged-in user**. The values are cosmetic (colours, viewport widths, sidebar position), but in projects with several user roles you usually want only admins to change them. The plugin logs a warning at startup while either operation is still on its default.
 
-If you need stricter access — say, per-tenant settings or admin-only editing — override the global yourself **before** the plugin sees it, or wrap the field with your own access check. The plugin only registers the global if no global with the same slug already exists, so you can ship your own under `BETTER_EDITOR_SETTINGS_SLUG` and the auto-registration will skip:
+Restrict access with `settingsOverrides`:
+
+```ts
+betterEditor({
+  collections: ['pages'],
+  settingsOverrides: ({ defaultGlobal }) => ({
+    ...defaultGlobal,
+    access: {
+      read: ({ req }) => Boolean(req.user),
+      update: ({ req }) => req.user?.role === 'admin',
+    },
+  }),
+})
+```
+
+The editor overlay reads the global from the admin panel with the user's session, so `read` only needs to allow users who can open the editor. Setting an operation explicitly, even to `() => true`, silences the warning for it.
+
+### Shipping your own settings global
+
+For full control (e.g. per-tenant settings), you can also register the global yourself. The plugin only registers it if no global with the same slug already exists, so you can ship your own under `BETTER_EDITOR_SETTINGS_SLUG` and the auto-registration will skip:
 
 ```ts
 import { betterEditorSettingsGlobal, BETTER_EDITOR_SETTINGS_SLUG } from 'payload-better-editor'
 
 const tenantSettings: GlobalConfig = {
   ...betterEditorSettingsGlobal,
-  access: { read: ({ req }) => req.user?.role === 'admin' },
+  access: {
+    read: ({ req }) => Boolean(req.user),
+    update: ({ req }) => req.user?.role === 'admin',
+  },
 }
 
 export default buildConfig({
@@ -231,6 +266,8 @@ export default buildConfig({
   plugins: [betterEditor({ collections: ['pages'] })],
 })
 ```
+
+The startup warning checks your own global too. Here an unset `read` counts as restricted, since Payload then only allows logged-in users.
 
 Do not add sensitive fields to `BetterEditorSettings` without tightening the read access first.
 
